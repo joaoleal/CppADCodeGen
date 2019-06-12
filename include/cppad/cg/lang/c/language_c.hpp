@@ -75,6 +75,8 @@ protected:
     // auxiliary string stream
     std::ostringstream _ss;
     //
+    LangStreamStack<Base> _streamStack;
+    //
     size_t _independentSize;
     //
     size_t _minTemporaryVarID;
@@ -131,6 +133,7 @@ public:
         _outArgName("out"),
         _atomicArgName("atomicFun"),
         _nameGen(nullptr),
+        _streamStack(_code),
         _independentSize(0), // not really required (but it avoids warnings)
         _minTemporaryVarID(0), // not really required (but it avoids warnings)
         _dependent(nullptr),
@@ -628,6 +631,7 @@ protected:
         auxArrayName_ = "";
         _currentLoops.clear();
         _atomicFuncArrays.clear();
+        _streamStack.clear();
 
         // save some info
         _info = info.get();
@@ -796,6 +800,8 @@ protected:
                 }
 
                 assignCount += printAssignment(node);
+                
+                CPPAD_ASSERT_KNOWN(_streamStack.empty(), "Error writing all operations to output stream")
             }
 
             if (!localFuncNames.empty() && assignCount > 0) {
@@ -911,31 +917,36 @@ protected:
     }
 
     inline unsigned printAssignment(Node& node) {
-        return printAssignment(node, node);
+        return pushAssignment(node, node);
     }
 
-    inline unsigned printAssignment(Node& nodeName,
-                                    const Arg& nodeRhs) {
+    inline unsigned pushAssignment(Node& nodeName,
+                                   const Arg& nodeRhs) {
         if (nodeRhs.getOperation() != nullptr) {
-            return printAssignment(nodeName, *nodeRhs.getOperation());
+            return pushAssignment(nodeName, *nodeRhs.getOperation());
         } else {
-            printAssignmentStart(nodeName);
-            printParameter(*nodeRhs.getParameter());
-            printAssignmentEnd(nodeName);
+            pushAssignmentStart(nodeName);
+            pushParameter(*nodeRhs.getParameter());
+            pushAssignmentEnd(nodeName);
+
+            _streamStack.flush();
+
             return 1;
         }
     }
 
-    inline unsigned printAssignment(Node& nodeName,
+    inline unsigned pushAssignment(Node& nodeName,
                                    Node& nodeRhs) {
         bool createsVar = directlyAssignsVariable(nodeRhs); // do we need to do the assignment here?
         if (!createsVar) {
-            printAssignmentStart(nodeName);
+            pushAssignmentStart(nodeName);
         }
-        unsigned lines = printExpressionNoVarCheck(nodeRhs);
+        unsigned lines = pushExpressionNoVarCheck2(nodeRhs);
         if (!createsVar) {
-            printAssignmentEnd(nodeRhs);
+            pushAssignmentEnd(nodeRhs);
         }
+
+        _streamStack.flush();
 
         if (nodeRhs.getOperationType() == CGOpCode::ArrayElement) {
             Node* array = nodeRhs.getArguments()[0].getOperation();
@@ -950,33 +961,33 @@ protected:
         return lines;
     }
 
-    inline virtual void printAssignmentStart(Node& op) {
-        printAssignmentStart(op, createVariableName(op), isDependent(op));
+    inline virtual void pushAssignmentStart(Node& op) {
+        pushAssignmentStart(op, createVariableName(op), isDependent(op));
     }
 
-    inline virtual void printAssignmentStart(Node& node,
-                                             const std::string& varName,
-                                             bool isDep) {
+    inline virtual void pushAssignmentStart(Node& node,
+                                            const std::string& varName,
+                                            bool isDep) {
         if (!isDep) {
             _temporary[getVariableID(node)] = &node;
         }
 
-        _code << _indentation << varName << " ";
+        _streamStack << _indentation << varName << " ";
         if (isDep) {
             CGOpCode op = node.getOperationType();
             if (op == CGOpCode::DependentMultiAssign || (op == CGOpCode::LoopIndexedDep && node.getInfo()[1] == 1)) {
-                _code << "+=";
+                _streamStack << "+=";
             } else {
-                _code << _depAssignOperation;
+                _streamStack << _depAssignOperation;
             }
         } else {
-            _code << "=";
+            _streamStack << "=";
         }
-        _code << " ";
+        _streamStack << " ";
     }
 
-    inline virtual void printAssignmentEnd(Node& op) {
-        _code << ";\n";
+    inline virtual void pushAssignmentEnd(Node& op) {
+        _streamStack << ";\n";
     }
 
     virtual std::string argumentDeclaration(const FuncArgument& funcArg) const {
@@ -1172,48 +1183,74 @@ protected:
         return false;
     }
 
-    virtual void printIndependentVariableName(Node& op) {
+    virtual void pushIndependentVariableName(Node& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 0, "Invalid number of arguments for independent variable")
 
-        _code << _nameGen->generateIndependent(op, getVariableID(op));
+        _streamStack << _nameGen->generateIndependent(op, getVariableID(op));
     }
 
-    virtual unsigned print(const Arg& arg) {
+    virtual unsigned push(const Arg& arg) {
         if (arg.getOperation() != nullptr) {
             // expression
-            return printExpression(*arg.getOperation());
+            return pushExpression(*arg.getOperation());
         } else {
             // parameter
-            printParameter(*arg.getParameter());
+            pushParameter(*arg.getParameter());
             return 1;
         }
     }
 
-    virtual unsigned printExpression(Node& op) {
+    virtual unsigned pushExpression(Node& op) {
         if (getVariableID(op) > 0) {
             // use variable name
-            _code << createVariableName(op);
+            _streamStack << createVariableName(op);
             return 1;
         } else {
             // print expression code
-            return printExpressionNoVarCheck(op);
+            _streamStack << op;
+            return 0;
         }
     }
 
-    virtual unsigned printExpressionNoVarCheck(Node& node) {
+    virtual unsigned pushExpressionNoVarCheck2(Node& node) {
+        Node* n;
+
+        unsigned lines = pushExpressionNoVarCheck(node);
+
+        while (true) {
+
+            _streamStack.flush();
+            if (!_streamStack.empty()) {
+                n = &_streamStack.startNewOperationNode();
+            } else {
+                n = nullptr;
+            }
+
+            if (n == nullptr)
+                break;
+
+            unsigned lines2 = pushExpressionNoVarCheck(*n);
+
+            lines = std::max(lines, lines2);
+        }
+
+        return lines;
+    }
+
+    virtual unsigned pushExpressionNoVarCheck(Node& node) {
         CGOpCode op = node.getOperationType();
         switch (op) {
             case CGOpCode::ArrayCreation:
-                printArrayCreationOp(node);
+                pushArrayCreationOp(node);
                 break;
             case CGOpCode::SparseArrayCreation:
-                printSparseArrayCreationOp(node);
+                pushSparseArrayCreationOp(node);
                 break;
             case CGOpCode::ArrayElement:
-                printArrayElementOp(node);
+                pushArrayElementOp(node);
                 break;
             case CGOpCode::Assign:
-                return printAssignOp(node);
+                return pushAssignOp(node);
 
             case CGOpCode::Abs:
             case CGOpCode::Acos:
@@ -1236,19 +1273,19 @@ protected:
             case CGOpCode::Expm1:
             case CGOpCode::Log1p:
 #endif
-                printUnaryFunction(node);
+                pushUnaryFunction(node);
                 break;
             case CGOpCode::AtomicForward: // atomicFunction.forward(q, p, vx, vy, tx, ty)
-                printAtomicForwardOp(node);
+                pushAtomicForwardOp(node);
                 break;
             case CGOpCode::AtomicReverse: // atomicFunction.reverse(p, tx, ty, px, py)
-                printAtomicReverseOp(node);
+                pushAtomicReverseOp(node);
                 break;
             case CGOpCode::Add:
-                printOperationAdd(node);
+                pushOperationAdd(node);
                 break;
             case CGOpCode::Alias:
-                return printOperationAlias(node);
+                return pushOperationAlias(node);
 
             case CGOpCode::ComLt:
             case CGOpCode::ComLe:
@@ -1256,86 +1293,86 @@ protected:
             case CGOpCode::ComGe:
             case CGOpCode::ComGt:
             case CGOpCode::ComNe:
-                printConditionalAssignment(node);
+                pushConditionalAssignment(node);
                 break;
             case CGOpCode::Div:
-                printOperationDiv(node);
+                pushOperationDiv(node);
                 break;
             case CGOpCode::Inv:
-                printIndependentVariableName(node);
+                pushIndependentVariableName(node);
                 break;
             case CGOpCode::Mul:
-                printOperationMul(node);
+                pushOperationMul(node);
                 break;
             case CGOpCode::Pow:
-                printPowFunction(node);
+                pushPowFunction(node);
                 break;
             case CGOpCode::Pri:
-                printPrintOperation(node);
+                pushPrintOperation(node);
                 break;
             case CGOpCode::Sign:
-                printSignFunction(node);
+                pushSignFunction(node);
                 break;
             case CGOpCode::Sub:
-                printOperationMinus(node);
+                pushOperationMinus(node);
                 break;
 
             case CGOpCode::UnMinus:
-                printOperationUnaryMinus(node);
+                pushOperationUnaryMinus(node);
                 break;
 
             case CGOpCode::DependentMultiAssign:
-                return printDependentMultiAssign(node);
+                return pushDependentMultiAssign(node);
 
             case CGOpCode::Index:
                 return 0; // nothing to do
             case CGOpCode::IndexAssign:
-                printIndexAssign(node);
+                pushIndexAssign(node);
                 break;
             case CGOpCode::IndexDeclaration:
                 return 0; // already done
 
             case CGOpCode::LoopStart:
-                printLoopStart(node);
+                pushLoopStart(node);
                 break;
             case CGOpCode::LoopIndexedIndep:
-                printLoopIndexedIndep(node);
+                pushLoopIndexedIndep(node);
                 break;
             case CGOpCode::LoopIndexedDep:
-                printLoopIndexedDep(node);
+                pushLoopIndexedDep(node);
                 break;
             case CGOpCode::LoopIndexedTmp:
-                printLoopIndexedTmp(node);
+                pushLoopIndexedTmp(node);
                 break;
             case CGOpCode::TmpDcl:
                 // nothing to do
                 return 0;
             case CGOpCode::Tmp:
-                printTmpVar(node);
+                pushTmpVar(node);
                 break;
             case CGOpCode::LoopEnd:
-                printLoopEnd(node);
+                pushLoopEnd(node);
                 break;
             case CGOpCode::IndexCondExpr:
-                printIndexCondExprOp(node);
+                pushIndexCondExprOp(node);
                 break;
             case CGOpCode::StartIf:
-                printStartIf(node);
+                pushStartIf(node);
                 break;
             case CGOpCode::ElseIf:
-                printElseIf(node);
+                pushElseIf(node);
                 break;
             case CGOpCode::Else:
-                printElse(node);
+                pushElse(node);
                 break;
             case CGOpCode::EndIf:
-                printEndIf(node);
+                pushEndIf(node);
                 break;
             case CGOpCode::CondResult:
-                printCondResult(node);
+                pushCondResult(node);
                 break;
             case CGOpCode::UserCustom:
-                printUserCustom(node);
+                pushUserCustom(node);
                 break;
             default:
                 throw CGException("Unknown operation code '", op, "'.");
@@ -1343,95 +1380,95 @@ protected:
         return 1;
     }
 
-    virtual unsigned printAssignOp(Node& node) {
+    virtual unsigned pushAssignOp(Node& node) {
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 1, "Invalid number of arguments for assign operation")
 
-        return print(node.getArguments()[0]);
+        return push(node.getArguments()[0]);
     }
 
-    virtual void printUnaryFunction(Node& op) {
+    virtual void pushUnaryFunction(Node& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 1, "Invalid number of arguments for unary function")
 
         switch (op.getOperationType()) {
             case CGOpCode::Abs:
-                _code << absFuncName();
+                _streamStack << absFuncName();
                 break;
             case CGOpCode::Acos:
-                _code << acosFuncName();
+                _streamStack << acosFuncName();
                 break;
             case CGOpCode::Asin:
-                _code << asinFuncName();
+                _streamStack << asinFuncName();
                 break;
             case CGOpCode::Atan:
-                _code << atanFuncName();
+                _streamStack << atanFuncName();
                 break;
             case CGOpCode::Cosh:
-                _code << coshFuncName();
+                _streamStack << coshFuncName();
                 break;
             case CGOpCode::Cos:
-                _code << cosFuncName();
+                _streamStack << cosFuncName();
                 break;
             case CGOpCode::Exp:
-                _code << expFuncName();
+                _streamStack << expFuncName();
                 break;
             case CGOpCode::Log:
-                _code << logFuncName();
+                _streamStack << logFuncName();
                 break;
             case CGOpCode::Sinh:
-                _code << sinhFuncName();
+                _streamStack << sinhFuncName();
                 break;
             case CGOpCode::Sin:
-                _code << sinFuncName();
+                _streamStack << sinFuncName();
                 break;
             case CGOpCode::Sqrt:
-                _code << sqrtFuncName();
+                _streamStack << sqrtFuncName();
                 break;
             case CGOpCode::Tanh:
-                _code << tanhFuncName();
+                _streamStack << tanhFuncName();
                 break;
             case CGOpCode::Tan:
-                _code << tanFuncName();
+                _streamStack << tanFuncName();
                 break;
 #if CPPAD_USE_CPLUSPLUS_2011
             case CGOpCode::Erf:
-                _code << erfFuncName();
+                _streamStack << erfFuncName();
                 break;
             case CGOpCode::Asinh:
-                _code << asinhFuncName();
+                _streamStack << asinhFuncName();
                 break;
             case CGOpCode::Acosh:
-                _code << acoshFuncName();
+                _streamStack << acoshFuncName();
                 break;
             case CGOpCode::Atanh:
-                _code << atanhFuncName();
+                _streamStack << atanhFuncName();
                 break;
             case CGOpCode::Expm1:
-                _code << expm1FuncName();
+                _streamStack << expm1FuncName();
                 break;
             case CGOpCode::Log1p:
-                _code << log1pFuncName();
+                _streamStack << log1pFuncName();
                 break;
 #endif
             default:
                 throw CGException("Unknown function name for operation code '", op.getOperationType(), "'.");
         }
 
-        _code << "(";
-        print(op.getArguments()[0]);
-        _code << ")";
+        _streamStack << "(";
+        push(op.getArguments()[0]);
+        _streamStack << ")";
     }
 
-    virtual void printPowFunction(Node& op) {
+    virtual void pushPowFunction(Node& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for pow() function")
 
-        _code << powFuncName() << "(";
-        print(op.getArguments()[0]);
-        _code << ", ";
-        print(op.getArguments()[1]);
-        _code << ")";
+        _streamStack <<powFuncName() << "(";
+        push(op.getArguments()[0]);
+        _streamStack << ", ";
+        push(op.getArguments()[1]);
+        _streamStack << ")";
     }
 
-    virtual void printSignFunction(Node& op) {
+    virtual void pushSignFunction(Node& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 1, "Invalid number of arguments for sign() function")
         CPPADCG_ASSERT_UNKNOWN(op.getArguments()[0].getOperation() != nullptr)
         CPPADCG_ASSERT_UNKNOWN(getVariableID(*op.getArguments()[0].getOperation()) > 0)
@@ -1440,43 +1477,43 @@ protected:
 
         const std::string& argName = createVariableName(arg);
 
-        _code << "(" << argName << " " << _C_COMP_OP_GT << " ";
-        printParameter(Base(0.0));
-        _code << "?";
-        printParameter(Base(1.0));
-        _code << ":(" << argName << " " << _C_COMP_OP_LT << " ";
-        printParameter(Base(0.0));
-        _code << "?";
-        printParameter(Base(-1.0));
-        _code << ":";
-        printParameter(Base(0.0));
-        _code << "))";
+        _streamStack << "(" << argName << " " << _C_COMP_OP_GT << " ";
+        pushParameter(Base(0.0));
+        _streamStack << "?";
+        pushParameter(Base(1.0));
+        _streamStack << ":(" << argName << " " << _C_COMP_OP_LT << " ";
+        pushParameter(Base(0.0));
+        _streamStack << "?";
+        pushParameter(Base(-1.0));
+        _streamStack << ":";
+        pushParameter(Base(0.0));
+        _streamStack << "))";
     }
 
-    virtual unsigned printOperationAlias(Node& op) {
+    virtual unsigned pushOperationAlias(Node& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 1, "Invalid number of arguments for alias")
-        return print(op.getArguments()[0]);
+        return push(op.getArguments()[0]);
     }
 
-    virtual void printOperationAdd(Node& op) {
+    virtual void pushOperationAdd(Node& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for addition")
 
         const Arg& left = op.getArguments()[0];
         const Arg& right = op.getArguments()[1];
 
         if(right.getParameter() == nullptr || (*right.getParameter() >= 0)) {
-            print(left);
-            _code << " + ";
-            print(right);
+            push(left);
+            _streamStack << " + ";
+            push(right);
         } else {
             // right has a negative parameter so we would get v0 + -v1
-            print(left);
-            _code << " - ";
-            printParameter(-*right.getParameter()); // make it positive
+            push(left);
+            _streamStack << " - ";
+            pushParameter(-*right.getParameter()); // make it positive
         }
     }
 
-    virtual void printOperationMinus(Node& op) {
+    virtual void pushOperationMinus(Node& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for subtraction")
 
         const Arg& left = op.getArguments()[0];
@@ -1485,20 +1522,20 @@ protected:
         if(right.getParameter() == nullptr || (*right.getParameter() >= 0)) {
             bool encloseRight = encloseInParenthesesMul(right.getOperation());
 
-            print(left);
-            _code << " - ";
+            push(left);
+            _streamStack << " - ";
             if (encloseRight) {
-                _code << "(";
+                _streamStack << "(";
             }
-            print(right);
+            push(right);
             if (encloseRight) {
-                _code << ")";
+                _streamStack << ")";
             }
         } else {
             // right has a negative parameter so we would get v0 - -v1
-            print(left);
-            _code << " + ";
-            printParameter(-*right.getParameter()); // make it positive
+            push(left);
+            _streamStack << " + ";
+            pushParameter(-*right.getParameter()); // make it positive
         }
     }
 
@@ -1516,7 +1553,7 @@ protected:
                 !isFunction(node->getOperationType());
     }
 
-    virtual void printOperationDiv(Node& op) {
+    virtual void pushOperationDiv(Node& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for division")
 
         const Arg& left = op.getArguments()[0];
@@ -1526,19 +1563,19 @@ protected:
         bool encloseRight = encloseInParenthesesDiv(right.getOperation());
 
         if (encloseLeft) {
-            _code << "(";
+            _streamStack << "(";
         }
-        print(left);
+        push(left);
         if (encloseLeft) {
-            _code << ")";
+            _streamStack << ")";
         }
-        _code << " / ";
+        _streamStack << " / ";
         if (encloseRight) {
-            _code << "(";
+            _streamStack << "(";
         }
-        print(right);
+        push(right);
         if (encloseRight) {
-            _code << ")";
+            _streamStack << ")";
         }
     }
 
@@ -1558,7 +1595,7 @@ protected:
                 !isFunction(node->getOperationType());
     }
 
-    virtual void printOperationMul(Node& op) {
+    virtual void pushOperationMul(Node& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for multiplication")
 
         const Arg& left = op.getArguments()[0];
@@ -1568,42 +1605,42 @@ protected:
         bool encloseRight = encloseInParenthesesMul(right.getOperation());
 
         if (encloseLeft) {
-            _code << "(";
+            _streamStack << "(";
         }
-        print(left);
+        push(left);
         if (encloseLeft) {
-            _code << ")";
+            _streamStack << ")";
         }
-        _code << " * ";
+        _streamStack << " * ";
         if (encloseRight) {
-            _code << "(";
+            _streamStack << "(";
         }
-        print(right);
+        push(right);
         if (encloseRight) {
-            _code << ")";
+            _streamStack << ")";
         }
     }
 
-    virtual void printOperationUnaryMinus(Node& op) {
+    virtual void pushOperationUnaryMinus(Node& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 1, "Invalid number of arguments for unary minus")
 
         const Arg& arg = op.getArguments()[0];
 
         bool enclose = encloseInParenthesesMul(arg.getOperation());
 
-        _code << "-";
+        _streamStack << "-";
         if (enclose) {
-            _code << "(";
+            _streamStack << "(";
         } else {
-            _code << " "; // there may be several - together -> space required
+            _streamStack << " "; // there may be several - together -> space required
         }
-        print(arg);
+        push(arg);
         if (enclose) {
-            _code << ")";
+            _streamStack << ")";
         }
     }
 
-    virtual void printPrintOperation(const Node& node) {
+    virtual void pushPrintOperation(const Node& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::Pri, "Invalid node type")
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() >= 1, "Invalid number of arguments for print operation")
 
@@ -1615,16 +1652,16 @@ protected:
         replaceString(after, "\n", "\\n");
         replaceString(after, "\"", "\\\"");
 
-        _code << _indentation << "fprintf(stderr, \"" << before << getPrintfBaseFormat() << after << "\"";
+        _streamStack <<_indentation << "fprintf(stderr, \"" << before << getPrintfBaseFormat() << after << "\"";
         const std::vector<Arg>& args = pnode.getArguments();
         for (size_t a = 0; a < args.size(); a++) {
-            _code << ", ";
-            print(args[a]);
+            _streamStack << ", ";
+            push(args[a]);
         }
-        _code << ");\n";
+        _streamStack << ");\n";
     }
 
-    virtual void printConditionalAssignment(Node& node) {
+    virtual void pushConditionalAssignment(Node& node) {
         CPPADCG_ASSERT_UNKNOWN(getVariableID(node) > 0)
 
         const std::vector<Arg>& args = node.getArguments();
@@ -1639,25 +1676,25 @@ protected:
         if ((trueCase.getParameter() != nullptr && falseCase.getParameter() != nullptr && *trueCase.getParameter() == *falseCase.getParameter()) ||
                 (trueCase.getOperation() != nullptr && falseCase.getOperation() != nullptr && trueCase.getOperation() == falseCase.getOperation())) {
             // true and false cases are the same
-            printAssignmentStart(node, varName, isDep);
-            print(trueCase);
-            printAssignmentEnd(node);
+            pushAssignmentStart(node, varName, isDep);
+            push(trueCase);
+            pushAssignmentEnd(node);
         } else {
-            _code << _indentation << "if( ";
-            print(left);
-            _code << " " << getComparison(node.getOperationType()) << " ";
-            print(right);
-            _code << " ) {\n";
-            _code << _spaces;
-            printAssignmentStart(node, varName, isDep);
-            print(trueCase);
-            printAssignmentEnd(node);
-            _code << _indentation << "} else {\n";
-            _code << _spaces;
-            printAssignmentStart(node, varName, isDep);
-            print(falseCase);
-            printAssignmentEnd(node);
-            _code << _indentation << "}\n";
+            _streamStack <<_indentation << "if( ";
+            push(left);
+            _streamStack << " " << getComparison(node.getOperationType()) << " ";
+            push(right);
+            _streamStack << " ) {\n";
+            _streamStack <<_spaces;
+            pushAssignmentStart(node, varName, isDep);
+            push(trueCase);
+            pushAssignmentEnd(node);
+            _streamStack <<_indentation << "} else {\n";
+            _streamStack <<_spaces;
+            pushAssignmentStart(node, varName, isDep);
+            push(falseCase);
+            pushAssignmentEnd(node);
+            _streamStack <<_indentation << "}\n";
         }
     }
 
@@ -1675,9 +1712,9 @@ protected:
         return false;
     }
 
-    virtual void printArrayCreationOp(Node& op);
+    virtual void pushArrayCreationOp(Node& op);
 
-    virtual void printSparseArrayCreationOp(Node& op);
+    virtual void pushSparseArrayCreationOp(Node& op);
 
     inline void printArrayStructInit(const std::string& dataArrayName,
                                      size_t pos,
@@ -1696,9 +1733,9 @@ protected:
 
     inline std::string getTempArrayName(const Node& op);
 
-    virtual void printArrayElementOp(Node& op);
+    virtual void pushArrayElementOp(Node& op);
 
-    virtual void printAtomicForwardOp(Node& atomicFor) {
+    virtual void pushAtomicForwardOp(Node& atomicFor) {
         CPPADCG_ASSERT_KNOWN(atomicFor.getInfo().size() == 3, "Invalid number of information elements for atomic forward operation")
         int q = atomicFor.getInfo()[1];
         int p = atomicFor.getInfo()[2];
@@ -1728,11 +1765,11 @@ protected:
         printArrayStructInit(_ATOMIC_TY, *ty[p]); // also does indentation
         _ss.str("");
 
-        _code << _indentation << "atomicFun.forward(atomicFun.libModel, "
-                << atomicIndex << ", " << q << ", " << p << ", "
-                << _ATOMIC_TX << ", &" << _ATOMIC_TY << "); // "
-                << _info->atomicFunctionId2Name.at(id)
-                << "\n";
+        _streamStack << _indentation << "atomicFun.forward(atomicFun.libModel, "
+                     << atomicIndex << ", " << q << ", " << p << ", "
+                     << _ATOMIC_TX << ", &" << _ATOMIC_TY << "); // "
+                     << _info->atomicFunctionId2Name.at(id)
+                     << "\n";
 
         /**
          * the values of ty are now changed
@@ -1740,7 +1777,7 @@ protected:
         markArrayChanged(*ty[p]);
     }
 
-    virtual void printAtomicReverseOp(Node& atomicRev) {
+    virtual void pushAtomicReverseOp(Node& atomicRev) {
         CPPADCG_ASSERT_KNOWN(atomicRev.getInfo().size() == 2, "Invalid number of information elements for atomic reverse operation")
         int p = atomicRev.getInfo()[1];
         size_t p1 = p + 1;
@@ -1776,11 +1813,11 @@ protected:
         printArrayStructInit(_ATOMIC_PX, *px[0]); // also does indentation
         _ss.str("");
 
-        _code << _indentation << "atomicFun.reverse(atomicFun.libModel, "
-                << atomicIndex << ", " << p << ", "
-                << _ATOMIC_TX << ", &" << _ATOMIC_PX << ", " << _ATOMIC_PY << "); // "
-                << _info->atomicFunctionId2Name.at(id)
-                << "\n";
+        _streamStack << _indentation << "atomicFun.reverse(atomicFun.libModel, "
+                     << atomicIndex << ", " << p << ", "
+                     << _ATOMIC_TX << ", &" << _ATOMIC_PX << ", " << _ATOMIC_PY << "); // "
+                     << _info->atomicFunctionId2Name.at(id)
+                     << "\n";
 
         /**
          * the values of px are now changed
@@ -1788,7 +1825,7 @@ protected:
         markArrayChanged(*px[0]);
     }
 
-    virtual unsigned printDependentMultiAssign(Node& node) {
+    virtual unsigned pushDependentMultiAssign(Node& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::DependentMultiAssign, "Invalid node type")
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() > 0, "Invalid number of arguments")
 
@@ -1804,14 +1841,14 @@ protected:
             }
 
             if (useArg) {
-                printAssignment(node, arg); // ignore other arguments!
+                pushAssignment(node, arg); // ignore other arguments!
                 return 1;
             }
         }
         return 0;
     }
 
-    virtual void printLoopStart(Node& node) {
+    virtual void pushLoopStart(Node& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::LoopStart, "Invalid node type")
 
         auto& lnode = static_cast<LoopStartOperationNode<Base>&> (node);
@@ -1827,19 +1864,19 @@ protected:
             iterationCount = oss.str();
         }
 
-        _code << _spaces << "for("
-                << jj << " = 0; "
-                << jj << " < " << iterationCount << "; "
-                << jj << "++) {\n";
+        _streamStack << _spaces << "for("
+                     << jj << " = 0; "
+                     << jj << " < " << iterationCount << "; "
+                     << jj << "++) {\n";
         _indentation += _spaces;
     }
 
-    virtual void printLoopEnd(Node& node) {
+    virtual void pushLoopEnd(Node& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::LoopEnd, "Invalid node type")
 
         _indentation.resize(_indentation.size() - _spaces.size());
 
-        _code << _indentation << "}\n";
+        _streamStack <<_indentation << "}\n";
 
         _currentLoops.pop_back();
     }
@@ -1851,48 +1888,48 @@ protected:
     virtual size_t printLoopIndexedDepsUsingLoop(const std::vector<Node*>& variableOrder,
                                                  size_t starti);
 
-    virtual void printLoopIndexedDep(Node& node);
+    virtual void pushLoopIndexedDep(Node& node);
 
-    virtual void printLoopIndexedIndep(Node& node) {
+    virtual void pushLoopIndexedIndep(Node& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::LoopIndexedIndep, "Invalid node type")
         CPPADCG_ASSERT_KNOWN(node.getInfo().size() == 1, "Invalid number of information elements for loop indexed independent operation")
 
         // CGLoopIndexedIndepOp
         size_t pos = node.getInfo()[1];
         const IndexPattern* ip = _info->loopIndependentIndexPatterns[pos];
-        _code << _nameGen->generateIndexedIndependent(node, getVariableID(node), *ip);
+        _streamStack <<_nameGen->generateIndexedIndependent(node, getVariableID(node), *ip);
     }
 
-    virtual void printLoopIndexedTmp(Node& node) {
+    virtual void pushLoopIndexedTmp(Node& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::LoopIndexedTmp, "Invalid node type")
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 2, "Invalid number of arguments for loop indexed temporary operation")
         Node* tmpVar = node.getArguments()[0].getOperation();
         CPPADCG_ASSERT_KNOWN(tmpVar != nullptr && tmpVar->getOperationType() == CGOpCode::TmpDcl, "Invalid arguments for loop indexed temporary operation")
 
-        print(node.getArguments()[1]);
+        push(node.getArguments()[1]);
     }
 
-    virtual void printTmpVar(Node& node) {
+    virtual void pushTmpVar(Node& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::Tmp, "Invalid node type")
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() > 0, "Invalid number of arguments for temporary variable usage operation")
         Node* tmpVar = node.getArguments()[0].getOperation();
         CPPADCG_ASSERT_KNOWN(tmpVar != nullptr && tmpVar->getOperationType() == CGOpCode::TmpDcl, "Invalid arguments for loop indexed temporary operation")
 
-        _code << *tmpVar->getName();
+        _streamStack <<*tmpVar->getName();
     }
 
-    virtual void printIndexAssign(Node& node) {
+    virtual void pushIndexAssign(Node& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::IndexAssign, "Invalid node type")
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() > 0, "Invalid number of arguments for an index assignment operation")
 
         auto& inode = static_cast<IndexAssignOperationNode<Base>&> (node);
 
         const IndexPattern& ip = inode.getIndexPattern();
-        _code << _indentation << (*inode.getIndex().getName())
+        _streamStack <<_indentation << (*inode.getIndex().getName())
                 << " = " << indexPattern2String(ip, inode.getIndexPatternIndexes()) << ";\n";
     }
 
-    virtual void printIndexCondExprOp(Node& node) {
+    virtual void pushIndexCondExprOp(Node& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::IndexCondExpr, "Invalid node type")
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 1, "Invalid number of arguments for an index condition expression operation")
         CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != nullptr, "Invalid argument for an index condition expression operation")
@@ -1906,7 +1943,7 @@ protected:
         printIndexCondExpr(_code, info, index);
     }
 
-    virtual void printStartIf(Node& node) {
+    virtual void pushStartIf(Node& node) {
         /**
          * the first argument is the condition, following arguments are
          * just extra dependencies that must be defined outside the if
@@ -1915,14 +1952,14 @@ protected:
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() >= 1, "Invalid number of arguments for an 'if start' operation")
         CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != nullptr, "Invalid argument for an 'if start' operation")
 
-        _code << _indentation << "if(";
-        printIndexCondExprOp(*node.getArguments()[0].getOperation());
-        _code << ") {\n";
+        _streamStack <<_indentation << "if(";
+        pushIndexCondExprOp(*node.getArguments()[0].getOperation());
+        _streamStack << ") {\n";
 
         _indentation += _spaces;
     }
 
-    virtual void printElseIf(Node& node) {
+    virtual void pushElseIf(Node& node) {
         /**
          * the first argument is the condition, the second argument is the
          * if start node, the following arguments are assignments in the
@@ -1935,14 +1972,14 @@ protected:
 
         _indentation.resize(_indentation.size() - _spaces.size());
 
-        _code << _indentation << "} else if(";
-        printIndexCondExprOp(*node.getArguments()[1].getOperation());
-        _code << ") {\n";
+        _streamStack <<_indentation << "} else if(";
+        pushIndexCondExprOp(*node.getArguments()[1].getOperation());
+        _streamStack << ") {\n";
 
         _indentation += _spaces;
     }
 
-    virtual void printElse(Node& node) {
+    virtual void pushElse(Node& node) {
         /**
          * the first argument is the  if start node, the following arguments
          * are assignments in the previous if branch
@@ -1952,20 +1989,20 @@ protected:
 
         _indentation.resize(_indentation.size() - _spaces.size());
 
-        _code << _indentation << "} else {\n";
+        _streamStack <<_indentation << "} else {\n";
 
         _indentation += _spaces;
     }
 
-    virtual void printEndIf(Node& node) {
+    virtual void pushEndIf(Node& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::EndIf, "Invalid node type for an 'end if' operation")
 
         _indentation.resize(_indentation.size() - _spaces.size());
 
-        _code << _indentation << "}\n";
+        _streamStack <<_indentation << "}\n";
     }
 
-    virtual void printCondResult(Node& node) {
+    virtual void pushCondResult(Node& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::CondResult, "Invalid node type")
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 2, "Invalid number of arguments for an assignment inside an if/else operation")
         CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != nullptr, "Invalid argument for an an assignment inside an if/else operation")
@@ -1976,7 +2013,7 @@ protected:
         printAssignment(nodeArg);
     }
 
-    virtual void printUserCustom(Node& node) {
+    virtual void pushUserCustom(Node& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::UserCustom, "Invalid node type")
 
         throw CGException("Unable to generate C source code for user custom operation nodes.");
@@ -1991,18 +2028,27 @@ protected:
     }
 
     virtual void printParameter(const Base& value) {
+        writeParameter(value, _code);
+    }
+
+    virtual void pushParameter(const Base& value) {
+        writeParameter(value, _streamStack);
+    }
+
+    template<class Output>
+    void writeParameter(const Base& value, Output& output) {
         // make sure all digits of floating point values are printed
         std::ostringstream os;
         os << std::setprecision(_parameterPrecision) << value;
 
         std::string number = os.str();
-        _code << number;
+        output << number;
 
         if (std::abs(value) > Base(0) && value != Base(1) && value != Base(-1)) {
             if (number.find('.') == std::string::npos && number.find('e') == std::string::npos) {
                 // also make sure there is always a '.' after the number in
                 // order to avoid integer overflows
-                _code << '.';
+                output << '.';
             }
         }
     }

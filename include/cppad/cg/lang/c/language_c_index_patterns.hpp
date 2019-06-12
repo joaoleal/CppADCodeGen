@@ -71,7 +71,7 @@ inline void LanguageC<Base>::printRandomIndexPatternDeclaration(std::ostringstre
             os << indentation;
             printStaticIndexArray(os, ip->getName(), y);
         } else {
-            CPPADCG_ASSERT_UNKNOWN(ip->getType() == IndexPatternType::Random2D);
+            CPPADCG_ASSERT_UNKNOWN(ip->getType() == IndexPatternType::Random2D)
             /**
              * 2D
              */
@@ -206,7 +206,7 @@ inline std::string LanguageC<Base>::indexPattern2String(const IndexPattern& ip,
     switch (ip.getType()) {
         case IndexPatternType::Linear: // y = x * a + b
         {
-            CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes");
+            CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes")
             const auto& lip = static_cast<const LinearIndexPattern&> (ip);
             return linearIndexPattern2String(lip, *indexes[0]);
         }
@@ -216,7 +216,7 @@ inline std::string LanguageC<Base>::indexPattern2String(const IndexPattern& ip,
             const auto* lip = static_cast<const SectionedIndexPattern*> (&ip);
             const std::map<size_t, IndexPattern*>& sections = lip->getLinearSections();
             size_t sSize = sections.size();
-            CPPADCG_ASSERT_UNKNOWN(sSize > 1);
+            CPPADCG_ASSERT_UNKNOWN(sSize > 1)
 
             auto its = sections.begin();
             for (size_t s = 0; s < sSize - 1; s++) {

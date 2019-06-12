@@ -20,7 +20,7 @@ namespace CppAD {
 namespace cg {
 
 template<class Base>
-void LanguageC<Base>::printArrayCreationOp(OperationNode<Base>& array) {
+void LanguageC<Base>::pushArrayCreationOp(OperationNode <Base>& array) {
     CPPADCG_ASSERT_KNOWN(array.getArguments().size() > 0, "Invalid number of arguments for array creation operation")
     const size_t id = getVariableID(array);
     const std::vector<Argument<Base> >& args = array.getArguments();
@@ -34,7 +34,7 @@ void LanguageC<Base>::printArrayCreationOp(OperationNode<Base>& array) {
 
         if (newValue) {
             if (firstElement) {
-                _code << _indentation << auxArrayName_ << " = " << _nameGen->generateTemporaryArray(array, getVariableID(array)) << "; // size: " << args.size() << "\n";
+                _streamStack << _indentation << auxArrayName_ << " = " << _nameGen->generateTemporaryArray(array, getVariableID(array)) << "; // size: " << args.size() << "\n";
                 firstElement = false;
             }
 
@@ -43,9 +43,9 @@ void LanguageC<Base>::printArrayCreationOp(OperationNode<Base>& array) {
 
             if (newI == i) {
                 // individual element assignment
-                _code << _indentation << auxArrayName_ << "[" << i << "] = ";
-                print(args[i]);
-                _code << ";\n";
+                _streamStack << _indentation << auxArrayName_ << "[" << i << "] = ";
+                push(args[i]);
+                _streamStack << ";\n";
 
                 _tmpArrayValues[startPos + i] = &args[i];
 
@@ -57,7 +57,7 @@ void LanguageC<Base>::printArrayCreationOp(OperationNode<Base>& array) {
 }
 
 template<class Base>
-void LanguageC<Base>::printSparseArrayCreationOp(OperationNode<Base>& array) {
+void LanguageC<Base>::pushSparseArrayCreationOp(OperationNode <Base>& array) {
     const std::vector<size_t>& info = array.getInfo();
     CPPADCG_ASSERT_KNOWN(!info.empty(), "Invalid number of information elements for sparse array creation operation")
 
@@ -78,7 +78,7 @@ void LanguageC<Base>::printSparseArrayCreationOp(OperationNode<Base>& array) {
 
         if (newValue) {
             if (firstElement) {
-                _code << _indentation << auxArrayName_ << " = " << _nameGen->generateTemporarySparseArray(array, getVariableID(array))
+                _streamStack << _indentation << auxArrayName_ << " = " << _nameGen->generateTemporarySparseArray(array, getVariableID(array))
                         << "; // nnz: " << args.size() << "  size:" << info[0] << "\n";
                 firstElement = false;
             }
@@ -88,22 +88,22 @@ void LanguageC<Base>::printSparseArrayCreationOp(OperationNode<Base>& array) {
 
             if (newI == i) {
                 // individual element assignment
-                _code << _indentation << auxArrayName_ << "[" << i << "] = ";
-                print(args[i]);
-                _code << "; ";
+                _streamStack << _indentation << auxArrayName_ << "[" << i << "] = ";
+                push(args[i]);
+                _streamStack << "; ";
                 // print indexes (location of values)
-                _code << _C_SPARSE_INDEX_ARRAY << "[";
-                if (startPos != 0) _code << startPos << "+";
-                _code << i << "] = " << info[i + 1] << ";\n";
+                _streamStack << _C_SPARSE_INDEX_ARRAY << "[";
+                if (startPos != 0) _streamStack << startPos << "+";
+                _streamStack << i << "] = " << info[i + 1] << ";\n";
 
                 _tmpSparseArrayValues[startPos + i] = &args[i];
 
             } else {
                 // print indexes (location of values)
                 for (size_t j = i; j < newI; j++) {
-                    _code << _indentation << _C_SPARSE_INDEX_ARRAY << "[";
-                    if (startPos != 0) _code << startPos << "+";
-                    _code << j << "] = " << info[j + 1] << ";\n";
+                    _streamStack << _indentation << _C_SPARSE_INDEX_ARRAY << "[";
+                    if (startPos != 0) _streamStack << startPos << "+";
+                    _streamStack << j << "] = " << info[j + 1] << ";\n";
                 }
 
                 i = newI - 1;
@@ -112,10 +112,10 @@ void LanguageC<Base>::printSparseArrayCreationOp(OperationNode<Base>& array) {
 
         } else {
             // print indexes (location of values)
-            _code << _indentation
-                    << _C_SPARSE_INDEX_ARRAY << "[";
-            if (startPos != 0) _code << startPos << "+";
-            _code << i << "] = " << info[i + 1] << ";\n";
+            _streamStack << _indentation
+                         << _C_SPARSE_INDEX_ARRAY << "[";
+            if (startPos != 0) _streamStack << startPos << "+";
+            _streamStack << i << "] = " << info[i + 1] << ";\n";
         }
 
     }
@@ -284,8 +284,8 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
     /**
      * print the loop
      */
-    _code << _indentation << "for(i = " << starti << "; i < " << i << "; i++) "
-            << auxArrayName_ << "[i] = " << arrayAssign.str() << ";\n";
+    _streamStack << _indentation << "for(i = " << starti << "; i < " << i << "; i++) "
+                 << auxArrayName_ << "[i] = " << arrayAssign.str() << ";\n";
 
     /**
      * update values in the global temporary array
@@ -306,7 +306,7 @@ inline std::string LanguageC<Base>::getTempArrayName(const OperationNode<Base>& 
 }
 
 template<class Base>
-void LanguageC<Base>::printArrayElementOp(OperationNode<Base>& op) {
+void LanguageC<Base>::pushArrayElementOp(OperationNode <Base>& op) {
     CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for array element operation")
     CPPADCG_ASSERT_KNOWN(op.getArguments()[0].getOperation() != nullptr, "Invalid argument for array element operation")
     CPPADCG_ASSERT_KNOWN(op.getInfo().size() == 1, "Invalid number of information indexes for array element operation")
@@ -318,7 +318,7 @@ void LanguageC<Base>::printArrayElementOp(OperationNode<Base>& op) {
     else
         arrayName = _nameGen->generateTemporarySparseArray(arrayOp, getVariableID(arrayOp));
 
-    _code << "(" << arrayName << ")[" << op.getInfo()[0] << "]";
+    _streamStack << "(" << arrayName << ")[" << op.getInfo()[0] << "]";
 }
 
 template<class Base>
@@ -349,29 +349,29 @@ inline void LanguageC<Base>::printArrayStructInit(const std::string& dataArrayNa
 
         if (size > 0) {
             if (firstTime || aName != lastArray.data) {
-                _code << _indentation;
-                _code << dataArrayName << ".data = " << aName << "; ";
+                _streamStack << _indentation;
+                _streamStack << dataArrayName << ".data = " << aName << "; ";
                 lastArray.data = aName;
                 changed = true;
             }
         } else {
             if (firstTime || "NULL" != lastArray.data) {
-                _code << _indentation;
-                _code << dataArrayName << ".data = NULL; ";
+                _streamStack << _indentation;
+                _streamStack << dataArrayName << ".data = NULL; ";
                 lastArray.data = "NULL";
                 changed = true;
             }
         }
 
         if (firstTime || size != lastArray.size) {
-            if (!changed) _code << _indentation;
-            _code << dataArrayName << ".size = " << size << "; ";
+            if (!changed) _streamStack << _indentation;
+            _streamStack << dataArrayName << ".size = " << size << "; ";
             lastArray.size = size;
             changed = true;
         }
         if (firstTime || lastArray.sparse) {
-            if (!changed) _code << _indentation;
-            _code << dataArrayName << ".sparse = " << false << ";";
+            if (!changed) _streamStack << _indentation;
+            _streamStack << dataArrayName << ".sparse = " << false << ";";
             lastArray.sparse = false;
             changed = true;
         }
@@ -383,35 +383,35 @@ inline void LanguageC<Base>::printArrayStructInit(const std::string& dataArrayNa
 
         if (nnz > 0) {
             if (firstTime || aName != lastArray.data) {
-                _code << _indentation;
-                _code << dataArrayName << ".data = " << aName << "; ";
+                _streamStack << _indentation;
+                _streamStack << dataArrayName << ".data = " << aName << "; ";
                 lastArray.data = aName;
                 changed = true;
             }
         } else {
             if (firstTime || "NULL" != lastArray.data) {
-                _code << _indentation;
-                _code << dataArrayName << ".data = NULL; ";
+                _streamStack << _indentation;
+                _streamStack << dataArrayName << ".data = NULL; ";
                 lastArray.data = "NULL";
                 changed = true;
             }
         }
 
         if (firstTime || size != lastArray.size) {
-            if (!changed) _code << _indentation;
-            _code << dataArrayName << ".size = " << size << "; ";
+            if (!changed) _streamStack << _indentation;
+            _streamStack << dataArrayName << ".size = " << size << "; ";
             lastArray.size = size;
             changed = true;
         }
         if (firstTime || !lastArray.sparse) {
-            if (!changed) _code << _indentation;
-            _code << dataArrayName << ".sparse = " << true << "; ";
+            if (!changed) _streamStack << _indentation;
+            _streamStack << dataArrayName << ".sparse = " << true << "; ";
             lastArray.sparse = true;
             changed = true;
         }
         if (firstTime || nnz != lastArray.nnz) {
-            if (!changed) _code << _indentation;
-            _code << dataArrayName << ".nnz = " << nnz << "; ";
+            if (!changed) _streamStack << _indentation;
+            _streamStack << dataArrayName << ".nnz = " << nnz << "; ";
             lastArray.nnz = nnz;
             changed = true;
         }
@@ -419,8 +419,8 @@ inline void LanguageC<Base>::printArrayStructInit(const std::string& dataArrayNa
         if (nnz > 0) {
             size_t id = getVariableID(array);
             if (firstTime || id != lastArray.idx_id) {
-                if (!changed) _code << _indentation;
-                _code << dataArrayName << ".idx = &(" << _C_SPARSE_INDEX_ARRAY << "[" << (id - 1) << "]);";
+                if (!changed) _streamStack << _indentation;
+                _streamStack << dataArrayName << ".idx = &(" << _C_SPARSE_INDEX_ARRAY << "[" << (id - 1) << "]);";
                 lastArray.idx_id = id;
                 changed = true;
             }
@@ -432,7 +432,7 @@ inline void LanguageC<Base>::printArrayStructInit(const std::string& dataArrayNa
     lastArray.scope = _info->scope[array];
 
     if (changed)
-        _code << "\n";
+        _streamStack << "\n";
 }
 
 template<class Base>

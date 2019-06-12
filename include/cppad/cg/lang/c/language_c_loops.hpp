@@ -20,11 +20,11 @@ namespace CppAD {
 namespace cg {
 
 template<class Base>
-void LanguageC<Base>::printLoopIndexedDep(OperationNode<Base>& node) {
+void LanguageC<Base>::pushLoopIndexedDep(OperationNode <Base>& node) {
     CPPADCG_ASSERT_KNOWN(node.getArguments().size() >= 1, "Invalid number of arguments for loop indexed dependent operation")
 
     // LoopIndexedDep
-    print(node.getArguments()[0]);
+    push(node.getArguments()[0]);
 }
 
 template<class Base>
@@ -152,14 +152,14 @@ inline size_t LanguageC<Base>::printLoopIndexedDepsUsingLoop(const std::vector<O
      * print the loop
      */
     size_t depVarCount = i - starti;
-    _code << _indentation << "for(i = 0; i < " << depVarCount << "; i++) ";
-    _code << rightAssign.str() << " ";
+    _streamStack << _indentation << "for(i = 0; i < " << depVarCount << "; i++) ";
+    _streamStack << rightAssign.str() << " ";
     if (refAssignOrAdd == 1) {
-        _code << "+=";
+        _streamStack << "+=";
     } else {
-        _code << _depAssignOperation;
+        _streamStack << _depAssignOperation;
     }
-    _code << " ";
+    _streamStack << " ";
 
     std::string arrayName;
     if (refArray->getOperationType() == CGOpCode::ArrayCreation)
@@ -167,7 +167,7 @@ inline size_t LanguageC<Base>::printLoopIndexedDepsUsingLoop(const std::vector<O
     else
         arrayName = _nameGen->generateTemporarySparseArray(*refArray, getVariableID(*refArray));
 
-    _code << "(" << arrayName << ")[i + " << startArrayIndex << "];\n";
+    _streamStack << "(" << arrayName << ")[i + " << startArrayIndex << "];\n";
 
     return i - 1;
 }

@@ -119,6 +119,7 @@
 #include <cppad/cg/variable_name_generator.hpp>
 #include <cppad/cg/job_timer.hpp>
 #include <cppad/cg/lang/language.hpp>
+#include <cppad/cg/lang/lang_stream_stack.hpp>
 #include <cppad/cg/scope_path_element.hpp>
 #include <cppad/cg/array_id_compresser.hpp>
 #include <cppad/cg/patterns/loop_position.hpp>
