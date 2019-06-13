@@ -180,7 +180,7 @@ public:
                 out << index << "==" << min;
             } else if (min == 0) {
                 out << index << "≤" << max;
-            } else if (max == std::numeric_limits<size_t>::max()) {
+            } else if (max == (std::numeric_limits<size_t>::max)()) {
                 out << min << "≤" << index;
             } else {
                 if (infoSize != 2)

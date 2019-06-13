@@ -441,7 +441,7 @@ std::vector<size_t> createIndexConditionExpression(const std::set<size_t>& itera
                     info.push_back(minNew->first);
 
                 if (max->first == maxIter)
-                    info.push_back(std::numeric_limits<size_t>::max());
+                    info.push_back((std::numeric_limits<size_t>::max)());
                 else
                     info.push_back(maxNew->first);
             }

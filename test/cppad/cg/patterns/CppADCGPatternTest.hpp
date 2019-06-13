@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -57,7 +58,7 @@ public:
         //this->verbose_ = true;
     }
 
-    virtual void TearDown() {
+    void TearDown() override {
         modelMem_.reset(nullptr);
 
         CppADCGTest::TearDown();
@@ -69,7 +70,7 @@ public:
 
     void setModel(std::vector<ADCGD> (*model)(const std::vector<ADCGD>& x, size_t repeat)) {
         modelMem_.reset(new DefaultPatternTestModel<CG<Base> >(model));
-        setModel(*modelMem_.get());
+        setModel(*modelMem_);
     }
 
     void testPatternDetection(size_t m,
@@ -193,14 +194,14 @@ public:
         for (size_t j = 0; j < xb.size(); j++)
             x[j] = xb[j];
         CppAD::Independent(x);
-        if (xNorm_.size() > 0) {
+        if (!xNorm_.empty()) {
             assert(x.size() == xNorm_.size());
             for (size_t j = 0; j < x.size(); j++)
                 x[j] *= xNorm_[j];
         }
 
         std::vector<ADCGD> y = model_->evaluateModel(x, repeat);
-        if (eqNorm_.size() > 0) {
+        if (!eqNorm_.empty()) {
             assert(y.size() == eqNorm_.size());
             for (size_t i = 0; i < y.size(); i++)
                 y[i] /= eqNorm_[i];
@@ -277,16 +278,15 @@ public:
         map<size_t, map<size_t, set<size_t> > > orderedCalcLoops;
 
         const std::vector<Loop<Base>*>& calcLoops = matcher.getLoops();
-        for (size_t l = 0; l < calcLoops.size(); l++) {
-            Loop<Base>* loop = calcLoops[l];
-            size_t minDep = std::numeric_limits<size_t>::max();
+        for (auto loop : calcLoops) {
+            size_t minDep = (std::numeric_limits<size_t>::max)();
 
             map<size_t, set<size_t> > dependents;
             set<EquationPattern<Base>*>::const_iterator iteq;
             for (iteq = loop->equations.begin(); iteq != loop->equations.end(); ++iteq) {
                 EquationPattern<Base>* eq = *iteq;
                 size_t minEqDep = *eq->dependents.begin();
-                minDep = std::min(minDep, *eq->dependents.begin());
+                minDep = std::min<size_t>(minDep, *eq->dependents.begin());
                 dependents[minEqDep] = eq->dependents;
             }
 
@@ -298,21 +298,19 @@ public:
         //  - expected
         bool defined = false;
         map<size_t, map<size_t, set<size_t> > > orderedExpectedLoops;
-        for (size_t l = 0; l < loops.size(); l++) {
-            const std::vector<set<size_t> >& eqPatterns = loops[l];
-
+        for (const auto& eqPatterns : loops) {
             if (!eqPatterns.empty()) {
                 defined = true;
                 /**
                  * check every equation
                  */
-                size_t minDep = std::numeric_limits<size_t>::max();
+                size_t minDep = (std::numeric_limits<size_t>::max)();
 
                 map<size_t, set<size_t> > dependents;
-                for (size_t eq = 0; eq < eqPatterns.size(); eq++) {
-                    size_t minEqDep = *eqPatterns[eq].begin();
-                    minDep = std::min(minDep, *eqPatterns[eq].begin());
-                    dependents[minEqDep] = eqPatterns[eq];
+                for (const auto& eqPattern : eqPatterns) {
+                    size_t minEqDep = *eqPattern.begin();
+                    minDep = std::min<size_t>(minDep, *eqPattern.begin());
+                    dependents[minEqDep] = eqPattern;
                 }
                 orderedExpectedLoops[minDep] = dependents;
             }
@@ -335,8 +333,7 @@ public:
 
         } else {
             ASSERT_EQ(matcher.getEquationPatterns().size(), depCandidates.size());
-            for (size_t eq = 0; eq < matcher.getEquationPatterns().size(); eq++) {
-                EquationPattern<Base>* eqp = matcher.getEquationPatterns()[eq];
+            for (auto eqp : matcher.getEquationPatterns()) {
                 ASSERT_EQ(eqp->dependents.size(), repeat);
             }
         }
@@ -422,9 +419,9 @@ public:
         std::unique_ptr<GenericModel<double> > modelL;
         if (loadModels) {
             modelL = dynamicLibL->model(libBaseName + "Loops");
-            ASSERT_TRUE(modelL.get() != nullptr);
-            for (size_t i = 0; i < atoms_.size(); i++)
-                modelL->addAtomicFunction(*atoms_[i]);
+            ASSERT_TRUE(modelL != nullptr);
+            for (auto& atom : atoms_)
+                modelL->addAtomicFunction(*atom);
         }
         /**
          * Without the loops
@@ -463,8 +460,8 @@ public:
         std::unique_ptr<GenericModel<double> > model;
         if (loadModels) {
             model = dynamicLib->model(libBaseName + "NoLoops");
-            for (size_t i = 0; i < atoms_.size(); i++)
-                model->addAtomicFunction(*atoms_[i]);
+            for (auto& atom : atoms_)
+                model->addAtomicFunction(*atom);
         }
 
         if (!loadModels)

@@ -351,7 +351,7 @@ public:
     inline BidirGraph<Base> findPathGraph(Node& root,
                                           Node& target,
                                           size_t& bifurcations,
-                                          size_t maxBifurcations = std::numeric_limits<size_t>::max());
+                                          size_t maxBifurcations = (std::numeric_limits<size_t>::max)());
 
     /**************************************************************************
      *                       Source code generation

@@ -629,7 +629,7 @@ public:
                 out << index << " == " << min;
             } else if (min == 0) {
                 out << index << " \\le " << max;
-            } else if (max == std::numeric_limits<size_t>::max()) {
+            } else if (max == (std::numeric_limits<size_t>::max)()) {
                 out << min << " \\le " << index;
             } else {
                 if (infoSize != 2)

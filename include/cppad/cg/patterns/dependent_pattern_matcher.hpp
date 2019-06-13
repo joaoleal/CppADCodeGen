@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -121,8 +122,8 @@ public:
         idCounter_(0),
         origShareNodeId_(*handler_),
         color_(0) {
-        CPPADCG_ASSERT_UNKNOWN(independents_.size() > 0);
-        CPPADCG_ASSERT_UNKNOWN(independents_[0].getCodeHandler() != nullptr);
+        CPPADCG_ASSERT_UNKNOWN(independents_.size() > 0)
+        CPPADCG_ASSERT_UNKNOWN(independents_[0].getCodeHandler() != nullptr)
         equations_.reserve(relatedDepCandidates_.size());
         origShareNodeId_.adjustSize();
     }
@@ -195,7 +196,7 @@ private:
                      * since both operations which use indexed independents
                      * have no operation, consequently an alias is used
                      */
-                    CPPADCG_ASSERT_UNKNOWN(handler_ == dependents_[iDep].getCodeHandler());
+                    CPPADCG_ASSERT_UNKNOWN(handler_ == dependents_[iDep].getCodeHandler())
                     dependents_[iDep] = CG<Base>(*handler_->makeNode(CGOpCode::Alias, *node));
                 }
             }
@@ -266,7 +267,7 @@ private:
             }
 
             // create a loop for this equation
-            Loop<Base>* loop = new Loop<Base>(*eq);
+            auto* loop = new Loop<Base>(*eq);
             loops_.push_back(loop);
             equation2Loop_[eq] = loop;
         }
@@ -285,12 +286,12 @@ private:
          */
         for (size_t l1 = 0; l1 < loops_.size(); l1++) {
             Loop<Base>* loop1 = loops_[l1];
-            CPPADCG_ASSERT_UNKNOWN(loop1->equations.size() == 1);
+            CPPADCG_ASSERT_UNKNOWN(loop1->equations.size() == 1)
             EquationPattern<Base>* eq1 = *loop1->equations.begin();
 
             for (size_t l2 = l1 + 1; l2 < loops_.size(); l2++) {
                 Loop<Base>* loop2 = loops_[l2];
-                CPPADCG_ASSERT_UNKNOWN(loop2->equations.size() == 1);
+                CPPADCG_ASSERT_UNKNOWN(loop2->equations.size() == 1)
                 EquationPattern<Base>* eq2 = *loop2->equations.begin();
 
                 UniqueEquationPair<Base> eqRel(eq1, eq2);
@@ -303,7 +304,7 @@ private:
                 /**
                  * There are shared variables among the two equation patterns
                  */
-                TotalOps2validDepsType* totalOps2validDeps = new TotalOps2validDepsType();
+                auto* totalOps2validDeps = new TotalOps2validDepsType();
                 totalOps2validDepsMem.push_back(totalOps2validDeps);
                 size_t maxOps = 0; // the maximum number of shared operations between two dependents
 
@@ -340,7 +341,7 @@ private:
 
                         DepPairType depRel(dep1, dep2);
                         (*totalOps2validDeps)[totalOps][depRel] = &sharedTmps;
-                        maxOps = std::max(maxOps, totalOps);
+                        maxOps = std::max<size_t>(maxOps, totalOps);
                     }
 
                     if (!canCombine) break;
@@ -414,7 +415,7 @@ private:
                     loop1->merge(*loop2, indexedLoopRelations, nonIndexedLoopRelations);
 
                     typename std::vector<Loop<Base>*>::const_iterator it = std::find(loops_.cbegin(), loops_.cend(), loop2);
-                    CPPADCG_ASSERT_UNKNOWN(it != loops_.end());
+                    CPPADCG_ASSERT_UNKNOWN(it != loops_.end())
                     loops_.erase(it);
                     delete loop2;
 
@@ -713,10 +714,9 @@ private:
              * determine which equations belong to loops
              */
             const std::vector<std::vector<LoopPosition> >& ldeps = loopModel->getDependentIndexes();
-            for (size_t eq = 0; eq < ldeps.size(); eq++) {
-                for (size_t it = 0; it < ldeps[eq].size(); it++) {
-                    const LoopPosition& pos = ldeps[eq][it];
-                    if (pos.original != std::numeric_limits<size_t>::max()) {// some equations are not present in all iteration
+            for (const auto& ldep : ldeps) {
+                for (const auto& pos : ldep) {
+                    if (pos.original != (std::numeric_limits<size_t>::max)()) {// some equations are not present in all iteration
                         inLoop[pos.original] = true;
                         eqInLoopCount++;
                     }
@@ -747,7 +747,7 @@ private:
                 }
             }
         }
-        CPPADCG_ASSERT_UNKNOWN(inl == nonLoopEq);
+        CPPADCG_ASSERT_UNKNOWN(inl == nonLoopEq)
 
         /**
          * Place new dependents for the temporary variables used by the loops
@@ -807,12 +807,12 @@ private:
                     continue;
                 }
 
-                if (eqCurr_ == nullptr || used.size() > 0) {
+                if (eqCurr_ == nullptr || !used.empty()) {
                     eqCurr_ = new EquationPattern<Base>(dependents_[iDepRef], iDepRef);
                     equations_.push_back(eqCurr_);
                 }
 
-                std::set<size_t>::const_iterator it = itRef;
+                auto it = itRef;
                 for (++it; it != candidates.end(); ++it) {
                     size_t iDep = *it;
                     // check if it has already been used
@@ -960,10 +960,10 @@ private:
 
         std::set<size_t>& deps = id2Deps[id];
 
-        if (deps.size() == 0) {
+        if (deps.empty()) {
             deps.insert(dep); // here for the first time
         } else {
-            std::pair < std::set<size_t>::iterator, bool> added = deps.insert(dep);
+            auto added = deps.insert(dep);
             if (!added.second) {
                 return; // already been here
             }
@@ -1318,7 +1318,7 @@ private:
 
         } else {
             // dependent 1 and dependent 2 not in any relation set
-            set<size_t>* related = new std::set<size_t>();
+            auto* related = new std::set<size_t>();
             dependentRelations.insert(related);
             related->insert(dep1);
             related->insert(dep2);

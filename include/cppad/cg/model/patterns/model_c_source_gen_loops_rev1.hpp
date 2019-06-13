@@ -262,12 +262,12 @@ void ModelCSourceGen<Base>::prepareSparseReverseOneWithLoops(const std::map<size
 
                     for (const auto& itc : rowInfo.indexedPositions) {
                         const std::vector<size_t>& positionsC = itc.second;
-                        if (positionsC[it] != std::numeric_limits<size_t>::max()) // not all elements are requested for all iterations
+                        if (positionsC[it] != (std::numeric_limits<size_t>::max)()) // not all elements are requested for all iterations
                             positions.insert(positionsC[it]);
                     }
                     for (const auto& itc : rowInfo.nonIndexedPositions) {
                         const std::vector<size_t>& positionsC = itc.second;
-                        if (positionsC[it] != std::numeric_limits<size_t>::max()) // not all elements are requested for all iterations
+                        if (positionsC[it] != (std::numeric_limits<size_t>::max)()) // not all elements are requested for all iterations
                             positions.insert(positionsC[it]);
                     }
 

@@ -597,7 +597,7 @@ std::map<JacobianTermContrib<Base>, std::set<size_t> > groupForOneByContrib(cons
             for (size_t iter = 0; iter < nIterations; iter++) {
                 // it is present in all iterations but the user might request fewer elements in the Jacobian
                 // (it may be because the equation might not exist for this iteration)
-                if (positions[iter] != std::numeric_limits<size_t>::max()) {
+                if (positions[iter] != (std::numeric_limits<size_t>::max)()) {
                     size_t j = indexedIndepIndexes[tapeJ][iter].original;
                     jcols[j].indexed.insert(tapeJ);
                     jcol2Iter[j].insert(iter);
@@ -615,7 +615,7 @@ std::map<JacobianTermContrib<Base>, std::set<size_t> > groupForOneByContrib(cons
             for (size_t iter = 0; iter < nIterations; iter++) {
                 // it is present in all iterations but the user might request fewer elements in the Jacobian
                 // (it may be because the equation might not exist for this iteration)
-                if (positions[iter] != std::numeric_limits<size_t>::max()) {
+                if (positions[iter] != (std::numeric_limits<size_t>::max)()) {
                     used = true;
                     jcol2Iter.insert(iter);
                 }
@@ -737,8 +737,8 @@ std::vector<std::pair<CG<Base>, IndexPattern*> > generateForwardOneGroupOps(Code
                 const std::vector<LoopPosition>& tapeJPos = indexedIndepIndexes[tapeJ];
                 iter2jcols.clear();
                 for (size_t iter : group.iterations) {
-                    if (positions[iter] != std::numeric_limits<size_t>::max()) { // the element must have been requested
-                        CPPADCG_ASSERT_UNKNOWN(tapeJPos[iter].original != std::numeric_limits<size_t>::max()); // the equation must exist for this iteration
+                    if (positions[iter] != (std::numeric_limits<size_t>::max)()) { // the element must have been requested
+                        CPPADCG_ASSERT_UNKNOWN(tapeJPos[iter].original != (std::numeric_limits<size_t>::max)()); // the equation must exist for this iteration
                         iter2jcols[iter] = tapeJPos[iter].original;
                     }
                 }
@@ -766,8 +766,8 @@ std::vector<std::pair<CG<Base>, IndexPattern*> > generateForwardOneGroupOps(Code
 
             iter2jcols.clear();
             for (size_t iter : group.iterations) {
-                if (positions[iter] != std::numeric_limits<size_t>::max()) {// the element must have been requested
-                    CPPADCG_ASSERT_UNKNOWN(lModel.getDependentIndexes()[tapeI][iter].original != std::numeric_limits<size_t>::max()); // the equation must exist for this iteration
+                if (positions[iter] != (std::numeric_limits<size_t>::max)()) {// the element must have been requested
+                    CPPADCG_ASSERT_UNKNOWN(lModel.getDependentIndexes()[tapeI][iter].original != (std::numeric_limits<size_t>::max)()); // the equation must exist for this iteration
                     iter2jcols[iter] = j;
                 }
             }
@@ -828,7 +828,7 @@ std::pair<CG<Base>, IndexPattern*> createForwardOneElement(CodeHandler<Base>& ha
     for (const std::pair<size_t, size_t>& itIt : iter2jcols) {
         size_t iter = itIt.first;
         size_t jcol = itIt.second;
-        CPPADCG_ASSERT_UNKNOWN(positions[iter] != std::numeric_limits<size_t>::max());
+        CPPADCG_ASSERT_UNKNOWN(positions[iter] != (std::numeric_limits<size_t>::max)());
         locationsIter2Pos[iter] = positions[iter];
         jcol2CompressedLoc[jcol].insert(positions[iter]);
     }

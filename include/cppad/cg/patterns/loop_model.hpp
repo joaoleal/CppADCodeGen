@@ -150,7 +150,7 @@ public:
             for (size_t it = 0; it < iterationCount_; it++) {
                 size_t orig = dependentOrigIndexes[i][it];
                 dependentIndexes_[i][it] = LoopPosition(i, orig);
-                if (orig != std::numeric_limits<size_t>::max()) // some equations are not present in all iterations
+                if (orig != (std::numeric_limits<size_t>::max)()) // some equations are not present in all iterations
                     depOrigIndexes_[orig] = LoopIndexedPosition(dependentIndexes_[i][it].tape,
                                                                 dependentIndexes_[i][it].original,
                                                                 it);
@@ -167,7 +167,7 @@ public:
         for (size_t i = 0; i < lm; i++) {
             std::set<size_t> iterations;
             for (size_t it = 0; it < iterationCount_; it++) {
-                if (dependentIndexes_[i][it].original != std::numeric_limits<size_t>::max()) {
+                if (dependentIndexes_[i][it].original != (std::numeric_limits<size_t>::max)()) {
                     iterations.insert(it);
                 }
             }
@@ -204,7 +204,7 @@ public:
             for (size_t j = 0; j < nIndexed; j++) {
                 size_t orig = indexedIndepOrigIndexes[j][it];
                 indexedIndepIndexes_[j][it] = LoopPosition(j, orig);
-                if (orig != std::numeric_limits<size_t>::max()) //some variables are not present in all iterations
+                if (orig != (std::numeric_limits<size_t>::max)()) //some variables are not present in all iterations
                     iteration2orig2indexedIndepIndexes_[it][orig].insert(j);
             }
         }
@@ -413,7 +413,7 @@ public:
             std::map<size_t, size_t> indexes;
             for (size_t it = 0; it < iterationCount_; it++) {
                 size_t orig = indexedIndepIndexes_[j][it].original;
-                if (orig != std::numeric_limits<size_t>::max()) // some variables are not present in all iteration
+                if (orig != (std::numeric_limits<size_t>::max)()) // some variables are not present in all iteration
                     indexes[it] = orig;
             }
             indepIndexPatterns_[j] = IndexPattern::detect(indexes);
@@ -424,7 +424,7 @@ public:
             std::map<size_t, size_t> indexes;
             for (size_t it = 0; it < iterationCount_; it++) {
                 size_t e = dependentIndexes_[j][it].original;
-                if (e != std::numeric_limits<size_t>::max()) // some equations are not present in all iteration
+                if (e != (std::numeric_limits<size_t>::max)()) // some equations are not present in all iteration
                     indexes[it] = e;
             }
 

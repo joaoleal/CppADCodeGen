@@ -216,7 +216,7 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
             }
 
             std::unique_ptr<OperationNode<Base>> op2(OperationNode<Base>::makeTemporaryNode(CGOpCode::LoopIndexedIndep, refOp.getInfo(), refOp.getArguments()));
-            op2->getInfo()[1] = std::numeric_limits<size_t>::max(); // just to be safe (this would be the index pattern id in the handler)
+            op2->getInfo()[1] = (std::numeric_limits<size_t>::max)(); // just to be safe (this would be the index pattern id in the handler)
             op2->getArguments().push_back(_info->auxIterationIndexOp);
 
             arrayAssign << _nameGen->generateIndexedIndependent(*op2, 0, *p2dip);
@@ -425,7 +425,7 @@ inline void LanguageC<Base>::printArrayStructInit(const std::string& dataArrayNa
                 changed = true;
             }
         } else {
-            lastArray.idx_id = std::numeric_limits<size_t>::max();
+            lastArray.idx_id = (std::numeric_limits<size_t>::max)();
         }
     }
 

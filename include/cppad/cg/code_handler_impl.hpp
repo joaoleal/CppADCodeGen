@@ -140,8 +140,7 @@ template<class Base>
 size_t CodeHandler<Base>::getIndependentVariableIndex(const Node& var) const {
     CPPADCG_ASSERT_UNKNOWN(var.getOperationType() == CGOpCode::Inv);
 
-    typename std::vector<Node*>::const_iterator it =
-            std::find(_independentVariables.begin(), _independentVariables.end(), &var);
+    auto it = std::find(_independentVariables.begin(), _independentVariables.end(), &var);
     if (it == _independentVariables.end()) {
         throw CGException("Variable not found in the independent variable vector");
     }
@@ -156,7 +155,7 @@ inline size_t CodeHandler<Base>::getOperationTreeVisitId() const {
 
 template<class Base>
 inline void CodeHandler<Base>::startNewOperationTreeVisit() {
-    assert(_idVisit < std::numeric_limits<size_t>::max());
+    assert(_idVisit < (std::numeric_limits<size_t>::max)());
 
     _lastVisit.adjustSize();
     _idVisit++;
@@ -344,7 +343,7 @@ void CodeHandler<Base>::generateCode(std::ostream& out,
     /**
      * determine the variable creation order
      */
-    _scopedVariableOrder.reserve(std::max(size_t(1), _scopes.size()) + 10); // some additional scopes might still be added
+    _scopedVariableOrder.reserve(std::max<size_t>(size_t(1), _scopes.size()) + 10); // some additional scopes might still be added
 
     startNewOperationTreeVisit();
 
@@ -965,7 +964,7 @@ inline bool CodeHandler<Base>::handleTemporaryVarInDiffScopes(Node& code,
 
         if (iterationRegions.size() > 2 ||
             iterationRegions[0] != 0 ||
-            iterationRegions[1] != std::numeric_limits<size_t>::max()) {
+            iterationRegions[1] != (std::numeric_limits<size_t>::max)()) {
             // this temporary variable is not used by all iterations
 
             replaceWithConditionalTempVar(code, *newIterIndexOp, iterationRegions, oldScope, newScope);
@@ -1116,7 +1115,7 @@ inline void CodeHandler<Base>::updateTemporaryVarInDiffScopes(Node& code) {
 
         if (iterationRegions.size() == 2 &&
             (iterationRegions[0] == 0 ||
-             iterationRegions[1] == std::numeric_limits<size_t>::max())) {
+             iterationRegions[1] == (std::numeric_limits<size_t>::max)())) {
             // this temporary variable is used by all iterations
             // there is no need for an 'if'
             restoreTemporaryVar(code);
@@ -1464,7 +1463,7 @@ void CodeHandler<Base>::checkVariableCreation(Node& root) {
             aType == CGOpCode::Else || aType == CGOpCode::EndIf) {
             if (_varId[arg] == 0) {
                 // ID value is not really used but must be non-zero
-                _varId[arg] = std::numeric_limits<size_t>::max();
+                _varId[arg] = (std::numeric_limits<size_t>::max)();
             }
         } else if (aType == CGOpCode::AtomicForward || aType == CGOpCode::AtomicReverse) {
             /**
@@ -1491,12 +1490,12 @@ void CodeHandler<Base>::checkVariableCreation(Node& root) {
 
             if (aType == CGOpCode::AtomicForward) {
                 int p = arg.getInfo()[2];
-                _atomicFunctionsMaxForward[pos] = std::max(_atomicFunctionsMaxForward[pos],
-                                                           p);
+                _atomicFunctionsMaxForward[pos] = std::max<int>(_atomicFunctionsMaxForward[pos],
+                                                                p);
             } else {
                 int p = arg.getInfo()[1];
-                _atomicFunctionsMaxReverse[pos] = std::max(_atomicFunctionsMaxReverse[pos],
-                                                           p);
+                _atomicFunctionsMaxReverse[pos] = std::max<int>(_atomicFunctionsMaxReverse[pos],
+                                                                p);
             }
         }
 
@@ -1511,11 +1510,11 @@ void CodeHandler<Base>::checkVariableCreation(Node& root) {
 
             if (aType == CGOpCode::LoopIndexedIndep) {
                 // ID value not really used but must be non-zero
-                _varId[arg] = std::numeric_limits<size_t>::max();
+                _varId[arg] = (std::numeric_limits<size_t>::max)();
             } else if (aType == CGOpCode::Alias) {
                 return; // should never be added to the evaluation queue
             } else if (aType == CGOpCode::Tmp) {
-                _varId[arg] = std::numeric_limits<size_t>::max();
+                _varId[arg] = (std::numeric_limits<size_t>::max)();
             } else if (aType == CGOpCode::LoopStart ||
                        aType == CGOpCode::LoopEnd ||
                        aType == CGOpCode::StartIf ||
@@ -1529,13 +1528,13 @@ void CodeHandler<Base>::checkVariableCreation(Node& root) {
                 addToEvaluationQueue(arg);
                 if (_varId[arg] == 0) {
                     // ID value is not really used but must be non-zero
-                    _varId[arg] = std::numeric_limits<size_t>::max();
+                    _varId[arg] = (std::numeric_limits<size_t>::max)();
                 }
             } else if (aType == CGOpCode::Pri) {
                 addToEvaluationQueue(arg);
                 if (_varId[arg] == 0) {
                     // ID value is not really used but must be non-zero
-                    _varId[arg] = std::numeric_limits<size_t>::max();
+                    _varId[arg] = (std::numeric_limits<size_t>::max)();
                 }
             } else if (aType == CGOpCode::TmpDcl) {
                 addToEvaluationQueue(arg);
@@ -1556,7 +1555,7 @@ void CodeHandler<Base>::checkVariableCreation(Node& root) {
                     } else if (aType == CGOpCode::LoopIndexedDep ||
                                aType == CGOpCode::LoopIndexedTmp) {
                         // ID value not really used but must be non-zero
-                        _varId[arg] = std::numeric_limits<size_t>::max();
+                        _varId[arg] = (std::numeric_limits<size_t>::max)();
                     } else if (aType == CGOpCode::ArrayCreation) {
                         // a temporary array
                         size_t arraySize = arg.getArguments().size();

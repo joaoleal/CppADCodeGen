@@ -27,8 +27,8 @@ public:
     unsigned short count; // number of times to be added to that location
 
     inline HessianElement() :
-        location(std::numeric_limits<size_t>::max()),
-        row(std::numeric_limits<size_t>::max()),
+        location((std::numeric_limits<size_t>::max)()),
+        row((std::numeric_limits<size_t>::max)()),
         count(0) {
     }
 

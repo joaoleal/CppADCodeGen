@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2014 Ciengis
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -60,21 +61,21 @@ inline void LanguageLatex<Base>::printRandomIndexPatternDeclaration(std::ostring
             /**
              * 1D
              */
-            Random1DIndexPattern* ip1 = static_cast<Random1DIndexPattern*> (ip);
+            auto* ip1 = static_cast<Random1DIndexPattern*> (ip);
             const std::map<size_t, size_t>& x2y = ip1->getValues();
 
             std::vector<size_t> y(x2y.rbegin()->first + 1);
-            for (const std::pair<size_t, size_t>& p : x2y)
+            for (const auto& p : x2y)
                 y[p.first] = p.second;
 
             os << indentation;
             printStaticIndexArray(os, ip->getName(), y);
         } else {
-            CPPADCG_ASSERT_UNKNOWN(ip->getType() == IndexPatternType::Random2D);
+            CPPADCG_ASSERT_UNKNOWN(ip->getType() == IndexPatternType::Random2D)
             /**
              * 2D
              */
-            Random2DIndexPattern* ip2 = static_cast<Random2DIndexPattern*> (ip);
+            auto* ip2 = static_cast<Random2DIndexPattern*> (ip);
             os << indentation;
             printStaticIndexMatrix(os, ip->getName(), ip2->getValues());
         }
@@ -110,7 +111,7 @@ void LanguageLatex<Base>::printStaticIndexMatrix(std::ostringstream& os,
 
         for (it = values.begin(); it != values.end(); ++it) {
             if (!it->second.empty())
-                n = std::max(n, it->second.rbegin()->first + 1);
+                n = std::max<size_t>(n, it->second.rbegin()->first + 1);
         }
     }
 
@@ -162,19 +163,19 @@ inline std::string LanguageLatex<Base>::indexPattern2String(const IndexPattern& 
     switch (ip.getType()) {
         case IndexPatternType::Linear: // y = x * a + b
         {
-            CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes");
-            const LinearIndexPattern& lip = static_cast<const LinearIndexPattern&> (ip);
+            CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes")
+            const auto& lip = static_cast<const LinearIndexPattern&> (ip);
             return linearIndexPattern2String(lip, *indexes[0]);
         }
         case IndexPatternType::Sectioned:
         {
-            CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes");
-            const SectionedIndexPattern* lip = static_cast<const SectionedIndexPattern*> (&ip);
+            CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes")
+            const auto* lip = static_cast<const SectionedIndexPattern*> (&ip);
             const std::map<size_t, IndexPattern*>& sections = lip->getLinearSections();
             size_t sSize = sections.size();
-            CPPADCG_ASSERT_UNKNOWN(sSize > 1);
+            CPPADCG_ASSERT_UNKNOWN(sSize > 1)
 
-            std::map<size_t, IndexPattern*>::const_iterator its = sections.begin();
+            auto its = sections.begin();
             for (size_t s = 0; s < sSize - 1; s++) {
                 const IndexPattern* lp = its->second;
                 ++its;
@@ -190,9 +191,9 @@ inline std::string LanguageLatex<Base>::indexPattern2String(const IndexPattern& 
 
         case IndexPatternType::Plane2D: // y = f(x) + f(z)
         {
-            CPPADCG_ASSERT_KNOWN(indexes.size() >= 1, "Invalid number of indexes");
+            CPPADCG_ASSERT_KNOWN(indexes.size() >= 1, "Invalid number of indexes")
             std::string indexExpr;
-            const Plane2DIndexPattern& pip = static_cast<const Plane2DIndexPattern&> (ip);
+            const auto& pip = static_cast<const Plane2DIndexPattern&> (ip);
             bool useParens = pip.getPattern1() != nullptr && pip.getPattern2() != nullptr;
 
             if (useParens) indexExpr += "\\left(";
@@ -211,16 +212,16 @@ inline std::string LanguageLatex<Base>::indexPattern2String(const IndexPattern& 
         }
         case IndexPatternType::Random1D:
         {
-            CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes");
-            const Random1DIndexPattern& rip = static_cast<const Random1DIndexPattern&> (ip);
-            CPPADCG_ASSERT_KNOWN(!rip.getName().empty(), "Invalid name for array");
+            CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes")
+            const auto& rip = static_cast<const Random1DIndexPattern&> (ip);
+            CPPADCG_ASSERT_KNOWN(!rip.getName().empty(), "Invalid name for array")
             return rip.getName() + "\\left[" + (*indexes[0]->getName()) + "\\right]";
         }
         case IndexPatternType::Random2D:
         {
-            CPPADCG_ASSERT_KNOWN(indexes.size() == 2, "Invalid number of indexes");
-            const Random2DIndexPattern& rip = static_cast<const Random2DIndexPattern&> (ip);
-            CPPADCG_ASSERT_KNOWN(!rip.getName().empty(), "Invalid name for array");
+            CPPADCG_ASSERT_KNOWN(indexes.size() == 2, "Invalid number of indexes")
+            const auto& rip = static_cast<const Random2DIndexPattern&> (ip);
+            CPPADCG_ASSERT_KNOWN(!rip.getName().empty(), "Invalid name for array")
             return rip.getName() + "\\left[" + (*indexes[0]->getName()) + "\\right]\\left[" + (*indexes[1]->getName()) + "\\right]";
         }
         default:

@@ -113,11 +113,19 @@ public:
         return (lss << std::to_string(i));
     }
 
+    friend inline LangStreamStack<Base>& operator<<(LangStreamStack<Base>& lss, long long int i) {
+        return (lss << std::to_string(i));
+    }
+
     friend inline LangStreamStack<Base>& operator<<(LangStreamStack<Base>& lss, unsigned int i) {
         return (lss << std::to_string(i));
     }
 
     friend inline LangStreamStack<Base>& operator<<(LangStreamStack<Base>& lss, long unsigned int i) {
+        return (lss << std::to_string(i));
+    }
+
+    friend inline LangStreamStack<Base>& operator<<(LangStreamStack<Base>& lss, long long unsigned int i) {
         return (lss << std::to_string(i));
     }
 

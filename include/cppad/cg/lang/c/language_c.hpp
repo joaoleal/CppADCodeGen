@@ -359,7 +359,7 @@ public:
                                                     int maxForwardOrder = -1,
                                                     int maxReverseOrder = -1) {
         if (maxForwardOrder >= 0 || maxReverseOrder >= 0) {
-            ss << _spaces << "Array " << _ATOMIC_TX << "[" << (std::max(maxForwardOrder, maxReverseOrder) + 1) << "];\n";
+            ss << _spaces << "Array " << _ATOMIC_TX << "[" << (std::max<int>(maxForwardOrder, maxReverseOrder) + 1) << "];\n";
             if (maxForwardOrder >= 0)
                 ss << _spaces << "Array " << _ATOMIC_TY << ";\n";
             if (maxReverseOrder >= 0) {
@@ -530,7 +530,7 @@ public:
                 out << index << " == " << min;
             } else if (min == 0) {
                 out << index << " <= " << max;
-            } else if (max == std::numeric_limits<size_t>::max()) {
+            } else if (max == (std::numeric_limits<size_t>::max)()) {
                 out << min << " <= " << index;
             } else {
                 if (infoSize != 2)
@@ -1231,7 +1231,7 @@ protected:
 
             unsigned lines2 = pushExpressionNoVarCheck(*n);
 
-            lines = std::max(lines, lines2);
+            lines = std::max<unsigned>(lines, lines2);
         }
 
         return lines;

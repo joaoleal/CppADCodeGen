@@ -141,7 +141,7 @@ inline size_t LanguageC<Base>::printLoopIndexedDepsUsingLoop(const std::vector<O
     }
 
     std::unique_ptr<OperationNode<Base>> op2(OperationNode<Base>::makeTemporaryNode(CGOpCode::LoopIndexedDep, ref.getInfo(), ref.getArguments()));
-    op2->getInfo()[1] = std::numeric_limits<size_t>::max(); // just to be safe (this would be the index pattern id in the handler)
+    op2->getInfo()[1] = (std::numeric_limits<size_t>::max)(); // just to be safe (this would be the index pattern id in the handler)
     op2->getArguments().push_back(_info->auxIterationIndexOp);
 
     std::ostringstream rightAssign;

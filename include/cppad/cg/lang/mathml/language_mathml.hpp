@@ -478,7 +478,7 @@ public:
                 out << "<mi class='index'>" << index << "</mi><mo>==</mo><mn>" << min << "</nm>";
             } else if (min == 0) {
                 out << "<mi class='index'>" << index << "</mi><mo>&le;</mo><mn>" << max << "</mn>";
-            } else if (max == std::numeric_limits<size_t>::max()) {
+            } else if (max == (std::numeric_limits<size_t>::max)()) {
                 out << "<mn>" << min << "</mn><mo>&le;</mo><mi class='index'>" << index << "</mi>";
             } else {
                 if (infoSize != 2)
@@ -799,7 +799,7 @@ protected:
     }
 
     inline size_t getVariableID(const Node& node) const {
-        return _info->varId[node]; // some of these values are 0 and std::numeric_limits<size_t>::max()
+        return _info->varId[node]; // some of these values are 0 and (std::numeric_limits<size_t>::max)()
     }
 
     inline virtual void printAlgorithmFileStart(std::ostream& out) {

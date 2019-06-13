@@ -139,7 +139,7 @@ void LanguageC<Base>::printStaticIndexMatrix(std::ostringstream& os,
 
         for (it = values.begin(); it != values.end(); ++it) {
             if (!it->second.empty())
-                n = std::max(n, it->second.rbegin()->first + 1);
+                n = std::max<size_t>(n, it->second.rbegin()->first + 1);
         }
     }
 
