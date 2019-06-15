@@ -59,7 +59,7 @@ protected:
     // spaces for 1 level indentation
     const std::string _spaces;
     // information from the code handler (not owned)
-    LanguageGenerationData<Base>* _info;
+    std::unique_ptr<LanguageGenerationData<Base>> _info;
     // current indentation
     std::string _indentation;
     // variable name used for the inlet variable
@@ -93,8 +93,6 @@ protected:
     bool _ignoreZeroDepAssign;
     // the name of the function to be created (if the string is empty no function is created)
     std::string _functionName;
-    // the arguments provided to local functions called by the main function
-    std::string _localFunctionArguments;
     // the maximum number of assignments (~lines) per local function
     size_t _maxAssignmentsPerFunction;
     // the maximum number of operations per variable assignment
@@ -681,13 +679,13 @@ protected:
         _streamStack.clear();
 
         // save some info
-        _info = info.get();
-        _independentSize = info->independent.size();
-        _dependent = &info->dependent;
-        _nameGen = &info->nameGen;
-        _minTemporaryVarID = info->minTemporaryVarID;
-        const ArrayView<CG<Base> >& dependent = info->dependent;
-        const std::vector<Node*>& variableOrder = info->variableOrder;
+        _info = std::move(info);
+        _independentSize = _info->independent.size();
+        _dependent = &_info->dependent;
+        _nameGen = &_info->nameGen;
+        _minTemporaryVarID = _info->minTemporaryVarID;
+        const ArrayView<CG<Base> >& dependent = _info->dependent;
+        const std::vector<Node*>& variableOrder = _info->variableOrder;
 
         _tmpArrayValues.resize(_nameGen->getMaxTemporaryArrayVariableID());
         std::fill(_tmpArrayValues.begin(), _tmpArrayValues.end(), nullptr);
@@ -697,14 +695,14 @@ protected:
         /**
          * generate index array names (might be used for variable names)
          */
-        generateNames4RandomIndexPatterns(info->indexRandomPatterns);
+        generateNames4RandomIndexPatterns(_info->indexRandomPatterns);
 
         /**
          * generate variable names
          */
         //generate names for the independent variables
         for (size_t j = 0; j < _independentSize; j++) {
-            Node& op = *info->independent[j];
+            Node& op = *_info->independent[j];
             if (op.getName() == nullptr) {
                 op.setName(_nameGen->generateIndependent(op, getVariableID(op)));
             }
@@ -716,7 +714,7 @@ protected:
             if (node != nullptr && node->getOperationType() != CGOpCode::LoopEnd && node->getName() == nullptr) {
                 if (node->getOperationType() == CGOpCode::LoopIndexedDep) {
                     size_t pos = node->getInfo()[0];
-                    const IndexPattern* ip = info->loopDependentIndexPatterns[pos];
+                    const IndexPattern* ip = _info->loopDependentIndexPatterns[pos];
                     node->setName(_nameGen->generateIndexedDependent(*node, getVariableID(*node), *ip));
 
                 } else {
@@ -808,7 +806,7 @@ protected:
             /**
              * Source code generation magic!
              */
-            if (info->zeroDependents) {
+            if (_info->zeroDependents) {
                 // zero initial values
                 for (size_t i = 0; i < depArg.size(); i++) {
                     const FuncArgument& a = depArg[i];
@@ -830,7 +828,7 @@ protected:
                 // check if a new function should start
                 if (assignCount >= _maxAssignmentsPerFunction && multiFunction && _currentLoops.empty()) {
                     assignCount = 0;
-                    saveLocalFunction(localFuncNames, localFuncNames.empty() && info->zeroDependents);
+                    saveLocalFunction(localFuncNames, localFuncNames.empty() && _info->zeroDependents);
                 }
 
                 Node& node = *it;
@@ -877,8 +875,8 @@ protected:
             _code << generateIndependentVariableDeclaration() << "\n";
             _code << generateDependentVariableDeclaration() << "\n";
             _code << generateTemporaryVariableDeclaration(true, false,
-                                                          info->atomicFunctionsMaxForward,
-                                                          info->atomicFunctionsMaxReverse) << "\n";
+                                                          _info->atomicFunctionsMaxForward,
+                                                          _info->atomicFunctionsMaxReverse) << "\n";
             _nameGen->prepareCustomFunctionVariables(_code);
             for (auto & localFuncName : localFuncNames) {
                 _code << _spaces << localFuncName << "(" << localFuncArgs_ << ");\n";
@@ -935,9 +933,9 @@ protected:
                 _nameGen->customFunctionVariableDeclarations(_ss);
                 _ss << generateIndependentVariableDeclaration() << "\n";
                 _ss << generateDependentVariableDeclaration() << "\n";
-                _ss << generateTemporaryVariableDeclaration(false, info->zeroDependents,
-                                                            info->atomicFunctionsMaxForward,
-                                                            info->atomicFunctionsMaxReverse) << "\n";
+                _ss << generateTemporaryVariableDeclaration(false, _info->zeroDependents,
+                                                            _info->atomicFunctionsMaxForward,
+                                                            _info->atomicFunctionsMaxReverse) << "\n";
                 _nameGen->prepareCustomFunctionVariables(_ss);
                 _ss << _code.str();
                 _nameGen->finalizeCustomFunctionVariables(_ss);
