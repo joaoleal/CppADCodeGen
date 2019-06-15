@@ -95,9 +95,11 @@ protected:
     std::string _functionName;
     // the arguments provided to local functions called by the main function
     std::string _localFunctionArguments;
-    // the maximum number of assignment (~lines) per local function
+    // the maximum number of assignments (~lines) per local function
     size_t _maxAssignmentsPerFunction;
-    //
+    // the maximum number of operations per variable assignment
+    size_t _maxOperationsPerAssignment;
+    //  maps file names to with their contents
     std::map<std::string, std::string>* _sources;
     // the values in the temporary array
     std::vector<const Arg*> _tmpArrayValues;
@@ -140,6 +142,7 @@ public:
         _depAssignOperation("="),
         _ignoreZeroDepAssign(false),
         _maxAssignmentsPerFunction(0),
+        _maxOperationsPerAssignment((std::numeric_limits<size_t>::max)()),
         _sources(nullptr),
         _parameterPrecision(std::numeric_limits<Base>::digits10) {
     }
@@ -178,10 +181,24 @@ public:
         _depAssignOperation = depAssignOperation;
     }
 
+    /**
+     * Whether or not source code to set dependent variables to zero will be generated.
+     * It may be used not to set the dependent variables to zero when it is known
+     * they are already set to zero before the source code generation.
+     *
+     * @return true if source code to explicitly set dependent variables to zero will NOT be created.
+     */
     inline bool isIgnoreZeroDepAssign() const {
         return _ignoreZeroDepAssign;
     }
 
+    /**
+     * Whether or not to generate expressions to set dependent variables to zero.
+     * It may be used not to set the dependent variables to zero when it is known
+     * they are already set to zero before the source code generation.
+     *
+     * @param ignore true if source code to explicitly set dependent variables to zero will NOT be created.
+     */
     inline void setIgnoreZeroDepAssign(bool ignore) {
         _ignoreZeroDepAssign = ignore;
     }
@@ -223,10 +240,29 @@ public:
         _parameterPrecision = p;
     }
 
+    /**
+     * The maximum number of assignment per generated function.
+     * Zero means it is disabled (no limit).
+     * By setting a limit, it is possible to reduce the compiler workload by having multiple file/function
+     * instead of a very large one.
+     * Note that it is not possible to split some function (e.g., containing loops) and, therefore, this
+     * limit can be violated.
+     *
+     * @param maxAssignmentsPerFunction the maximum number of assignments per file/function
+     * @param sources A map where the file names are associated with their contents.
+     */
     virtual void setMaxAssignmentsPerFunction(size_t maxAssignmentsPerFunction,
                                               std::map<std::string, std::string>* sources) {
         _maxAssignmentsPerFunction = maxAssignmentsPerFunction;
         _sources = sources;
+    }
+
+    inline size_t getMaxOperationsPerAssignment() const {
+        return _maxOperationsPerAssignment;
+    }
+
+    inline void setMaxOperationsPerAssignment(size_t maxOperationsPerAssignment) {
+        _maxOperationsPerAssignment = maxOperationsPerAssignment;
     }
 
     inline std::string generateTemporaryVariableDeclaration(bool isWrapperFunction,
@@ -615,7 +651,7 @@ public:
 protected:
 
     void generateSourceCode(std::ostream& out,
-                            const std::unique_ptr<LanguageGenerationData<Base> >& info) override {
+                            std::unique_ptr<LanguageGenerationData<Base> > info) override {
 
         const bool createFunction = !_functionName.empty();
         const bool multiFunction = createFunction && _maxAssignmentsPerFunction > 0 && _sources != nullptr;
@@ -1042,12 +1078,13 @@ protected:
     }
 
     bool createsNewVariable(const Node& var,
-                            size_t totalUseCount) const override {
+                            size_t totalUseCount,
+                            size_t opCount) const override {
         CGOpCode op = var.getOperationType();
         if (totalUseCount > 1) {
             return op != CGOpCode::ArrayElement && op != CGOpCode::Index && op != CGOpCode::IndexDeclaration && op != CGOpCode::Tmp;
         } else {
-            return ( op == CGOpCode::ArrayCreation ||
+            return (op == CGOpCode::ArrayCreation ||
                     op == CGOpCode::SparseArrayCreation ||
                     op == CGOpCode::AtomicForward ||
                     op == CGOpCode::AtomicReverse ||
@@ -1060,7 +1097,8 @@ protected:
                     op == CGOpCode::LoopIndexedDep ||
                     op == CGOpCode::LoopIndexedTmp ||
                     op == CGOpCode::IndexAssign ||
-                    op == CGOpCode::Assign) &&
+                    op == CGOpCode::Assign ||
+                    opCount >= _maxOperationsPerAssignment) &&
                     op != CGOpCode::CondResult;
         }
     }

@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -162,16 +163,19 @@ public:
     using Node = OperationNode<Base>;
 protected:
     virtual void generateSourceCode(std::ostream& out,
-                                    const std::unique_ptr<LanguageGenerationData<Base> >& info) = 0;
+                                    std::unique_ptr<LanguageGenerationData<Base> > info) = 0;
 
     /**
      * Whether or not a new variable is created as a result of this operation
      *
      * @param op Operation
+     * @param totalUseCount the number of times this node has been used
+     *                      as an argument in other operations
      * @return true if a new variable is created
      */
     virtual bool createsNewVariable(const Node& op,
-                                    size_t totalUseCount) const = 0;
+                                    size_t totalUseCount,
+                                    size_t opCount) const = 0;
 
     virtual bool requiresVariableArgument(enum CGOpCode op,
                                           size_t argIndex) const = 0;

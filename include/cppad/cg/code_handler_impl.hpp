@@ -32,6 +32,7 @@ CodeHandler<Base>::CodeHandler(size_t varCount) :
         _evaluationOrder(*this),
         _lastUsageOrder(*this),
         _totalUseCount(*this),
+        _operationCount(*this),
         _varId(*this),
         _scopedVariableOrder(1),
         _atomicFunctionsOrder(nullptr),
@@ -298,6 +299,7 @@ void CodeHandler<Base>::generateCode(std::ostream& out,
     _evaluationOrder.adjustSize();
     _lastUsageOrder.adjustSize();
     _totalUseCount.adjustSize();
+    _operationCount.adjustSize();
     _varId.adjustSize();
     _scope.adjustSize();
 
@@ -431,17 +433,19 @@ void CodeHandler<Base>::generateCode(std::ostream& out,
     /**
      * Creates the source code for a specific language
      */
-    _info.reset(new LanguageGenerationData<Base>(_independentVariables, dependent,
-                                                 _minTemporaryVarID, _varId, _variableOrder, _variableDependencies,
-                                                 nameGen,
-                                                 atomicFunctionId2Index, atomicFunctionId2Name,
-                                                 _atomicFunctionsMaxForward, _atomicFunctionsMaxReverse,
-                                                 _reuseIDs,
-                                                 _loops.indexes, _loops.indexRandomPatterns,
-                                                 _loops.dependentIndexPatterns, _loops.independentIndexPatterns,
-                                                 _totalUseCount, _scope, *_auxIterationIndexOp,
-                                                 _zeroDependents));
-    lang.generateSourceCode(out, _info);
+
+    std::unique_ptr<LanguageGenerationData<Base> > _info(new LanguageGenerationData<Base>(_independentVariables, dependent,
+                                                                                          _minTemporaryVarID, _varId, _variableOrder, _variableDependencies,
+                                                                                          nameGen,
+                                                                                          atomicFunctionId2Index, atomicFunctionId2Name,
+                                                                                          _atomicFunctionsMaxForward, _atomicFunctionsMaxReverse,
+                                                                                          _reuseIDs,
+                                                                                          _loops.indexes, _loops.indexRandomPatterns,
+                                                                                          _loops.dependentIndexPatterns, _loops.independentIndexPatterns,
+                                                                                          _totalUseCount, _scope, *_auxIterationIndexOp,
+                                                                                          _zeroDependents));
+
+    lang.generateSourceCode(out, std::move(_info));
 
     /**
      * clean-up
@@ -509,6 +513,7 @@ inline void CodeHandler<Base>::resetNodes() {
     _evaluationOrder.fill(0);
     _lastUsageOrder.fill(0);
     _totalUseCount.fill(0);
+    _operationCount.fill(0);
     _varId.fill(0);
 }
 
@@ -1016,6 +1021,7 @@ inline void CodeHandler<Base>::replaceWithConditionalTempVar(Node& tmp,
     _evaluationOrder.adjustSize();
     _lastUsageOrder.adjustSize();
     _totalUseCount.adjustSize();
+    _operationCount.adjustSize();
     _varId.adjustSize();
 
     /**
@@ -1542,34 +1548,51 @@ void CodeHandler<Base>::checkVariableCreation(Node& root) {
                 _varId[arg] = _idCount;
                 _idCount++;
 
-            } else if (_lang->createsNewVariable(arg, getTotalUsageCount(arg)) ||
-                       _lang->requiresVariableArgument(code.getOperationType(), argIndex)) {
+            } else {
 
-                addToEvaluationQueue(arg);
+                // determine the number of operations required to compute this variable
+                size_t& opCount = _operationCount[arg];
 
-                if (_varId[arg] == 0) {
-                    if (aType == CGOpCode::AtomicForward ||
-                        aType == CGOpCode::AtomicReverse) {
-                        _varId[arg] = _idAtomicCount;
-                        _idAtomicCount++;
-                    } else if (aType == CGOpCode::LoopIndexedDep ||
-                               aType == CGOpCode::LoopIndexedTmp) {
-                        // ID value not really used but must be non-zero
-                        _varId[arg] = (std::numeric_limits<size_t>::max)();
-                    } else if (aType == CGOpCode::ArrayCreation) {
-                        // a temporary array
-                        size_t arraySize = arg.getArguments().size();
-                        _varId[arg] = _idArrayCount;
-                        _idArrayCount += arraySize;
-                    } else if (aType == CGOpCode::SparseArrayCreation) {
-                        // a temporary array
-                        size_t nnz = arg.getArguments().size();
-                        _varId[arg] = _idSparseArrayCount;
-                        _idSparseArrayCount += nnz;
-                    } else {
-                        // a single temporary variable
-                        _varId[arg] = _idCount;
-                        _idCount++;
+                opCount = 1;
+                for (const auto& a: arg) {
+                    if (a.getOperation() != nullptr) {
+                        auto& n = *a.getOperation();
+                        if (_varId[n] == 0) {
+                            opCount += _operationCount[n];
+                        }
+                    }
+                }
+
+                // determine if this variable should be temporary/dependent variable
+                if (_lang->createsNewVariable(arg, getTotalUsageCount(arg), opCount) ||
+                    _lang->requiresVariableArgument(code.getOperationType(), argIndex)) {
+
+                    addToEvaluationQueue(arg);
+
+                    if (_varId[arg] == 0) {
+                        if (aType == CGOpCode::AtomicForward ||
+                            aType == CGOpCode::AtomicReverse) {
+                            _varId[arg] = _idAtomicCount;
+                            _idAtomicCount++;
+                        } else if (aType == CGOpCode::LoopIndexedDep ||
+                                   aType == CGOpCode::LoopIndexedTmp) {
+                            // ID value not really used but must be non-zero
+                            _varId[arg] = (std::numeric_limits<size_t>::max)();
+                        } else if (aType == CGOpCode::ArrayCreation) {
+                            // a temporary array
+                            size_t arraySize = arg.getArguments().size();
+                            _varId[arg] = _idArrayCount;
+                            _idArrayCount += arraySize;
+                        } else if (aType == CGOpCode::SparseArrayCreation) {
+                            // a temporary array
+                            size_t nnz = arg.getArguments().size();
+                            _varId[arg] = _idSparseArrayCount;
+                            _idSparseArrayCount += nnz;
+                        } else {
+                            // a single temporary variable
+                            _varId[arg] = _idCount;
+                            _idCount++;
+                        }
                     }
                 }
             }
@@ -2140,6 +2163,7 @@ inline void CodeHandler<Base>::resetManagedNodes() {
     _evaluationOrder.fill(0);
     _lastUsageOrder.fill(0);
     _totalUseCount.fill(0);
+    _operationCount.fill(0);
     _varId.fill(0);
     _scope.fill(0);
 }

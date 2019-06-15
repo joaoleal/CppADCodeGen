@@ -234,8 +234,8 @@ public:
      **************************************************************************/
 protected:
 
-    virtual void generateSourceCode(std::ostream& out,
-                                    const std::unique_ptr<LanguageGenerationData<Base> >& info) override {
+    void generateSourceCode(std::ostream& out,
+                            std::unique_ptr<LanguageGenerationData<Base> > info) override {
         // clean up
         _code.str("");
         _ss.str("");
@@ -450,8 +450,9 @@ protected:
         return _info->varId[node];
     }
 
-    virtual bool createsNewVariable(const OperationNode<Base>& var,
-                                    size_t totalUseCount) const override {
+    bool createsNewVariable(const OperationNode<Base>& var,
+                            size_t totalUseCount,
+                            size_t opCount) const override {
         CGOpCode op = var.getOperationType();
         if (totalUseCount > 1) {
             return op != CGOpCode::ArrayElement && op != CGOpCode::Index && op != CGOpCode::IndexDeclaration && op != CGOpCode::Tmp;
