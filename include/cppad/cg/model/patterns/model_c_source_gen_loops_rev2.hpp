@@ -524,6 +524,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
 
                 LanguageC<Base> langC(_baseTypeName);
                 langC.setMaxAssignmentsPerFunction(_maxAssignPerFunc, &_sources);
+                langC.setMaxOperationsPerAssignment(_maxOperationsPerAssignment);
                 langC.setParameterPrecision(_parameterPrecision);
                 _cache.str("");
                 _cache << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "_noloop_indep" << j;

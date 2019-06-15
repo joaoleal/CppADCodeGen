@@ -241,7 +241,7 @@ public:
     }
 
     /**
-     * The maximum number of assignment per generated function.
+     * Defines the maximum number of assignment per generated function.
      * Zero means it is disabled (no limit).
      * By setting a limit, it is possible to reduce the compiler workload by having multiple file/function
      * instead of a very large one.
@@ -257,10 +257,21 @@ public:
         _sources = sources;
     }
 
+    /**
+     * The maximum number of operations per variable assignment.
+     *
+     * @return The maximum number of operations per variable assignment
+     */
     inline size_t getMaxOperationsPerAssignment() const {
         return _maxOperationsPerAssignment;
     }
 
+    /**
+     * Defines the maximum number of operations per variable assignment.
+     * Defining a limit can reduce the memory required for compilation of the source code.
+     *
+     * @param maxOperationsPerAssignment  The maximum number of operations per variable assignment.
+     */
     inline void setMaxOperationsPerAssignment(size_t maxOperationsPerAssignment) {
         _maxOperationsPerAssignment = maxOperationsPerAssignment;
     }

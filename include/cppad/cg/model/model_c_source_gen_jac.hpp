@@ -53,6 +53,7 @@ void ModelCSourceGen<Base>::generateJacobianSource() {
 
     LanguageC<Base> langC(_baseTypeName);
     langC.setMaxAssignmentsPerFunction(_maxAssignPerFunc, &_sources);
+    langC.setMaxOperationsPerAssignment(_maxOperationsPerAssignment);
     langC.setParameterPrecision(_parameterPrecision);
     langC.setGenerateFunction(_name + "_" + FUNCTION_JACOBIAN);
 
@@ -136,6 +137,7 @@ void ModelCSourceGen<Base>::generateSparseJacobianSource(bool forward) {
 
     LanguageC<Base> langC(_baseTypeName);
     langC.setMaxAssignmentsPerFunction(_maxAssignPerFunc, &_sources);
+    langC.setMaxOperationsPerAssignment(_maxOperationsPerAssignment);
     langC.setParameterPrecision(_parameterPrecision);
     langC.setGenerateFunction(_name + "_" + FUNCTION_SPARSE_JACOBIAN);
 

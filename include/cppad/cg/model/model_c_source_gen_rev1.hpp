@@ -120,6 +120,7 @@ void ModelCSourceGen<Base>::generateSparseReverseOneSourcesWithAtomics(const std
 
         LanguageC<Base> langC(_baseTypeName);
         langC.setMaxAssignmentsPerFunction(_maxAssignPerFunc, &_sources);
+        langC.setMaxOperationsPerAssignment(_maxOperationsPerAssignment);
         langC.setParameterPrecision(_parameterPrecision);
         _cache.str("");
         _cache << _name << "_" << FUNCTION_SPARSE_REVERSE_ONE << "_dep" << i;
@@ -207,6 +208,7 @@ void ModelCSourceGen<Base>::generateSparseReverseOneSourcesNoAtomics(const std::
 
         LanguageC<Base> langC(_baseTypeName);
         langC.setMaxAssignmentsPerFunction(_maxAssignPerFunc, &_sources);
+        langC.setMaxOperationsPerAssignment(_maxOperationsPerAssignment);
         langC.setParameterPrecision(_parameterPrecision);
         _cache.str("");
         _cache << _name << "_" << FUNCTION_SPARSE_REVERSE_ONE << "_dep" << i;

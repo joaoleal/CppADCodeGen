@@ -115,6 +115,7 @@ void ModelCSourceGen<Base>::generateSparseForwardOneSourcesWithAtomics(const std
 
         LanguageC<Base> langC(_baseTypeName);
         langC.setMaxAssignmentsPerFunction(_maxAssignPerFunc, &_sources);
+        langC.setMaxOperationsPerAssignment(_maxOperationsPerAssignment);
         langC.setParameterPrecision(_parameterPrecision);
         _cache.str("");
         _cache << _name << "_" << FUNCTION_SPARSE_FORWARD_ONE << "_indep" << j;
@@ -201,6 +202,7 @@ void ModelCSourceGen<Base>::generateSparseForwardOneSourcesNoAtomics(const std::
 
         LanguageC<Base> langC(_baseTypeName);
         langC.setMaxAssignmentsPerFunction(_maxAssignPerFunc, &_sources);
+        langC.setMaxOperationsPerAssignment(_maxOperationsPerAssignment);
         langC.setParameterPrecision(_parameterPrecision);
         _cache.str("");
         _cache << _name << "_" << FUNCTION_SPARSE_FORWARD_ONE << "_indep" << j;
