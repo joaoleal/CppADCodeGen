@@ -166,6 +166,14 @@ FUNCTION(add_cppadcg_test source_file)
                          ./${test_target_name}
                  COMMENT "Running valgrind on test \"${test_target_name}\"")
     ENDIF()
+
+    ################################################################################
+    # precompile headers
+    ################################################################################
+    IF(USE_PRECOMPILED_HEADERS)
+        depends_on_precompile_header(${test_target_name} "CppADCGTest.hpp")
+    ENDIF()
+
 ENDFUNCTION()
 ################################################################################
 # use valgrind if possible
@@ -201,6 +209,19 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 # enable c++11 functions in cppad
 ADD_DEFINITIONS(-DCPPAD_USE_CPLUSPLUS_2011=1)
+
+################################################################################
+
+INCLUDE(${CMAKE_SOURCE_DIR}/cmake/PrecompiledHeaders.cmake)
+
+OPTION(USE_PRECOMPILED_HEADERS "Use precompiled headers in tests" OFF)
+
+################################################################################
+
+IF(USE_PRECOMPILED_HEADERS)
+    precompile_header(CppADCGTest.hpp
+                      cppad/cg/cppadcg.hpp)
+ENDIF()
 
 ADD_SUBDIRECTORY(cppad/cg)
 #ADD_SUBDIRECTORY(zoot)
