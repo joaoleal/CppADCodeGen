@@ -2,8 +2,8 @@
 #define	CPPAD_CG_TEST_CPPADCGPATTERNTEST_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -316,14 +316,14 @@ public:
 
         const std::vector<Loop<Base>*>& calcLoops = matcher.getLoops();
         for (auto* loop : calcLoops) {
-            size_t minDep = std::numeric_limits<size_t>::max();
+            size_t minDep = (std::numeric_limits<size_t>::max)();
 
             map<size_t, set<size_t> > dependents;
             set<EquationPattern<Base>*>::const_iterator iteq;
             for (iteq = loop->equations.begin(); iteq != loop->equations.end(); ++iteq) {
                 EquationPattern<Base>* eq = *iteq;
                 size_t minEqDep = *eq->dependents.begin();
-                minDep = std::min(minDep, *eq->dependents.begin());
+                minDep = std::min<size_t>(minDep, *eq->dependents.begin());
                 dependents[minEqDep] = eq->dependents;
             }
 
@@ -335,18 +335,18 @@ public:
         //  - expected
         bool defined = false;
         map<size_t, map<size_t, set<size_t> > > orderedExpectedLoops;
-        for (const auto &eqPatterns : loops) {
+        for (const auto& eqPatterns : loops) {
             if (!eqPatterns.empty()) {
                 defined = true;
                 /**
                  * check every equation
                  */
-                size_t minDep = std::numeric_limits<size_t>::max();
+                size_t minDep = (std::numeric_limits<size_t>::max)();
 
                 map<size_t, set<size_t> > dependents;
                 for (const auto& eqPattern : eqPatterns) {
                     size_t minEqDep = *eqPattern.begin();
-                    minDep = std::min(minDep, *eqPattern.begin());
+                    minDep = std::min<size_t>(minDep, *eqPattern.begin());
                     dependents[minEqDep] = eqPattern;
                 }
                 orderedExpectedLoops[minDep] = dependents;

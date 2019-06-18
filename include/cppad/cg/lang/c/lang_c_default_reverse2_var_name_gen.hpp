@@ -52,7 +52,7 @@ public:
         _minLevel2ID(_minLevel1ID + n1),
         _level2Name("py2") {
 
-        CPPADCG_ASSERT_KNOWN(_nameGen != nullptr, "The name generator must not be null");
+        CPPADCG_ASSERT_KNOWN(_nameGen != nullptr, "The name generator must not be null")
 
         initialize();
     }
@@ -68,9 +68,9 @@ public:
         _minLevel2ID(_minLevel1ID + n1),
         _level2Name(std::move(level2Name)) {
 
-        CPPADCG_ASSERT_KNOWN(_nameGen != nullptr, "The name generator must not be null");
-        CPPADCG_ASSERT_KNOWN(_level1Name.size() > 0, "The name for the first level must not be empty");
-        CPPADCG_ASSERT_KNOWN(_level2Name.size() > 0, "The name for the second level must not be empty");
+        CPPADCG_ASSERT_KNOWN(_nameGen != nullptr, "The name generator must not be null")
+        CPPADCG_ASSERT_KNOWN(_level1Name.size() > 0, "The name for the first level must not be empty")
+        CPPADCG_ASSERT_KNOWN(_level2Name.size() > 0, "The name for the second level must not be empty")
 
         initialize();
     }
@@ -160,16 +160,16 @@ public:
         } else {
             size_t nIndex = independent.getArguments().size();
 
-            CPPADCG_ASSERT_KNOWN(independent.getOperationType() == CGOpCode::LoopIndexedIndep, "Invalid node type");
-            CPPADCG_ASSERT_KNOWN(nIndex > 0, "Invalid number of arguments");
+            CPPADCG_ASSERT_KNOWN(independent.getOperationType() == CGOpCode::LoopIndexedIndep, "Invalid node type")
+            CPPADCG_ASSERT_KNOWN(nIndex > 0, "Invalid number of arguments")
 
             _ss.clear();
             _ss.str("");
 
             std::vector<const OperationNode<Base>*> indices(nIndex);
             for (size_t i = 0; i < nIndex; ++i) {// typically there is only one index but there may be more
-                CPPADCG_ASSERT_KNOWN(independent.getArguments()[i].getOperation() != nullptr, "Invalid argument");
-                CPPADCG_ASSERT_KNOWN(independent.getArguments()[i].getOperation()->getOperationType() == CGOpCode::Index, "Invalid argument");
+                CPPADCG_ASSERT_KNOWN(independent.getArguments()[i].getOperation() != nullptr, "Invalid argument")
+                CPPADCG_ASSERT_KNOWN(independent.getArguments()[i].getOperation()->getOperationType() == CGOpCode::Index, "Invalid argument")
                 indices[i] = &static_cast<const IndexOperationNode<Base>&> (*independent.getArguments()[i].getOperation()).getIndex();
             }
 

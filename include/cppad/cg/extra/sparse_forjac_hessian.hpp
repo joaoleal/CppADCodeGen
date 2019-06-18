@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -50,7 +51,7 @@ public:
         size_t n = fun.Domain();
         size_t m = fun.Range();
 
-        if (user_row.size() == 0) {
+        if (user_row.empty()) {
             // create version of (row, col, k) sorted by column value
             user_col.resize(K + 1);
             user_row.resize(K + 1);
@@ -71,28 +72,28 @@ public:
 #ifndef NDEBUG
         CPPAD_ASSERT_KNOWN(size_t(row.size()) == K && size_t(col.size()) == K,
                            "sparseForJacHessian: either r or c does not have "
-                           "the same size as jac.");
+                           "the same size as jac.")
         CPPAD_ASSERT_KNOWN(user_row.size() == K + 1 &&
                            user_col.size() == K + 1 &&
                            sort_col.size() == K + 1,
-                           "sparseForJacHessian: invalid value in work.");
+                           "sparseForJacHessian: invalid value in work.")
         for (size_t k = 0; k < K; k++) {
             CPPAD_ASSERT_KNOWN(row[k] < m,
-                               "sparseForJacHessian: invalid value in r.");
+                               "sparseForJacHessian: invalid value in r.")
             CPPAD_ASSERT_KNOWN(col[k] < n,
-                               "sparseForJacHessian: invalid value in c.");
+                               "sparseForJacHessian: invalid value in c.")
             CPPAD_ASSERT_KNOWN(sort_col[k] < K,
-                               "sparseForJacHessian: invalid value in work.");
+                               "sparseForJacHessian: invalid value in work.")
             CPPAD_ASSERT_KNOWN(user_row[k] == row[k],
-                               "sparseForJacHessian: invalid value in work.");
+                               "sparseForJacHessian: invalid value in work.")
             CPPAD_ASSERT_KNOWN(user_col[k] == col[k],
-                               "sparseForJacHessian: invalid value in work.");
+                               "sparseForJacHessian: invalid value in work.")
         }
 #endif
     }
     /// inform CppAD that this information needs to be recomputed
 
-    inline void clear(void) {
+    inline void clear() {
         user_row.clear();
         user_col.clear();
         sort_row.clear();
@@ -125,7 +126,7 @@ public:
         size_t n = fun.Domain();
         K = row.size();
 
-        if (r_sort.size() == 0) {
+        if (r_sort.empty()) {
             // create version of (row, col, k) sorted by row value
             c_sort.resize(K);
             r_sort.resize(K + 1);
@@ -142,28 +143,28 @@ public:
         }
 #ifndef NDEBUG
         CPPAD_ASSERT_KNOWN(size_t(row.size()) == K && size_t(col.size()) == K,
-                           "sparseForJacHessian: either r or c does not have the same size as ehs.");
+                           "sparseForJacHessian: either r or c does not have the same size as ehs.")
         CPPAD_ASSERT_KNOWN(r_sort.size() == K + 1 &&
                            c_sort.size() == K &&
                            k_sort.size() == K,
-                           "sparseForJacHessian: invalid value in work.");
+                           "sparseForJacHessian: invalid value in work.")
         for (size_t k = 0; k < K; k++) {
             CPPAD_ASSERT_KNOWN(row[k] < n,
-                               "sparseForJacHessian: invalid value in r.");
+                               "sparseForJacHessian: invalid value in r.")
             CPPAD_ASSERT_KNOWN(col[k] < n,
-                               "sparseForJacHessian: invalid value in c.");
+                               "sparseForJacHessian: invalid value in c.")
             CPPAD_ASSERT_KNOWN(k_sort[k] < K,
-                               "sparseForJacHessian: invalid value in work.");
+                               "sparseForJacHessian: invalid value in work.")
             CPPAD_ASSERT_KNOWN(r_sort[k] == row[ k_sort[k] ],
-                               "sparseForJacHessian: invalid value in work.");
+                               "sparseForJacHessian: invalid value in work.")
             CPPAD_ASSERT_KNOWN(c_sort[k] == col[ k_sort[k] ],
-                               "sparseForJacHessian: invalid value in work.");
+                               "sparseForJacHessian: invalid value in work.")
         }
 #endif
     }
     /// inform CppAD that this information needs to be recomputed
 
-    inline void clear(void) {
+    inline void clear() {
         r_sort.clear();
         c_sort.clear();
         k_sort.clear();
@@ -189,12 +190,12 @@ public:
                         const VectorSize& hesCol) {
         size_t n = fun.Domain();
 
-        CPPAD_ASSERT_KNOWN(color.size() == 0 || color.size() == n,
-                           "sparseForJacHessian: invalid value in work.");
-        if (color.size() != 0) {
+        CPPAD_ASSERT_KNOWN(color.empty() || color.size() == n,
+                           "sparseForJacHessian: invalid value in work.")
+        if (!color.empty()) {
             for (size_t j = 0; j < n; j++) {
                 CPPAD_ASSERT_KNOWN(color[j] < n,
-                                   "sparseForJacHessian: invalid value in work.");
+                                   "sparseForJacHessian: invalid value in work.")
             }
         }
 
@@ -203,7 +204,7 @@ public:
     }
     /// inform CppAD that this information needs to be recomputed
 
-    inline void clear(void) {
+    inline void clear() {
         jac.clear();
         hes.clear();
         color.clear();
@@ -252,14 +253,14 @@ inline size_t colorForwardJacobianHessian(const ADFun<Base>& fun,
 
     std::vector<size_t>& color = work.color;
 
-    if (color.size() == 0) {
+    if (color.empty()) {
 
         color.resize(n);
 
         CPPAD_ASSERT_KNOWN(jac_p.size() == m,
-                           "sparseForJacHessian: invalid jacobian sparsity pattern dimension.");
+                           "sparseForJacHessian: invalid jacobian sparsity pattern dimension.")
         CPPAD_ASSERT_KNOWN(hes_p.size() == n,
-                           "sparseForJacHessian: invalid hessian sparsity pattern dimension.");
+                           "sparseForJacHessian: invalid hessian sparsity pattern dimension.")
 
         /**
          * Jacobian
@@ -275,8 +276,8 @@ inline size_t colorForwardJacobianHessian(const ADFun<Base>& fun,
         std::vector<size_t>& jac_col = work.jac.user_col;
         std::vector<size_t>& sort_col = work.jac.sort_col;
 
-        CPPAD_ASSERT_UNKNOWN(p_transpose.n_set() == n);
-        CPPAD_ASSERT_UNKNOWN(p_transpose.end() == m);
+        CPPAD_ASSERT_UNKNOWN(p_transpose.n_set() == n)
+        CPPAD_ASSERT_UNKNOWN(p_transpose.end() == m)
 
         // rows and columns that are in the returned jacobian
         SparsityPattern jac_r_used, jac_c_used;
@@ -284,11 +285,11 @@ inline size_t colorForwardJacobianHessian(const ADFun<Base>& fun,
         jac_c_used.resize(m, n);
 
         for (k = 0; k < jac_K; k++) {
-            CPPAD_ASSERT_UNKNOWN(jac_row[sort_col[k]] < m && jac_col[sort_col[k]] < n);
-            CPPAD_ASSERT_UNKNOWN(k == 0 || jac_col[sort_col[k - 1]] <= jac_col[sort_col[k]]);
+            CPPAD_ASSERT_UNKNOWN(jac_row[sort_col[k]] < m && jac_col[sort_col[k]] < n)
+            CPPAD_ASSERT_UNKNOWN(k == 0 || jac_col[sort_col[k - 1]] <= jac_col[sort_col[k]])
             CPPAD_ASSERT_KNOWN(p_transpose.is_element(jac_col[sort_col[k]], jac_row[sort_col[k]]),
                                "sparseForJacHessian: "
-                               "a (row, col) pair is not in sparsity pattern.");
+                               "a (row, col) pair is not in sparsity pattern.")
             jac_r_used.add_element(jac_col[sort_col[k]], jac_row[sort_col[k]]);
             jac_c_used.add_element(jac_row[sort_col[k]], jac_col[sort_col[k]]);
         }
@@ -308,8 +309,8 @@ inline size_t colorForwardJacobianHessian(const ADFun<Base>& fun,
         std::vector<size_t>& hes_row(work.hes.r_sort);
         std::vector<size_t>& hes_col(work.hes.c_sort);
 
-        CPPAD_ASSERT_UNKNOWN(hes_sparsity.n_set() == n);
-        CPPAD_ASSERT_UNKNOWN(hes_sparsity.end() == n);
+        CPPAD_ASSERT_UNKNOWN(hes_sparsity.n_set() == n)
+        CPPAD_ASSERT_UNKNOWN(hes_sparsity.end() == n)
 
         // rows and columns that are in the returned hessian
         SparsityPattern hes_r_used, hes_c_used;
@@ -317,10 +318,10 @@ inline size_t colorForwardJacobianHessian(const ADFun<Base>& fun,
         hes_c_used.resize(n, n);
 
         for (k = 0; k < hes_K; k++) {
-            CPPAD_ASSERT_UNKNOWN(hes_row[k] < n && hes_col[k] < n);
-            CPPAD_ASSERT_UNKNOWN(k == 0 || hes_row[k - 1] <= hes_row[k]);
+            CPPAD_ASSERT_UNKNOWN(hes_row[k] < n && hes_col[k] < n)
+            CPPAD_ASSERT_UNKNOWN(k == 0 || hes_row[k - 1] <= hes_row[k])
             CPPAD_ASSERT_KNOWN(hes_sparsity.is_element(hes_row[k], hes_col[k]),
-                               "sparseForJacHessian: a (row, col) pair is not in sparsity pattern.");
+                               "sparseForJacHessian: a (row, col) pair is not in sparsity pattern.")
             hes_r_used.add_element(hes_col[k], hes_row[k]);
             hes_c_used.add_element(hes_row[k], hes_col[k]);
         }
@@ -426,7 +427,7 @@ inline size_t colorForwardJacobianHessian(const ADFun<Base>& fun,
             c = 0;
             while (forbidden[c]) {
                 c++;
-                CPPAD_ASSERT_UNKNOWN(c <= j1);
+                CPPAD_ASSERT_UNKNOWN(c <= j1)
             }
             color[j1] = c;
         }
@@ -435,7 +436,7 @@ inline size_t colorForwardJacobianHessian(const ADFun<Base>& fun,
 
     size_t n_color = 1;
     for (j1 = 0; j1 < n; j1++)
-        n_color = std::max(n_color, color[j1] + 1);
+        n_color = std::max<size_t>(n_color, color[j1] + 1);
 
     return n_color;
 }
@@ -542,10 +543,10 @@ size_t sparseForJacHessian(ADFun<Base>& fun,
     size_t hes_K = size_t(hes_row.size());
 
     CPPADCG_ASSERT_KNOWN(size_t(x.size()) == n,
-                         "sparseForJacHessian: size of x not equal domain dimension for f.");
+                         "sparseForJacHessian: size of x not equal domain dimension for f.")
 
     CPPADCG_ASSERT_KNOWN(size_t(w.size()) == nH,
-                         "sparseForJacHessian: size of w not equal to the size of hes.");
+                         "sparseForJacHessian: size of w not equal to the size of hes.")
 
     const std::vector<size_t>& jac_scol = work.jac.sort_col;
     const std::vector<size_t>& hes_srow = work.hes.r_sort;
@@ -560,7 +561,7 @@ size_t sparseForJacHessian(ADFun<Base>& fun,
     // check VectorBase is Simple Vector class with Base type elements
     CheckSimpleVector<Base, VectorBase>();
 
-    CPPAD_ASSERT_UNKNOWN(size_t(x.size()) == n);
+    CPPAD_ASSERT_UNKNOWN(size_t(x.size()) == n)
 
     work.prepare(fun, jac_row, jac_col, hes_row, hes_col);
 

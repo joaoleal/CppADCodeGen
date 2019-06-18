@@ -2,8 +2,8 @@
 #define CPPAD_CG_LANG_C_DEFAULT_VAR_NAME_GEN_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2018 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -55,18 +55,18 @@ protected:
     size_t _maxTemporarySparseArrayID;
 public:
 
-    inline LangCDefaultVariableNameGenerator(const std::string& depName = "y",
-                                             const std::string& indepName = "x",
-                                             const std::string& paramName = "p",
-                                             const std::string& tmpName = "v",
-                                             const std::string& tmpArrayName = "array",
-                                             const std::string& tmpSparseArrayName = "sarray") :
-        _depName(depName),
-        _indepName(indepName),
-        _paramName(paramName),
-        _tmpName(tmpName),
-        _tmpArrayName(tmpArrayName),
-        _tmpSparseArrayName(tmpSparseArrayName),
+    inline LangCDefaultVariableNameGenerator(std::string depName = "y",
+                                             std::string indepName = "x",
+                                             std::string paramName = "p",
+                                             std::string tmpName = "v",
+                                             std::string tmpArrayName = "array",
+                                             std::string tmpSparseArrayName = "sarray") :
+        _depName(std::move(depName)),
+        _indepName(std::move(indepName)),
+        _paramName(std::move(paramName)),
+        _tmpName(std::move(tmpName)),
+        _tmpArrayName(std::move(tmpArrayName)),
+        _tmpSparseArrayName(std::move(tmpSparseArrayName)),
         _minParameterID(0), // not really required (but it avoids warnings)
         _maxParameterID(0), // not really required (but it avoids warnings)
         _minTemporaryID(0), // not really required (but it avoids warnings)
@@ -148,7 +148,7 @@ public:
         _ss.clear();
         _ss.str("");
 
-        CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGOpCode::ArrayCreation);
+        CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGOpCode::ArrayCreation)
 
         _ss << "&" << _tmpArrayName << "[" << (id - 1) << "]";
 
@@ -160,7 +160,7 @@ public:
         _ss.clear();
         _ss.str("");
 
-        CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGOpCode::SparseArrayCreation);
+        CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGOpCode::SparseArrayCreation)
 
         _ss << "&" << _tmpSparseArrayName << "[" << (id - 1) << "]";
 
@@ -170,8 +170,8 @@ public:
     std::string generateIndexedDependent(const OperationNode<Base>& var,
                                          size_t id,
                                          const IndexPattern& ip) override {
-        CPPADCG_ASSERT_KNOWN(var.getOperationType() == CGOpCode::LoopIndexedDep, "Invalid node type");
-        CPPADCG_ASSERT_KNOWN(!var.getArguments().empty(), "Invalid number of arguments");
+        CPPADCG_ASSERT_KNOWN(var.getOperationType() == CGOpCode::LoopIndexedDep, "Invalid node type")
+        CPPADCG_ASSERT_KNOWN(!var.getArguments().empty(), "Invalid number of arguments")
 
         _ss.clear();
         _ss.str("");
@@ -184,8 +184,8 @@ public:
     std::string generateIndexedIndependent(const OperationNode<Base>& independent,
                                            size_t id,
                                            const IndexPattern& ip) override {
-        CPPADCG_ASSERT_KNOWN(independent.getOperationType() == CGOpCode::LoopIndexedIndep, "Invalid node type");
-        CPPADCG_ASSERT_KNOWN(independent.getArguments().size() > 0, "Invalid number of arguments");
+        CPPADCG_ASSERT_KNOWN(independent.getOperationType() == CGOpCode::LoopIndexedIndep, "Invalid node type")
+        CPPADCG_ASSERT_KNOWN(independent.getArguments().size() > 0, "Invalid number of arguments")
 
         _ss.clear();
         _ss.str("");
@@ -207,7 +207,7 @@ public:
         // if
         //  _minTemporaryID == _maxTemporaryID + 1
         // then no temporary variables are being used
-        CPPADCG_ASSERT_UNKNOWN(_minTemporaryID <= _maxTemporaryID + 1);
+        CPPADCG_ASSERT_UNKNOWN(_minTemporaryID <= _maxTemporaryID + 1)
     }
 
     inline void setParameterID(size_t minParameterID,
@@ -296,8 +296,8 @@ protected:
         std::vector<const OperationNode<Base>*> indexes(args.size() - offset);
 
         for (size_t a = offset; a < args.size(); a++) {
-            CPPADCG_ASSERT_KNOWN(args[a].getOperation() != nullptr, "Invalid argument");
-            CPPADCG_ASSERT_KNOWN(args[a].getOperation()->getOperationType() == CGOpCode::Index, "Invalid argument");
+            CPPADCG_ASSERT_KNOWN(args[a].getOperation() != nullptr, "Invalid argument")
+            CPPADCG_ASSERT_KNOWN(args[a].getOperation()->getOperationType() == CGOpCode::Index, "Invalid argument")
 
             indexes[a - offset] = &static_cast<const IndexOperationNode<Base>*> (args[a].getOperation())->getIndex();
         }

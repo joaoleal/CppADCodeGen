@@ -2,8 +2,8 @@
 #define CPPAD_CG_EXCEPTION_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -20,7 +20,7 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Source code generation exception
+ * The exception used by CppADCodeGen
  * 
  * @author Joao Leal
  */
@@ -51,11 +51,11 @@ public:
 
     CGException() noexcept = delete;
 
-    const char* what() const noexcept {
+    const char* what() const noexcept override {
         return _message.c_str();
     }
 
-    virtual ~CGException() noexcept = default;
+    ~CGException() noexcept override = default;
 
 private:
 

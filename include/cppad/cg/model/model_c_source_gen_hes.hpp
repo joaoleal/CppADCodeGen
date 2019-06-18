@@ -74,7 +74,8 @@ void ModelCSourceGen<Base>::generateHessianSource() {
     finishedJob();
 
     LanguageC<Base> langC(_baseTypeName);
-    langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &_sources);
+    langC.setMaxAssignmentsPerFunction(_maxAssignPerFunc, &_sources);
+    langC.setMaxOperationsPerAssignment(_maxOperationsPerAssignment);
     langC.setParameterPrecision(_parameterPrecision);
     langC.setGenerateFunction(_name + "_" + FUNCTION_HESSIAN);
 
@@ -231,7 +232,8 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceDirectly() {
     finishedJob();
 
     LanguageC<Base> langC(_baseTypeName);
-    langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &_sources);
+    langC.setMaxAssignmentsPerFunction(_maxAssignPerFunc, &_sources);
+    langC.setMaxOperationsPerAssignment(_maxOperationsPerAssignment);
     langC.setParameterPrecision(_parameterPrecision);
     langC.setGenerateFunction(_name + "_" + FUNCTION_SPARSE_HESSIAN);
 

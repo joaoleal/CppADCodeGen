@@ -16,6 +16,8 @@
 # ----------------------------------------------------------------------------
 ADD_SUBDIRECTORY(dynamiclib)
 
+ADD_SUBDIRECTORY(lang/c)
+
 IF(PDFLATEX_COMPILER)
     ADD_SUBDIRECTORY(lang/latex)
 ENDIF()

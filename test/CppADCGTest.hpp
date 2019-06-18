@@ -38,14 +38,14 @@ protected:
     bool memory_check_;
 public:
 
-    inline CppADCGTest(bool verbose = false,
-                       bool printValues = false) :
+    inline explicit CppADCGTest(bool verbose = false,
+                                bool printValues = false) :
         verbose_(verbose),
         printValues_(printValues),
         memory_check_(true) {
     }
 
-    virtual void TearDown() {
+    void TearDown() override {
         if (memory_check_) {
             ASSERT_FALSE(CppAD::memory_leak());
         }
@@ -202,8 +202,8 @@ protected:
         ASSERT_EQ(expected.size(), value.size());
         for (size_t i = 0; i < expected.size(); i++) {
             ASSERT_EQ(expected[i].size(), value[i].size());
-            std::set<size_t>::const_iterator itE = expected[i].begin();
-            std::set<size_t>::const_iterator itV = value[i].begin();
+            auto itE = expected[i].begin();
+            auto itV = value[i].begin();
             for (; itE != expected[i].end(); ++itE, ++itV) {
                 ASSERT_EQ(*itE, *itV);
             }

@@ -89,6 +89,12 @@ protected:
      */
     CodeHandlerVector<Base, size_t> _totalUseCount;
     /**
+     * The number of operations used in the expression that directly assign the value
+     * to a (temporary/dependent) variable.
+     * Operations used to compute other temporary variables are not considered.
+     */
+    CodeHandlerVector<Base, size_t> _operationCount;
+    /**
      * Provides the variable ID that was altered/assigned to operation nodes.
      * Zero means that no variable is assigned.
      */
@@ -125,10 +131,6 @@ protected:
      */
     std::vector<std::string>* _atomicFunctionsOrder;
     /**
-     *
-     */
-    std::map<size_t, size_t> _atomicFunctionId2Index;
-    /**
      * the maximum forward mode order each atomic function is called
      * (-1 means forward mode not used)
      */
@@ -152,10 +154,6 @@ protected:
     std::list<std::pair<Node*, Node* > > _alteredNodes;
     // the language used for source code generation
     Language<Base>* _lang;
-    /**
-     * information sent to the language
-     */
-    std::unique_ptr<LanguageGenerationData<Base> > _info;
     // the lowest ID used for temporary variables
     size_t _minTemporaryVarID;
     /**
@@ -397,7 +395,7 @@ public:
     inline BidirGraph<Base> findPathGraph(Node& root,
                                           Node& target,
                                           size_t& bifurcations,
-                                          size_t maxBifurcations = std::numeric_limits<size_t>::max());
+                                          size_t maxBifurcations = (std::numeric_limits<size_t>::max)());
 
     /**************************************************************************
      *                       Source code generation

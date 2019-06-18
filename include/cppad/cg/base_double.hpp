@@ -29,11 +29,11 @@ public:
     }
 
     static cg::CG<double> min() {
-        return std::numeric_limits<double>::min();
+        return (std::numeric_limits<double>::min)();
     }
 
     static cg::CG<double> max() {
-        return std::numeric_limits<double>::max();
+        return (std::numeric_limits<double>::max)();
     }
 
     static cg::CG<double> quiet_NaN() {

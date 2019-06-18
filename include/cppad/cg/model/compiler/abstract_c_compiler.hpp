@@ -167,7 +167,7 @@ public:
         for (it = sources.begin(); it != sources.end(); ++it) {
             _sfiles.insert(it->first);
             std::string file = system::createPath(this->_tmpFolder, it->first + outputExtension);
-            maxsize = std::max(maxsize, file.size());
+            maxsize = std::max<size_t>(maxsize, file.size());
         }
 
         size_t countWidth = std::ceil(std::log10(sources.size()));

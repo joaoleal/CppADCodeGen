@@ -88,8 +88,8 @@ TEST_F(CppADCGTest, EigenADCGD) {
 
     ASSERT_EQ(traits::epsilon(), std::numeric_limits<double>::epsilon());
     ASSERT_EQ(traits::dummy_precision(), 100. * std::numeric_limits<double>::epsilon());
-    ASSERT_EQ(traits::highest(), std::numeric_limits<double>::max());
-    ASSERT_EQ(traits::lowest(), std::numeric_limits<double>::min());
+    ASSERT_EQ(traits::highest(), (std::numeric_limits<double>::max)());
+    ASSERT_EQ(traits::lowest(), (std::numeric_limits<double>::min)());
 
     ADCGD x = CGD(2.0);
     ASSERT_EQ(conj(x), x);

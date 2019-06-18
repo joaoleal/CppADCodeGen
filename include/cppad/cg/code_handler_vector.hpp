@@ -105,10 +105,10 @@ public:
     }
 
     inline void adjustSize(const OperationNode<Base>& node) {
-        CPPADCG_ASSERT_UNKNOWN(node.getCodeHandler() == this->handler_);
+        CPPADCG_ASSERT_UNKNOWN(node.getCodeHandler() == this->handler_)
 
         size_t p = node.getHandlerPosition();
-        if (p == std::numeric_limits<size_t>::max())
+        if (p == (std::numeric_limits<size_t>::max)())
             throw CGException("An operation node is not managed by this code handler");
 
         if (p >= data_.size())
@@ -116,35 +116,35 @@ public:
     }
 
     inline reference get(const OperationNode<Base>& node) {
-        CPPADCG_ASSERT_UNKNOWN(node.getCodeHandler() == this->handler_);
+        CPPADCG_ASSERT_UNKNOWN(node.getCodeHandler() == this->handler_)
 
         size_t p = node.getHandlerPosition();
-        if (p == std::numeric_limits<size_t>::max())
+        if (p == (std::numeric_limits<size_t>::max)())
             throw CGException("An operation node is not managed by this code handler");
-        CPPADCG_ASSERT_UNKNOWN(p < data_.size());
+        CPPADCG_ASSERT_UNKNOWN(p < data_.size())
 
         return data_[p];
     }
 
     inline const_reference get(const OperationNode<Base>& node) const {
-        CPPADCG_ASSERT_UNKNOWN(node.getCodeHandler() == this->handler_);
+        CPPADCG_ASSERT_UNKNOWN(node.getCodeHandler() == this->handler_)
 
         size_t p = node.getHandlerPosition();
-        if (p == std::numeric_limits<size_t>::max())
+        if (p == (std::numeric_limits<size_t>::max)())
             throw CGException("An operation node is not managed by this code handler");
-        CPPADCG_ASSERT_UNKNOWN(p < data_.size());
+        CPPADCG_ASSERT_UNKNOWN(p < data_.size())
 
         return data_[p];
     }
 
     inline void set(const OperationNode<Base>& node,
                     const T& val) {
-        CPPADCG_ASSERT_UNKNOWN(node.getCodeHandler() == this->handler_);
+        CPPADCG_ASSERT_UNKNOWN(node.getCodeHandler() == this->handler_)
 
         size_t p = node.getHandlerPosition();
-        if (p == std::numeric_limits<size_t>::max())
+        if (p == (std::numeric_limits<size_t>::max)())
             throw CGException("An operation node is not managed by this code handler");
-        CPPADCG_ASSERT_UNKNOWN(p < data_.size());
+        CPPADCG_ASSERT_UNKNOWN(p < data_.size())
 
         data_[node.getHandlerPosition()] = val;
     }
@@ -215,7 +215,7 @@ protected:
     void nodesErased(size_t start,
                      size_t end) override {
         if (start < data_.size()) {
-            end = std::min(end, data_.size());
+            end = std::min<size_t>(end, data_.size());
             data_.erase(data_.begin() + start, data_.begin() + end);
         }
     }

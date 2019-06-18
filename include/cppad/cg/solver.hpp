@@ -30,7 +30,7 @@ inline CG<Base> CodeHandler<Base>::solveFor(OperationNode<Base>& expression,
     if (&expression == &var)
         return CG<Base>(var);
 
-    size_t bifurcations = std::numeric_limits<size_t>::max(); // so that it is possible to enter the loop
+    size_t bifurcations = (std::numeric_limits<size_t>::max)(); // so that it is possible to enter the loop
 
     std::vector<SourceCodePath> paths;
     BidirGraph<Base> foundGraph;

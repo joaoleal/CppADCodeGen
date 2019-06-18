@@ -4,6 +4,7 @@
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -104,6 +105,7 @@
 #include <cppad/cg/debug.hpp>
 #include <cppad/cg/argument.hpp>
 #include <cppad/cg/operation_node.hpp>
+#include <cppad/cg/operation_stack.hpp>
 #include <cppad/cg/nodes/index_operation_node.hpp>
 #include <cppad/cg/nodes/index_assign_operation_node.hpp>
 #include <cppad/cg/nodes/loop_start_operation_node.hpp>
@@ -118,6 +120,7 @@
 #include <cppad/cg/variable_name_generator.hpp>
 #include <cppad/cg/job_timer.hpp>
 #include <cppad/cg/lang/language.hpp>
+#include <cppad/cg/lang/lang_stream_stack.hpp>
 #include <cppad/cg/scope_path_element.hpp>
 #include <cppad/cg/array_id_compresser.hpp>
 #include <cppad/cg/patterns/loop_position.hpp>

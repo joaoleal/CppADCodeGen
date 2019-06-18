@@ -229,21 +229,21 @@ public:
     void merge(Loop<Base>& other,
                const std::set<EquationPattern<Base>*>& indexedLoopRelations,
                const std::vector<std::pair<EquationPattern<Base>*, EquationPattern<Base>*> >& nonIndexedLoopRelations) {
-        CPPADCG_ASSERT_UNKNOWN(iterationCount_ == other.iterationCount_);
+        CPPADCG_ASSERT_UNKNOWN(iterationCount_ == other.iterationCount_)
 
 
         equations.insert(other.equations.begin(), other.equations.end());
         other.equations.clear(); // so that it does not delete the equations
 
-        CPPADCG_ASSERT_UNKNOWN(eqGroups_.size() == 1);
-        CPPADCG_ASSERT_UNKNOWN(other.eqGroups_.size() == 1);
+        CPPADCG_ASSERT_UNKNOWN(eqGroups_.size() == 1)
+        CPPADCG_ASSERT_UNKNOWN(other.eqGroups_.size() == 1)
 
         EquationGroup<Base>& g = eqGroups_[0];
         EquationGroup<Base>& og = other.eqGroups_[0];
         g.equations.insert(og.equations.begin(), og.equations.end());
 
-        CPPADCG_ASSERT_UNKNOWN(equationOrder_.empty());
-        CPPADCG_ASSERT_UNKNOWN(iterationDependents_.empty());
+        CPPADCG_ASSERT_UNKNOWN(equationOrder_.empty())
+        CPPADCG_ASSERT_UNKNOWN(iterationDependents_.empty())
 
         g.linkedEquationsByNonIndexed.insert(og.linkedEquationsByNonIndexed.begin(), og.linkedEquationsByNonIndexed.end());
         for (EquationPattern<Base>* itNIndexed : indexedLoopRelations) {
@@ -270,7 +270,7 @@ public:
             equationOrder_[it.first] = it.second + nEq;
         }
 
-        CPPADCG_ASSERT_UNKNOWN(iterationDependents_.size() == other.iterationDependents_.size());
+        CPPADCG_ASSERT_UNKNOWN(iterationDependents_.size() == other.iterationDependents_.size())
         for (size_t iter = 0; iter < iterationDependents_.size(); iter++) {
             iterationDependents_[iter].insert(other.iterationDependents_[iter].begin(), other.iterationDependents_[iter].end());
         }
@@ -283,7 +283,7 @@ public:
                          const std::map<size_t, EquationPattern<Base>*>& dep2Equation,
                          std::map<OperationNode<Base>*, size_t>& origTemp2Index) {
 
-        CPPADCG_ASSERT_UNKNOWN(dep2Iteration_.empty());
+        CPPADCG_ASSERT_UNKNOWN(dep2Iteration_.empty())
         for (size_t iter = 0; iter < iterationCount_; iter++) {
             const std::set<size_t>& deps = iterationDependents_[iter];
 
@@ -320,7 +320,7 @@ public:
         for (size_t g = 0; g < eqGroups_.size(); g++) {
             const EquationGroup<Base>& group = eqGroups_[g];
             const std::set<size_t>& refItDep = group.iterationDependents[group.refIteration];
-            CPPADCG_ASSERT_UNKNOWN(refItDep.size() == group.equations.size());
+            CPPADCG_ASSERT_UNKNOWN(refItDep.size() == group.equations.size())
 
             for (size_t dep : refItDep) {
                 EquationPattern<Base>::uncolor(dependents[dep].getOperationNode(), *varIndexed_);
@@ -338,7 +338,7 @@ public:
                         // currently there is no way to make a distinction between yi = xi and y_(i+1) = x_(i+1)
                         // since both operations which use indexed independents would be nullptr (the dependent)
                         // an alias is used for these cases
-                        CPPADCG_ASSERT_UNKNOWN(itop2a.first != nullptr);
+                        CPPADCG_ASSERT_UNKNOWN(itop2a.first != nullptr)
                         addOperationArguments2Loop(itop2a.first, itop2a.second);
                     }
 
@@ -348,7 +348,7 @@ public:
                         // currently there is no way to make a distinction between yi = xi and y_(i+1) = x_(i+1)
                         // since both operations which use indexed independents would be nullptr (the dependent)
                         // an alias is used for these cases
-                        CPPADCG_ASSERT_UNKNOWN(opLoopRef != nullptr);
+                        CPPADCG_ASSERT_UNKNOWN(opLoopRef != nullptr)
 
                         const OperationNode<Base>* opEqRef = eq->operationEO2Reference.at(dep).at(opLoopRef);
                         addOperationArguments2Loop(opLoopRef, eq->indexedOpIndep.op2Arguments.at(opEqRef));
@@ -391,7 +391,7 @@ public:
 
         for (EquationPattern<Base>* eq : equations) {
             depsInEq[eq] = eq->dependents;
-            nMaxIt = std::max(nMaxIt, eq->dependents.size());
+            nMaxIt = std::max<size_t>(nMaxIt, eq->dependents.size());
         }
 
         iterationDependents_.reserve(nMaxIt + 2 * equations.size());
@@ -460,7 +460,7 @@ public:
                         std::vector<size_t>& eq2FreeDep = freeDependents[eq2];
                         typename std::vector<size_t>::const_iterator itFreeDep2;
                         itFreeDep2 = std::find(eq2FreeDep.cbegin(), eq2FreeDep.cend(), dep2); // consider using lower_bound instead
-                        CPPADCG_ASSERT_UNKNOWN(itFreeDep2 != eq2FreeDep.cend());
+                        CPPADCG_ASSERT_UNKNOWN(itFreeDep2 != eq2FreeDep.cend())
 
                         eq2FreeDep.erase(itFreeDep2);
                     }
@@ -479,7 +479,7 @@ public:
 
                         std::vector<size_t>& eqFreeDep = freeDependents[eq];
                         auto itFreeDep = find(eqFreeDep.begin(), eqFreeDep.end(), dep); // consider using lower_bound instead
-                        CPPADCG_ASSERT_UNKNOWN(itFreeDep != eqFreeDep.end());
+                        CPPADCG_ASSERT_UNKNOWN(itFreeDep != eqFreeDep.end())
 
                         eqFreeDep.erase(itFreeDep);
 
@@ -572,7 +572,7 @@ public:
 
             }
 
-            iterationCount_ = std::max(iterationCount_, iterationDependents_.size());
+            iterationCount_ = std::max<size_t>(iterationCount_, iterationDependents_.size());
         }
 
     }
@@ -647,7 +647,7 @@ private:
                 /**
                  * create the independent variable order
                  */
-                CPPADCG_ASSERT_UNKNOWN(dep2Indep.size() > 0 && dep2Indep.size() <= iterationCount_);
+                CPPADCG_ASSERT_UNKNOWN(dep2Indep.size() > 0 && dep2Indep.size() <= iterationCount_)
                 for (const auto& itDep2Indep : dep2Indep) {
                     size_t iterationIndex = itDep2Indep.first;
                     const OperationNode<Base>* indep = itDep2Indep.second;
@@ -708,8 +708,8 @@ private:
                               std::map<OperationNode<Base>*, size_t>& origTemp2Index) {
         using CGB = CG<Base>;
         using ADCGB = AD<CGB>;
-        CPPADCG_ASSERT_UNKNOWN(independents.size() > 0);
-        CPPADCG_ASSERT_UNKNOWN(independents[0].getCodeHandler() != nullptr);
+        CPPADCG_ASSERT_UNKNOWN(independents.size() > 0)
+        CPPADCG_ASSERT_UNKNOWN(independents[0].getCodeHandler() != nullptr)
         CodeHandler<Base>& origHandler = *independents[0].getCodeHandler();
 
         /**
@@ -718,7 +718,7 @@ private:
         nIndependents_ = 0;
         idCounter_ = 1;
 
-        CPPADCG_ASSERT_UNKNOWN(equationOrder_.size() == equations.size());
+        CPPADCG_ASSERT_UNKNOWN(equationOrder_.size() == equations.size())
 
         std::vector<CGB> deps(equations.size());
 
@@ -876,7 +876,7 @@ private:
         /*******************************************************************
          * create the loop model object
          ******************************************************************/
-        std::vector<std::vector<size_t> > dependentOrigIndexes(equations.size(), std::vector<size_t> (iterationCount_, std::numeric_limits<size_t>::max()));
+        std::vector<std::vector<size_t> > dependentOrigIndexes(equations.size(), std::vector<size_t> (iterationCount_, (std::numeric_limits<size_t>::max)()));
         for (size_t it = 0; it < iterationCount_; it++) {
             const std::set<size_t>& itDeps = iterationDependents_[it];
             for (size_t origDep : itDeps) {
@@ -896,7 +896,7 @@ private:
                 if (indep != nullptr) {
                     index = indep->getInfo()[0];
                 } else {
-                    index = std::numeric_limits<size_t>::max(); // not used at this iteration by any equation
+                    index = (std::numeric_limits<size_t>::max)(); // not used at this iteration by any equation
                 }
                 indexedIndependents[j][it] = index;
             }
@@ -944,7 +944,7 @@ private:
     inline Argument<Base> makeGraphClones(const EquationPattern<Base>& eq,
                                           OperationNode<Base>& node) {
 
-        CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGOpCode::Inv);
+        CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGOpCode::Inv)
 
         size_t id = (*varId_)[node];
 
@@ -1019,9 +1019,9 @@ private:
 
     OperationNode<Base>& getIndexedIndependentClone(const OperationNode<Base>* operation,
                                                     size_t argIndex) {
-        CPPADCG_ASSERT_UNKNOWN(operation == nullptr || operation->getArguments().size() > argIndex);
-        CPPADCG_ASSERT_UNKNOWN(operation == nullptr || operation->getArguments()[argIndex].getOperation() != nullptr);
-        CPPADCG_ASSERT_UNKNOWN(operation == nullptr || operation->getArguments()[argIndex].getOperation()->getOperationType() == CGOpCode::Inv);
+        CPPADCG_ASSERT_UNKNOWN(operation == nullptr || operation->getArguments().size() > argIndex)
+        CPPADCG_ASSERT_UNKNOWN(operation == nullptr || operation->getArguments()[argIndex].getOperation() != nullptr)
+        CPPADCG_ASSERT_UNKNOWN(operation == nullptr || operation->getArguments()[argIndex].getOperation()->getOperationType() == CGOpCode::Inv)
 
         OperationArgumentsIndepOrder<Base>* args2Order = op2Arg2IndepOrder_.at(operation);
         IndependentOrder<Base>* indepOrder = args2Order->arg2Order.at(argIndex);
@@ -1043,7 +1043,7 @@ private:
     }
 
     OperationNode<Base>& getNonIndexedIndependentClone(const OperationNode<Base>& node) {
-        CPPADCG_ASSERT_UNKNOWN(node.getOperationType() == CGOpCode::Inv);
+        CPPADCG_ASSERT_UNKNOWN(node.getOperationType() == CGOpCode::Inv)
 
         auto it = orig2ConstIndepClone_.find(&node);
         if (it != orig2ConstIndepClone_.end()) {
@@ -1067,9 +1067,9 @@ private:
      * @return the clone
      */
     OperationNode<Base>& makeTemporaryVarClone(OperationNode<Base>& node) {
-        CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGOpCode::Inv);
-        CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGOpCode::ArrayCreation);
-        CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGOpCode::SparseArrayCreation);
+        CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGOpCode::Inv)
+        CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGOpCode::ArrayCreation)
+        CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGOpCode::SparseArrayCreation)
 
         CG<Base> newIndep;
         handler_.makeVariable(newIndep);
@@ -1190,7 +1190,7 @@ private:
                         const OperationNode<Base>* node2) {
             const IndependentOrder<Base>* indepOrder1 = clone2indexedIndep.at(node1);
             const IndependentOrder<Base>* indepOrder2 = clone2indexedIndep.at(node2);
-            CPPADCG_ASSERT_UNKNOWN(indepOrder1->order.size() == indepOrder2->order.size());
+            CPPADCG_ASSERT_UNKNOWN(indepOrder1->order.size() == indepOrder2->order.size())
 
             size_t size = indepOrder1->order.size();
             for (size_t j = 0; j < size; j++) {
@@ -1214,7 +1214,7 @@ private:
                     return false;
             }
 
-            CPPADCG_ASSERT_UNKNOWN(false); // should never get here
+            CPPADCG_ASSERT_UNKNOWN(false) // should never get here
             return false;
         }
     };

@@ -120,6 +120,8 @@ class SectionedIndexPattern;
 /***************************************************************************
  * Languages
  **************************************************************************/
+template<class Base>
+class LangStreamOperation;
 
 template<class Base>
 class LanguageC;

@@ -629,7 +629,7 @@ public:
                 out << index << " == " << min;
             } else if (min == 0) {
                 out << index << " \\le " << max;
-            } else if (max == std::numeric_limits<size_t>::max()) {
+            } else if (max == (std::numeric_limits<size_t>::max)()) {
                 out << min << " \\le " << index;
             } else {
                 if (infoSize != 2)
@@ -682,7 +682,7 @@ public:
 protected:
 
     void generateSourceCode(std::ostream& out,
-                            const std::unique_ptr<LanguageGenerationData<Base> >& info) override {
+                            std::unique_ptr<LanguageGenerationData<Base> > info) override {
 
         const bool multiFile = _maxAssignmentsPerFile > 0 && _sources != nullptr;
 
@@ -1060,7 +1060,8 @@ protected:
     }
 
     bool createsNewVariable(const Node& var,
-                            size_t totalUseCount) const override {
+                            size_t totalUseCount,
+                            size_t opCount) const override {
         CGOpCode op = var.getOperationType();
         if (totalUseCount > 1) {
             return op != CGOpCode::ArrayElement && op != CGOpCode::Index && op != CGOpCode::IndexDeclaration && op != CGOpCode::Tmp;

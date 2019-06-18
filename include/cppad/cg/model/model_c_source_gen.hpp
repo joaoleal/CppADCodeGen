@@ -4,6 +4,7 @@
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -239,6 +240,10 @@ protected:
      */
     size_t _maxAssignPerFunc;
     /**
+     * the maximum number of operations per variable assignment
+     */
+    size_t _maxOperationsPerAssignment;
+    /**
      *
      */
     std::vector<std::set<size_t> > _relatedDepCandidates;
@@ -312,6 +317,7 @@ public:
         _jacMode(JacobianADMode::Automatic),
         _atomicsInfo(nullptr),
         _maxAssignPerFunc(20000),
+        _maxOperationsPerAssignment(1000),
         _jobTimer(nullptr) {
 
         CPPADCG_ASSERT_KNOWN(!_name.empty(), "Model name cannot be empty");
@@ -351,7 +357,7 @@ public:
     template<class VectorBase>
     inline void setTypicalIndependentValues(const VectorBase& x) {
         CPPAD_ASSERT_KNOWN(x.size() == 0 || x.size() == _fun.Domain(),
-                           "Invalid independent variable vector size");
+                           "Invalid independent variable vector size")
         _x.resize(x.size());
         for (size_t i = 0; i < x.size(); i++) {
             _x[i] = x[i];
@@ -808,12 +814,49 @@ public:
         _custom_hess = Position(elements);
     }
 
+    /**
+     * The maximum number of assignment per generated function.
+     * Zero means it is disabled (no limit).
+     * Note that it is not possible to split some function (e.g., containing loops) and, therefore, this
+     * limit can be violated.
+     *
+     * @return The maximum number of assignments per file/function
+     */
     inline size_t getMaxAssignmentsPerFunc() const {
         return _maxAssignPerFunc;
     }
 
+    /**
+     * Sets the maximum number of assignment per generated function.
+     * Zero means it is disabled (no limit).
+     * By setting a limit, it is possible to reduce the compiler workload by having multiple file/function
+     * instead of a very large one.
+     * Note that it is not possible to split some function (e.g., containing loops) and, therefore, this
+     * limit can be violated.
+     *
+     * @param maxAssignPerFunc The maximum number of assignments per file/function
+     */
     inline void setMaxAssignmentsPerFunc(size_t maxAssignPerFunc) {
         _maxAssignPerFunc = maxAssignPerFunc;
+    }
+
+    /**
+     * The maximum number of operations per variable assignment.
+     *
+     * @return The maximum number of operations per variable assignment
+     */
+    inline size_t getMaxOperationsPerAssignment() const {
+        return _maxOperationsPerAssignment;
+    }
+
+    /**
+     * Defines the maximum number of operations per variable assignment.
+     * Defining a limit can reduce the memory required for compilation of the source code.
+     *
+     * @param maxOperationsPerAssignment  The maximum number of operations per variable assignment.
+     */
+    inline void setMaxOperationsPerAssignment(size_t maxOperationsPerAssignment) {
+        _maxOperationsPerAssignment = maxOperationsPerAssignment;
     }
 
     inline virtual ~ModelCSourceGen() {

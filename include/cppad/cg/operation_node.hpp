@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -240,7 +241,7 @@ protected:
         operation_(orig.operation_),
         info_(orig.info_),
         arguments_(orig.arguments_),
-        pos_(std::numeric_limits<size_t>::max()),
+        pos_((std::numeric_limits<size_t>::max)()),
         name_(orig.name_ != nullptr ? new std::string(*orig.name_) : nullptr) {
     }
 
@@ -248,7 +249,7 @@ protected:
                          CGOpCode op) :
         handler_(handler),
         operation_(op),
-        pos_(std::numeric_limits<size_t>::max()) {
+        pos_((std::numeric_limits<size_t>::max)()) {
     }
 
     inline OperationNode(CodeHandler<Base>* handler,
@@ -257,7 +258,7 @@ protected:
         handler_(handler),
         operation_(op),
         arguments_ {arg},
-        pos_(std::numeric_limits<size_t>::max()) {
+        pos_((std::numeric_limits<size_t>::max)()) {
     }
 
     inline OperationNode(CodeHandler<Base>* handler,
@@ -266,7 +267,7 @@ protected:
         handler_(handler),
         operation_(op),
         arguments_(std::move(args)),
-        pos_(std::numeric_limits<size_t>::max()) {
+        pos_((std::numeric_limits<size_t>::max)()) {
     }
 
     inline OperationNode(CodeHandler<Base>* handler,
@@ -277,7 +278,7 @@ protected:
         operation_(op),
         info_(std::move(info)),
         arguments_(std::move(args)),
-        pos_(std::numeric_limits<size_t>::max()) {
+        pos_((std::numeric_limits<size_t>::max)()) {
     }
 
     inline OperationNode(CodeHandler<Base>* handler,
@@ -288,7 +289,7 @@ protected:
         operation_(op),
         info_(info),
         arguments_(args),
-        pos_(std::numeric_limits<size_t>::max()) {
+        pos_((std::numeric_limits<size_t>::max)()) {
     }
 
     inline void setHandlerPosition(size_t pos) {
@@ -309,12 +310,12 @@ public:
     }
 
 protected:
-    static inline std::set<CGOpCode> makeCustomNodeClassesSet();
+    static inline std::set<CGOpCode> makeCustomNodeClassesSet() noexcept;
 
 };
 
 template<class Base>
-inline std::set<CGOpCode> OperationNode<Base>::makeCustomNodeClassesSet() {
+inline std::set<CGOpCode> OperationNode<Base>::makeCustomNodeClassesSet() noexcept {
     std::set<CGOpCode> s;
     s.insert(CGOpCode::IndexAssign);
     s.insert(CGOpCode::Index);
