@@ -109,8 +109,8 @@ public:
         return _atomicNames;
     }
 
-    bool addAtomicFunction(atomic_three<Base>& atomic) override {
-        return addExternalFunction<atomic_three<Base>, AtomicExternalFunctionWrapper<Base> >
+    bool addAtomicFunction(atomic_base<Base>& atomic) override {
+        return addExternalFunction<atomic_base<Base>, AtomicExternalFunctionWrapper<Base> >
                 (atomic, atomic.afun_name());
     }
 
