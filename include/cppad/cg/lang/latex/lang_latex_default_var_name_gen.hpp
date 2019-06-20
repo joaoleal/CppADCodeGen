@@ -177,8 +177,8 @@ public:
     std::string generateIndexedDependent(const OperationNode<Base>& var,
                                          size_t id,
                                          const IndexPattern& ip) override {
-        CPPADCG_ASSERT_KNOWN(var.getOperationType() == CGOpCode::LoopIndexedDep, "Invalid node type");
-        CPPADCG_ASSERT_KNOWN(!var.getArguments().empty(), "Invalid number of arguments");
+        CPPADCG_ASSERT_KNOWN(var.getOperationType() == CGOpCode::LoopIndexedDep, "Invalid node type")
+        CPPADCG_ASSERT_KNOWN(!var.getArguments().empty(), "Invalid number of arguments")
 
         _ss.clear();
         _ss.str("");
@@ -196,8 +196,8 @@ public:
     std::string generateIndexedIndependent(const OperationNode<Base>& independent,
                                            size_t id,
                                            const IndexPattern& ip) override {
-        CPPADCG_ASSERT_KNOWN(independent.getOperationType() == CGOpCode::LoopIndexedIndep, "Invalid node type");
-        CPPADCG_ASSERT_KNOWN(independent.getArguments().size() > 0, "Invalid number of arguments");
+        CPPADCG_ASSERT_KNOWN(independent.getOperationType() == CGOpCode::LoopIndexedIndep, "Invalid node type")
+        CPPADCG_ASSERT_KNOWN(independent.getArguments().size() > 0, "Invalid number of arguments")
 
         _ss.clear();
         _ss.str("");
@@ -324,8 +324,8 @@ protected:
         std::vector<const OperationNode<Base>*> indexes(args.size() - offset);
 
         for (size_t a = offset; a < args.size(); a++) {
-            CPPADCG_ASSERT_KNOWN(args[a].getOperation() != nullptr, "Invalid argument");
-            CPPADCG_ASSERT_KNOWN(args[a].getOperation()->getOperationType() == CGOpCode::Index, "Invalid argument");
+            CPPADCG_ASSERT_KNOWN(args[a].getOperation() != nullptr, "Invalid argument")
+            CPPADCG_ASSERT_KNOWN(args[a].getOperation()->getOperationType() == CGOpCode::Index, "Invalid argument")
 
             indexes[a - offset] = &static_cast<const IndexOperationNode<Base>*> (args[a].getOperation())->getIndex();
         }

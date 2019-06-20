@@ -37,17 +37,17 @@ public:
 
     inline OperationNode<Base>& getIndexCreationNode() const {
         const std::vector<Argument<Base> >& args = this->getArguments();
-        CPPADCG_ASSERT_KNOWN(!args.empty(), "Invalid number of arguments");
-        CPPADCG_ASSERT_KNOWN(args.back().getOperation() != nullptr, "Invalid argument type");
+        CPPADCG_ASSERT_KNOWN(!args.empty(), "Invalid number of arguments")
+        CPPADCG_ASSERT_KNOWN(args.back().getOperation() != nullptr, "Invalid argument type")
         return *args.back().getOperation();
     }
 
     inline const OperationNode<Base>& getIndex() const {
         const std::vector<Argument<Base> >& args = this->getArguments();
-        CPPADCG_ASSERT_KNOWN(!args.empty(), "Invalid number of arguments");
+        CPPADCG_ASSERT_KNOWN(!args.empty(), "Invalid number of arguments")
 
         OperationNode<Base>* aNode = args[0].getOperation();
-        CPPADCG_ASSERT_KNOWN(aNode != nullptr && aNode->getOperationType() == CGOpCode::IndexDeclaration, "Invalid argument operation type");
+        CPPADCG_ASSERT_KNOWN(aNode != nullptr && aNode->getOperationType() == CGOpCode::IndexDeclaration, "Invalid argument operation type")
 
         return static_cast<const OperationNode<Base>&> (*aNode);
     }

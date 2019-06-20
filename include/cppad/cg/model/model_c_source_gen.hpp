@@ -81,7 +81,7 @@ protected:
             defined(true),
             row(r),
             col(c) {
-            CPPADCG_ASSERT_KNOWN(r.size() == c.size(), "The number of row indexes must be the same as the number of column indexes.");
+            CPPADCG_ASSERT_KNOWN(r.size() == c.size(), "The number of row indexes must be the same as the number of column indexes.")
         }
 
         template<class VectorSet>
@@ -320,17 +320,17 @@ public:
         _maxOperationsPerAssignment(1000),
         _jobTimer(nullptr) {
 
-        CPPADCG_ASSERT_KNOWN(!_name.empty(), "Model name cannot be empty");
+        CPPADCG_ASSERT_KNOWN(!_name.empty(), "Model name cannot be empty")
         CPPADCG_ASSERT_KNOWN((_name[0] >= 'a' && _name[0] <= 'z') ||
                              (_name[0] >= 'A' && _name[0] <= 'Z'),
-                             "Invalid model name character");
+                             "Invalid model name character")
         for (size_t i = 1; i < _name.size(); i++) {
             char c = _name[i];
             CPPADCG_ASSERT_KNOWN((c >= 'a' && c <= 'z') ||
                                  (c >= 'A' && c <= 'Z') ||
                                  (c >= '0' && c <= '9') ||
                                  c == '_'
-                                 , "Invalid model name character");
+                                 , "Invalid model name character")
         }
     }
 

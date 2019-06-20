@@ -37,13 +37,13 @@ public:
                          const Array tx[],
                          const Array& params,
                          Array& ty) {
-        CPPADCG_ASSERT_KNOWN(!tx[0].sparse, "independent array must be dense");
+        CPPADCG_ASSERT_KNOWN(!tx[0].sparse, "independent array must be dense")
         ArrayView<const Base> x(static_cast<const Base*> (tx[0].data), tx[0].size);
 
-        CPPADCG_ASSERT_KNOWN(!params.sparse, "parameter array must be dense");
+        CPPADCG_ASSERT_KNOWN(!params.sparse, "parameter array must be dense")
         ArrayView<Base> pars(static_cast<Base*> (params.data), params.size);
 
-        CPPADCG_ASSERT_KNOWN(!ty.sparse, "dependent array must be dense");
+        CPPADCG_ASSERT_KNOWN(!ty.sparse, "dependent array must be dense")
         ArrayView<Base> y(static_cast<Base*> (ty.data), ty.size);
 
         if (p == 0) {
@@ -51,7 +51,7 @@ public:
             return true;
 
         } else if (p == 1) {
-            CPPADCG_ASSERT_KNOWN(tx[1].sparse, "independent Taylor array must be sparse");
+            CPPADCG_ASSERT_KNOWN(tx[1].sparse, "independent Taylor array must be sparse")
             Base* tx1 = static_cast<Base*> (tx[1].data);
 
             model_->ForwardOne(x,
@@ -70,17 +70,17 @@ public:
                          const Array& params,
                          Array& px,
                          const Array py[]) {
-        CPPADCG_ASSERT_KNOWN(!tx[0].sparse, "independent array must be dense");
+        CPPADCG_ASSERT_KNOWN(!tx[0].sparse, "independent array must be dense")
         ArrayView<const Base> x(static_cast<const Base*> (tx[0].data), tx[0].size);
 
-        CPPADCG_ASSERT_KNOWN(!params.sparse, "parameter array must be dense");
+        CPPADCG_ASSERT_KNOWN(!params.sparse, "parameter array must be dense")
         ArrayView<Base> pars(static_cast<Base*> (params.data), params.size);
 
-        CPPADCG_ASSERT_KNOWN(!px.sparse, "independent partials array must be dense");
+        CPPADCG_ASSERT_KNOWN(!px.sparse, "independent partials array must be dense")
         ArrayView<Base> pxb(static_cast<Base*> (px.data), px.size);
 
         if (p == 0) {
-            CPPADCG_ASSERT_KNOWN(py[0].sparse, "dependent partials array must be sparse");
+            CPPADCG_ASSERT_KNOWN(py[0].sparse, "dependent partials array must be sparse")
             Base* pyb = static_cast<Base*> (py[0].data);
 
             model_->ReverseOne(x,
@@ -90,11 +90,11 @@ public:
             return true;
 
         } else if (p == 1) {
-            CPPADCG_ASSERT_KNOWN(tx[1].sparse, "independent array must be sparse");
+            CPPADCG_ASSERT_KNOWN(tx[1].sparse, "independent array must be sparse")
             const Base* tx1 = static_cast<const Base*> (tx[1].data);
-            CPPADCG_ASSERT_KNOWN(py[0].sparse, "dependent partials array must be sparse");
-            CPPADCG_ASSERT_KNOWN(py[0].nnz == 0, "first order dependent partials must be zero");
-            CPPADCG_ASSERT_KNOWN(!py[1].sparse, "independent partials array must be dense");
+            CPPADCG_ASSERT_KNOWN(py[0].sparse, "dependent partials array must be sparse")
+            CPPADCG_ASSERT_KNOWN(py[0].nnz == 0, "first order dependent partials must be zero")
+            CPPADCG_ASSERT_KNOWN(!py[1].sparse, "independent partials array must be dense")
             ArrayView<const Base> py2(static_cast<Base*> (py[1].data), py[1].size);
 
             model_->ReverseTwo(x,

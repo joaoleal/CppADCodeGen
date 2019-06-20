@@ -27,16 +27,16 @@ public:
      * for dependent variables relative to independent variables.
      *
      * @param libModel The model calling where this is being called from.
-     * @param q Lowest order for this forward mode calculation.
-     * @param p Highest order for this forward mode calculation.
+     * @param order_low Lowest order for this forward mode calculation.
+     * @param order_up Highest order for this forward mode calculation.
      * @param tx Independent variable Taylor coefficients.
      * @param params Parameters.
      * @param ty Dependent variable Taylor coefficients.
      * @return <code>true</code> if evaluation succeeded, <code>false</code> otherwise.
      */
     virtual bool forward(FunctorGenericModel<Base>& libModel,
-                         int q,
-                         int p,
+                         int order_low,
+                         int order_up,
                          const Array tx[],
                          const Array& params,
                          Array& ty) = 0;

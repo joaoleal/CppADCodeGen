@@ -119,7 +119,7 @@ public:
     }
 
     void addCustomFunctionSource(const std::string& filename, const std::string& source) {
-        CPPADCG_ASSERT_KNOWN(!filename.empty(), "The filename name cannot be empty");
+        CPPADCG_ASSERT_KNOWN(!filename.empty(), "The filename name cannot be empty")
 
         _customSource[filename] = source;
     }

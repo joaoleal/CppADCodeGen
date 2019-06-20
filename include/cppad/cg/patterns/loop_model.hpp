@@ -144,7 +144,7 @@ public:
         iteration2orig2indexedIndepIndexes_(iterationCount),
         jacSparsity_(false),
         hessSparsity_(false) {
-        CPPADCG_ASSERT_KNOWN(fun != nullptr, "fun cannot be null");
+        CPPADCG_ASSERT_KNOWN(fun != nullptr, "fun cannot be null")
 
         /**
          * dependents

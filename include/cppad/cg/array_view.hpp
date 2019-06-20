@@ -236,7 +236,7 @@ public:
      * @return an ArrayView encapsulating the first n elements
      */
     inline ArrayView<value_type> head(size_t n) {
-        CPPADCG_ASSERT_KNOWN(n <= size(), "ArrayView::head() size must be equal to or greater than the array size");
+        CPPADCG_ASSERT_KNOWN(n <= size(), "ArrayView::head() size must be equal to or greater than the array size")
         return ArrayView<value_type> (_data, n);
     }
 
@@ -244,7 +244,7 @@ public:
      * @return an ArrayView encapsulating the first n elements
      */
     inline ArrayView<const value_type> head(size_t n) const {
-        CPPADCG_ASSERT_KNOWN(n <= size(), "ArrayView::head() size must be equal to or greater than the array size");
+        CPPADCG_ASSERT_KNOWN(n <= size(), "ArrayView::head() size must be equal to or greater than the array size")
         return ArrayView<const value_type> (_data, n);
     }
 
@@ -252,7 +252,7 @@ public:
      * @return an ArrayView encapsulating the last n elements
      */
     inline ArrayView<value_type> tail(size_t n) {
-        CPPADCG_ASSERT_KNOWN(n <= size(), "ArrayView::tail() size must be equal to or greater than the array size");
+        CPPADCG_ASSERT_KNOWN(n <= size(), "ArrayView::tail() size must be equal to or greater than the array size")
         return ArrayView<value_type> (_data + (size() - n), n);
     }
 
@@ -260,7 +260,7 @@ public:
      * @return an ArrayView encapsulating the last n elements
      */
     inline ArrayView<const value_type> tail(size_t n) const {
-        CPPADCG_ASSERT_KNOWN(n <= size(), "ArrayView::tail() size must be equal to or greater than the array size");
+        CPPADCG_ASSERT_KNOWN(n <= size(), "ArrayView::tail() size must be equal to or greater than the array size")
         return ArrayView<const value_type> (_data + (size() - n), n);
     }
 
@@ -269,8 +269,8 @@ public:
      */
     inline ArrayView<value_type> segment(size_t start,
                                          size_t n) {
-        CPPADCG_ASSERT_KNOWN(start < size(), "ArrayView::segment() start index must be lower than the array size");
-        CPPADCG_ASSERT_KNOWN(start + n <= size(), "ArrayView::segment() the new segment will end after the end of this array");
+        CPPADCG_ASSERT_KNOWN(start < size(), "ArrayView::segment() start index must be lower than the array size")
+        CPPADCG_ASSERT_KNOWN(start + n <= size(), "ArrayView::segment() the new segment will end after the end of this array")
         return ArrayView<value_type> (_data + start, n);
     }
 
@@ -279,8 +279,8 @@ public:
      */
     inline ArrayView<const value_type> segment(size_t start,
                                                size_t n) const {
-        CPPADCG_ASSERT_KNOWN(start < size(), "ArrayView::segment() start index must be lower than the array size");
-        CPPADCG_ASSERT_KNOWN(start + n <= size(), "ArrayView::segment() the new segment will end after the end of this array");
+        CPPADCG_ASSERT_KNOWN(start < size(), "ArrayView::segment() start index must be lower than the array size")
+        CPPADCG_ASSERT_KNOWN(start + n <= size(), "ArrayView::segment() the new segment will end after the end of this array")
         return ArrayView<const value_type> (_data + start, n);
     }
 
@@ -340,12 +340,12 @@ public:
 
     // Element access.
     inline reference operator[](size_type i) {
-        CPPADCG_ASSERT_KNOWN(i < size(), "ArrayView::operator[] index is equal to or greater than the array size");
+        CPPADCG_ASSERT_KNOWN(i < size(), "ArrayView::operator[] index is equal to or greater than the array size")
         return _data[i];
     }
 
     inline const_reference operator[](size_type i) const {
-        CPPADCG_ASSERT_KNOWN(i < size(), "ArrayView::operator[] index is equal to or greater than the array size");
+        CPPADCG_ASSERT_KNOWN(i < size(), "ArrayView::operator[] index is equal to or greater than the array size")
         return _data[i];
     }
 
@@ -362,22 +362,22 @@ public:
     }
 
     inline reference front() {
-        CPPADCG_ASSERT_KNOWN(!empty(), "ArrayView: cannot call front for an empty array");
+        CPPADCG_ASSERT_KNOWN(!empty(), "ArrayView: cannot call front for an empty array")
         return *begin();
     }
 
     inline const_reference front() const {
-        CPPADCG_ASSERT_KNOWN(!empty(), "ArrayView: cannot call front for an empty array");
+        CPPADCG_ASSERT_KNOWN(!empty(), "ArrayView: cannot call front for an empty array")
         return _data[0];
     }
 
     inline reference back() {
-        CPPADCG_ASSERT_KNOWN(!empty(), "ArrayView: cannot call back for an empty array");
+        CPPADCG_ASSERT_KNOWN(!empty(), "ArrayView: cannot call back for an empty array")
         return *(end() - 1);
     }
 
     inline const_reference back() const {
-        CPPADCG_ASSERT_KNOWN(!empty(), "ArrayView: cannot call back for an empty array");
+        CPPADCG_ASSERT_KNOWN(!empty(), "ArrayView: cannot call back for an empty array")
         return _data[size() - 1];
     }
 

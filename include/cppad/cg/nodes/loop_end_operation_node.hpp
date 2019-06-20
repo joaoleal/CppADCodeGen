@@ -33,10 +33,10 @@ public:
 
     inline const LoopStartOperationNode<Base>& getLoopStart() const {
         const std::vector<Argument<Base> >& args = this->getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() > 0, "There must be at least one argument");
+        CPPADCG_ASSERT_KNOWN(args.size() > 0, "There must be at least one argument")
 
         OperationNode<Base>* aNode = args[0].getOperation();
-        CPPADCG_ASSERT_KNOWN(aNode != nullptr && aNode->getOperationType() == CGOpCode::LoopStart, "The first argument must be the loop start operation");
+        CPPADCG_ASSERT_KNOWN(aNode != nullptr && aNode->getOperationType() == CGOpCode::LoopStart, "The first argument must be the loop start operation")
 
         return dynamic_cast<LoopStartOperationNode<Base>&> (*aNode);
     }

@@ -272,13 +272,13 @@ private:
         }
 
         while (scRef->getOperationType() == CGOpCode::Alias) {
-            CPPADCG_ASSERT_KNOWN(scRef->getArguments().size() == 1, "Invalid number of arguments for alias");
+            CPPADCG_ASSERT_KNOWN(scRef->getArguments().size() == 1, "Invalid number of arguments for alias")
             OperationNode<Base>* sc = scRef->getArguments()[0].getOperation();
             if (sc != nullptr && sc->getOperationType() == CGOpCode::Inv) break;  // an alias is used to distinguish between indexed dependents and indexed independents
             scRef = sc;
         }
         while (sc2->getOperationType() == CGOpCode::Alias) {
-            CPPADCG_ASSERT_KNOWN(sc2->getArguments().size() == 1, "Invalid number of arguments for alias");
+            CPPADCG_ASSERT_KNOWN(sc2->getArguments().size() == 1, "Invalid number of arguments for alias")
             OperationNode<Base>* sc = sc2->getArguments()[0].getOperation();
             if (sc != nullptr && sc->getOperationType() == CGOpCode::Inv) break;  // an alias is used to distinguish between indexed dependents and indexed independents
             sc2 = sc;
@@ -418,13 +418,13 @@ private:
                                 std::set<const OperationNode<Base>*>& indexedOperations) {
 
         while (scRef->getOperationType() == CGOpCode::Alias) {
-            CPPADCG_ASSERT_KNOWN(scRef->getArguments().size() == 1, "Invalid number of arguments for alias");
+            CPPADCG_ASSERT_KNOWN(scRef->getArguments().size() == 1, "Invalid number of arguments for alias")
             OperationNode<Base>* sc = scRef->getArguments()[0].getOperation();
             if (sc != nullptr && sc->getOperationType() == CGOpCode::Inv) break; // an alias is used to distinguish between indexed dependents and indexed independents
             scRef = sc;
         }
         while (sc2->getOperationType() == CGOpCode::Alias) {
-            CPPADCG_ASSERT_KNOWN(sc2->getArguments().size() == 1, "Invalid number of arguments for alias");
+            CPPADCG_ASSERT_KNOWN(sc2->getArguments().size() == 1, "Invalid number of arguments for alias")
             OperationNode<Base>* sc = sc2->getArguments()[0].getOperation();
             if (sc != nullptr && sc->getOperationType() == CGOpCode::Inv) break; // an alias is used to distinguish between indexed dependents and indexed independents
             sc2 = sc;

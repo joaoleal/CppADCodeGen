@@ -1169,7 +1169,7 @@ protected:
     }
 
     virtual void printIndependentParameterName(Node& op) {
-        CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 0, "Invalid number of arguments for independent parameter");
+        CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 0, "Invalid number of arguments for independent parameter")
         _code << "<mrow id='" << createHtmlID(op) << "' class='indep'>" << _nameGen->generateParameter(op, getVariableID(op)) << "</mrow>";
     }
 

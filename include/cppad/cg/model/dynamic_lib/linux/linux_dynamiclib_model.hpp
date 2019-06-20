@@ -50,11 +50,11 @@ protected:
      *
      * @param name The model name
      */
-    LinuxDynamicLibModel(LinuxDynamicLib<Base>* dynLib, const std::string& name) :
-        FunctorGenericModel<Base>(name),
+    LinuxDynamicLibModel(LinuxDynamicLib<Base>* dynLib, std::string name) :
+        FunctorGenericModel<Base>(std::move(name)),
         _dynLib(dynLib) {
 
-        CPPADCG_ASSERT_UNKNOWN(_dynLib != nullptr);
+        CPPADCG_ASSERT_UNKNOWN(_dynLib != nullptr)
 
         this->init();
     }

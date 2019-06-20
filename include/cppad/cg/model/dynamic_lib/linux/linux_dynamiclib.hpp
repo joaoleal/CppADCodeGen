@@ -55,7 +55,7 @@ public:
 
         // load the dynamic library
         _dynLibHandle = dlopen(path.c_str(), dlOpenMode);
-        CPPADCG_ASSERT_KNOWN(_dynLibHandle != nullptr, ("Failed to dynamically load library '" + dynLibName + "': " + dlerror()).c_str());
+        CPPADCG_ASSERT_KNOWN(_dynLibHandle != nullptr, ("Failed to dynamically load library '" + dynLibName + "': " + dlerror()).c_str())
 
         // validate the dynamic library
         this->validate();

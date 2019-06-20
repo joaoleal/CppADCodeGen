@@ -71,8 +71,8 @@ public:
         dependentIndexes_(dependentOrigIndexes),
         jacSparsity_(false),
         hessSparsity_(false) {
-        CPPADCG_ASSERT_KNOWN(fun != nullptr, "fun cannot be null");
-        CPPADCG_ASSERT_KNOWN(dependentOrigIndexes.size() <= fun->Range(), "invalid size");
+        CPPADCG_ASSERT_KNOWN(fun != nullptr, "fun cannot be null")
+        CPPADCG_ASSERT_KNOWN(dependentOrigIndexes.size() <= fun->Range(), "invalid size")
 
         for (size_t il = 0; il < dependentIndexes_.size(); il++)
             dependentOrig2Local[dependentIndexes_[il]] = il;

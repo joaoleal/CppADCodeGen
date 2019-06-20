@@ -61,7 +61,7 @@ public:
     }
 
     inline void setLibraryName(const std::string& libraryName) {
-        CPPADCG_ASSERT_KNOWN(!libraryName.empty(), "Library name cannot be empty");
+        CPPADCG_ASSERT_KNOWN(!libraryName.empty(), "Library name cannot be empty")
 
         _libraryName = libraryName;
     }

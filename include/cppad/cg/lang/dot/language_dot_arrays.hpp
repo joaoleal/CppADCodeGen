@@ -20,7 +20,7 @@ namespace cg {
 
 template<class Base>
 std::string LanguageDot<Base>::printArrayCreationOp(OperationNode<Base>& array) {
-    CPPADCG_ASSERT_KNOWN(array.getArguments().size() > 0, "Invalid number of arguments for array creation operation");
+    CPPADCG_ASSERT_KNOWN(array.getArguments().size() > 0, "Invalid number of arguments for array creation operation")
     const std::vector<Argument<Base> >& args = array.getArguments();
     const size_t argSize = args.size();
 
@@ -52,12 +52,12 @@ template<class Base>
 std::string LanguageDot<Base>::printSparseArrayCreationOp(OperationNode<Base>& array) {
 
     const std::vector<size_t>& info = array.getInfo();
-    CPPADCG_ASSERT_KNOWN(info.size() > 0, "Invalid number of information elements for sparse array creation operation");
+    CPPADCG_ASSERT_KNOWN(info.size() > 0, "Invalid number of information elements for sparse array creation operation")
 
     const std::vector<Argument<Base> >& args = array.getArguments();
     const size_t argSize = args.size();
 
-    CPPADCG_ASSERT_KNOWN(info.size() == argSize + 1, "Invalid number of arguments for sparse array creation operation");
+    CPPADCG_ASSERT_KNOWN(info.size() == argSize + 1, "Invalid number of arguments for sparse array creation operation")
 
     _ss.str("");
     _ss << "sparse[" << info[0] << "]"; // nnz: args.size()
@@ -132,9 +132,9 @@ inline size_t LanguageDot<Base>::printArrayCreationUsingLoop(const std::string a
 
 template<class Base>
 std::string LanguageDot<Base>::printArrayElementOp(OperationNode<Base>& op) {
-    CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for array element operation");
-    CPPADCG_ASSERT_KNOWN(op.getArguments()[0].getOperation() != nullptr, "Invalid argument for array element operation");
-    CPPADCG_ASSERT_KNOWN(op.getInfo().size() == 1, "Invalid number of information indexes for array element operation");
+    CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for array element operation")
+    CPPADCG_ASSERT_KNOWN(op.getArguments()[0].getOperation() != nullptr, "Invalid argument for array element operation")
+    CPPADCG_ASSERT_KNOWN(op.getInfo().size() == 1, "Invalid number of information indexes for array element operation")
 
     std::string name = makeNodeName(op);
 
