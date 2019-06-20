@@ -38,7 +38,7 @@ public:
                                IndexPattern* pattern2) :
         pattern1_(pattern1),
         pattern2_(pattern2) {
-        CPPADCG_ASSERT_UNKNOWN(pattern1_ != nullptr || pattern2_ != nullptr);
+        CPPADCG_ASSERT_UNKNOWN(pattern1_ != nullptr || pattern2_ != nullptr)
     }
 
     Plane2DIndexPattern(const Plane2DIndexPattern& orig) = delete;

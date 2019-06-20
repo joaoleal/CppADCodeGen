@@ -51,7 +51,7 @@ inline void combineNonOverlapingIterationRanges(std::vector<size_t>& iterRegions
             itPos = iterRegions.insert(itPos, pos);
         }
     }
-    CPPADCG_ASSERT_UNKNOWN(iterRegions.size() % 2 == 0);
+    CPPADCG_ASSERT_UNKNOWN(iterRegions.size() % 2 == 0)
 }
 
 /**
@@ -127,7 +127,7 @@ inline std::vector<size_t> invertIterationRanges(const std::vector<size_t>& iter
         return inverted;
     }
 
-    CPPADCG_ASSERT_UNKNOWN(iterRegions.size() % 2 == 0);
+    CPPADCG_ASSERT_UNKNOWN(iterRegions.size() % 2 == 0)
     inverted.reserve(iterRegions.size() + 4);
 
     if (iterRegions[0] != 0) {
@@ -136,7 +136,7 @@ inline std::vector<size_t> invertIterationRanges(const std::vector<size_t>& iter
     }
 
     for (size_t i = 2; i < iterRegions.size(); i += 2) {
-        CPPADCG_ASSERT_UNKNOWN(iterRegions[i - 1] < iterRegions[i]);
+        CPPADCG_ASSERT_UNKNOWN(iterRegions[i - 1] < iterRegions[i])
         inverted.push_back(iterRegions[i - 1] + 1);
         inverted.push_back(iterRegions[i] - 1);
     }
@@ -164,28 +164,28 @@ inline std::vector<size_t> ifBranchIterationRanges(const OperationNode<Base>* bS
 
     if (bOp == CGOpCode::StartIf || bOp == CGOpCode::ElseIf) {
         OperationNode<Base>* cond = bScope->getArguments()[bOp == CGOpCode::StartIf ? 0 : 1].getOperation();
-        CPPADCG_ASSERT_UNKNOWN(cond->getOperationType() == CGOpCode::IndexCondExpr);
-        CPPADCG_ASSERT_UNKNOWN(cond->getArguments().size() == 1);
-        CPPADCG_ASSERT_UNKNOWN(cond->getArguments()[0].getOperation() != nullptr);
-        CPPADCG_ASSERT_UNKNOWN(cond->getArguments()[0].getOperation()->getOperationType() == CGOpCode::Index);
+        CPPADCG_ASSERT_UNKNOWN(cond->getOperationType() == CGOpCode::IndexCondExpr)
+        CPPADCG_ASSERT_UNKNOWN(cond->getArguments().size() == 1)
+        CPPADCG_ASSERT_UNKNOWN(cond->getArguments()[0].getOperation() != nullptr)
+        CPPADCG_ASSERT_UNKNOWN(cond->getArguments()[0].getOperation()->getOperationType() == CGOpCode::Index)
         iterationIndexOp = static_cast<IndexOperationNode<Base>*> (cond->getArguments()[0].getOperation());
         return cond->getInfo();
 
     } else {
         // else
-        CPPADCG_ASSERT_UNKNOWN(bOp == CGOpCode::Else);
+        CPPADCG_ASSERT_UNKNOWN(bOp == CGOpCode::Else)
 
         std::vector<size_t> nonIterationRegions;
         OperationNode<Base>* ifBranch = bScope->getArguments()[0].getOperation();
         do {
             CGOpCode bbOp = ifBranch->getOperationType();
             OperationNode<Base>* cond = ifBranch->getArguments()[bbOp == CGOpCode::StartIf ? 0 : 1].getOperation();
-            CPPADCG_ASSERT_UNKNOWN(cond->getOperationType() == CGOpCode::IndexCondExpr);
-            CPPADCG_ASSERT_UNKNOWN(cond->getArguments().size() == 1);
-            CPPADCG_ASSERT_UNKNOWN(cond->getArguments()[0].getOperation() != nullptr);
-            CPPADCG_ASSERT_UNKNOWN(cond->getArguments()[0].getOperation()->getOperationType() == CGOpCode::Index);
+            CPPADCG_ASSERT_UNKNOWN(cond->getOperationType() == CGOpCode::IndexCondExpr)
+            CPPADCG_ASSERT_UNKNOWN(cond->getArguments().size() == 1)
+            CPPADCG_ASSERT_UNKNOWN(cond->getArguments()[0].getOperation() != nullptr)
+            CPPADCG_ASSERT_UNKNOWN(cond->getArguments()[0].getOperation()->getOperationType() == CGOpCode::Index)
             IndexOperationNode<Base>* indexOp = static_cast<IndexOperationNode<Base>*> (cond->getArguments()[0].getOperation());
-            CPPADCG_ASSERT_UNKNOWN(iterationIndexOp == nullptr || iterationIndexOp == indexOp);
+            CPPADCG_ASSERT_UNKNOWN(iterationIndexOp == nullptr || iterationIndexOp == indexOp)
             iterationIndexOp = indexOp;
 
             combineOverlapingIterationRanges(nonIterationRegions, cond->getInfo());
@@ -193,7 +193,7 @@ inline std::vector<size_t> ifBranchIterationRanges(const OperationNode<Base>* bS
             ifBranch = ifBranch->getArguments()[0].getOperation();
         } while (ifBranch->getOperationType() == CGOpCode::ElseIf);
 
-        CPPADCG_ASSERT_UNKNOWN(iterationIndexOp != nullptr);
+        CPPADCG_ASSERT_UNKNOWN(iterationIndexOp != nullptr)
 
         // invert
         return invertIterationRanges(nonIterationRegions);

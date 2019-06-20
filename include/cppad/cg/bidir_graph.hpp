@@ -53,9 +53,9 @@ public:
     inline void connect(PathNodeEdges<Base>& nodeInfo,
                         Node& node,
                         size_t argument) {
-        CPPADCG_ASSERT_UNKNOWN(argument < node.getArguments().size());
-        CPPADCG_ASSERT_UNKNOWN(node.getArguments()[argument].getOperation() != nullptr);
-        CPPADCG_ASSERT_UNKNOWN(&graph_[&node] == &nodeInfo);
+        CPPADCG_ASSERT_UNKNOWN(argument < node.getArguments().size())
+        CPPADCG_ASSERT_UNKNOWN(node.getArguments()[argument].getOperation() != nullptr)
+        CPPADCG_ASSERT_UNKNOWN(&graph_[&node] == &nodeInfo)
 
         nodeInfo.arguments.push_back(argument);
 
@@ -144,8 +144,8 @@ public:
                     break;
 
                 edges = find(*n);
-                CPPADCG_ASSERT_UNKNOWN(edges != nullptr);
-                CPPADCG_ASSERT_UNKNOWN(!edges->usage.empty());
+                CPPADCG_ASSERT_UNKNOWN(edges != nullptr)
+                CPPADCG_ASSERT_UNKNOWN(!edges->usage.empty())
             }
 
             bifIndex = pathCommon.size();
@@ -224,7 +224,7 @@ private:
             size_t argIndex = arg0.argIndex;
 
             const PathNodeEdges<Base>* edges = find(*n);
-            CPPADCG_ASSERT_UNKNOWN(edges != nullptr);
+            CPPADCG_ASSERT_UNKNOWN(edges != nullptr)
 
             while (true) {
                 paths[0].push_back(OperationPathNode<Base>(n, argIndex));
@@ -238,10 +238,10 @@ private:
                 argIndex = edges->usage.begin()->argIndex;
 
                 edges = find(*n);
-                CPPADCG_ASSERT_UNKNOWN(edges != nullptr);
+                CPPADCG_ASSERT_UNKNOWN(edges != nullptr)
             }
 
-            CPPADCG_ASSERT_UNKNOWN(!edges->arguments.empty());
+            CPPADCG_ASSERT_UNKNOWN(!edges->arguments.empty())
 
             //if(edges->arguments.size() > 2) {
             //    continue; // should not use this???

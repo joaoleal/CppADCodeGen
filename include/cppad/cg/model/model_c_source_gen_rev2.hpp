@@ -128,7 +128,7 @@ void ModelCSourceGen<Base>::generateSparseReverseTwoSourcesWithAtomics(const std
         _fun.Forward(1, tx1v);
         tx1v[j] = Base(0);
         vector<CGBase> px = _fun.Reverse(2, py);
-        CPPADCG_ASSERT_UNKNOWN(px.size() == 2 * n);
+        CPPADCG_ASSERT_UNKNOWN(px.size() == 2 * n)
 
         vector<CGBase> pxCustom;
         for (size_t jj : cols) {

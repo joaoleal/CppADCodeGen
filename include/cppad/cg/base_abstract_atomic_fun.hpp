@@ -80,7 +80,7 @@ protected:
                                                  const CppAD::vector<CGB>& tx,
                                                  size_t p,
                                                  size_t k) {
-        CPPADCG_ASSERT_UNKNOWN(k <= p);
+        CPPADCG_ASSERT_UNKNOWN(k <= p)
         size_t n = tx.size() / (p + 1);
         std::vector<Arg> arrayArgs(n);
         for (size_t i = 0; i < n; i++) {
@@ -108,7 +108,7 @@ protected:
                                                        size_t p,
                                                        size_t k) {
         size_t p1 = p + 1;
-        CPPADCG_ASSERT_UNKNOWN(k < p1);
+        CPPADCG_ASSERT_UNKNOWN(k < p1)
         size_t n = py.size() / p1;
 
         std::vector<Arg> arrayArgs;

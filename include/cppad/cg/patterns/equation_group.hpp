@@ -51,7 +51,7 @@ public:
 public:
 
     inline void findReferenceIteration() {
-        CPPADCG_ASSERT_UNKNOWN(!iterationDependents.empty());
+        CPPADCG_ASSERT_UNKNOWN(!iterationDependents.empty())
 
         for (size_t it = 0; it < iterationDependents.size(); it++) {
             if (iterationDependents[it].size() == equations.size()) {
@@ -60,7 +60,7 @@ public:
             }
         }
 
-        CPPADCG_ASSERT_UNKNOWN(false);
+        CPPADCG_ASSERT_UNKNOWN(false)
     }
 
     inline long findIndexedLinkedDependent(size_t dep) const {
@@ -127,7 +127,7 @@ public:
             }
 
         } else {
-            CPPADCG_ASSERT_UNKNOWN(pos2 < size);
+            CPPADCG_ASSERT_UNKNOWN(pos2 < size)
             linkedEquationsByNonIndexedRel[pos2].insert(eq1);
         }
     }

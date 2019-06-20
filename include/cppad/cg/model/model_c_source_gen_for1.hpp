@@ -115,7 +115,7 @@ void ModelCSourceGen<Base>::generateSparseForwardOneSourcesWithAtomics(const std
         dxv[j] = dx;
         vector<CGBase> dy = _fun.Forward(1, dxv);
         dxv[j] = Base(0);
-        CPPADCG_ASSERT_UNKNOWN(dy.size() == _fun.Range());
+        CPPADCG_ASSERT_UNKNOWN(dy.size() == _fun.Range())
 
         vector<CGBase> dyCustom;
         for (size_t it2 : rows) {

@@ -313,7 +313,7 @@ public:
                                                              bool zeroArrayDependents = false,
                                                              int maxForwardOrder = -1,
                                                              int maxReverseOrder = -1) {
-        CPPADCG_ASSERT_UNKNOWN(_nameGen != nullptr);
+        CPPADCG_ASSERT_UNKNOWN(_nameGen != nullptr)
 
         // declare variables
         const std::vector<FuncArgument>& tmpArg = _nameGen->getTemporary();

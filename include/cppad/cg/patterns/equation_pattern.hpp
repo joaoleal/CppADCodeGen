@@ -254,7 +254,7 @@ private:
         } else if (dep1.isVariable() && dep2.isVariable()) {
             OperationNode<Base>* depRefOp = dep1.getOperationNode();
             OperationNode<Base>* dep2Op = dep2.getOperationNode();
-            CPPADCG_ASSERT_UNKNOWN(depRefOp->getOperationType() != CGOpCode::Inv);
+            CPPADCG_ASSERT_UNKNOWN(depRefOp->getOperationType() != CGOpCode::Inv)
 
             return comparePath(depRefOp, dep2Op, dep2Index, varColor);
         }
@@ -307,7 +307,7 @@ private:
             return false;
         }
 
-        CPPADCG_ASSERT_UNKNOWN(scRef->getOperationType() != CGOpCode::Inv);
+        CPPADCG_ASSERT_UNKNOWN(scRef->getOperationType() != CGOpCode::Inv)
 
         const std::vector<size_t>& info1 = scRef->getInfo();
         const std::vector<size_t>& info2 = sc2->getInfo();
@@ -430,7 +430,7 @@ private:
             sc2 = sc;
         }
 
-        CPPADCG_ASSERT_UNKNOWN(scRef->getOperationType() == sc2->getOperationType());
+        CPPADCG_ASSERT_UNKNOWN(scRef->getOperationType() == sc2->getOperationType())
 
         const std::vector<Argument<Base> >& argsRef = scRef->getArguments();
 
@@ -460,7 +460,7 @@ private:
 
                 if (!indexedArg) {
                     const std::vector<Argument<Base> >& args2 = sc2->getArguments();
-                    CPPADCG_ASSERT_UNKNOWN(size == args2.size());
+                    CPPADCG_ASSERT_UNKNOWN(size == args2.size())
                     indexedDependentPath |= findIndexedPath(argsRef[a].getOperation(), args2[a].getOperation(), varIndexed, indexedOperations);
                 }
             }

@@ -37,13 +37,13 @@ inline CG<Base> CodeHandler<Base>::solveFor(OperationNode<Base>& expression,
     OperationNode<Base> *root = &expression;
 
     while (bifurcations > 0) {
-        CPPADCG_ASSERT_UNKNOWN(root != nullptr);
+        CPPADCG_ASSERT_UNKNOWN(root != nullptr)
 
         // find possible paths from expression to var
         size_t oldBif = bifurcations;
         bifurcations = 0;
         foundGraph = findPathGraph(*root, var, bifurcations, 50000);
-        CPPADCG_ASSERT_UNKNOWN(oldBif > bifurcations);
+        CPPADCG_ASSERT_UNKNOWN(oldBif > bifurcations)
 
         if (!foundGraph.contains(var)) {
             std::cerr << "Missing variable " << var << std::endl;
@@ -58,14 +58,14 @@ inline CG<Base> CodeHandler<Base>::solveFor(OperationNode<Base>& expression,
             throw CGException("The provided variable is not present in the expression");
 
         } else if (paths.size() == 1) {
-            CPPADCG_ASSERT_UNKNOWN(paths[0][0].node == root);
-            CPPADCG_ASSERT_UNKNOWN(paths[0].back().node == &var);
+            CPPADCG_ASSERT_UNKNOWN(paths[0][0].node == root)
+            CPPADCG_ASSERT_UNKNOWN(paths[0].back().node == &var)
 
             return solveFor(paths[0]);
 
         } else {
-            CPPADCG_ASSERT_UNKNOWN(paths.size() >= 1);
-            CPPADCG_ASSERT_UNKNOWN(paths[0].back().node == &var);
+            CPPADCG_ASSERT_UNKNOWN(paths.size() >= 1)
+            CPPADCG_ASSERT_UNKNOWN(paths[0].back().node == &var)
 
             CG<Base> expression2 = collectVariable(*root, paths[0], paths[1], bifPos);
             root = expression2.getOperationNode();
@@ -75,7 +75,7 @@ inline CG<Base> CodeHandler<Base>::solveFor(OperationNode<Base>& expression,
         }
     }
 
-    CPPADCG_ASSERT_UNKNOWN(paths.size() == 1);
+    CPPADCG_ASSERT_UNKNOWN(paths.size() == 1)
     return solveFor(paths[0]);
 }
 

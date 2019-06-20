@@ -281,7 +281,7 @@ public:
         antiDerivative_(derivativeOf),
         tapeIndex_(tapeIndex),
         name_(name.empty() ? "d" + derivativeOf->name() + "dt" : name) {
-        CPPADCG_ASSERT_UNKNOWN(antiDerivative_ != nullptr);
+        CPPADCG_ASSERT_UNKNOWN(antiDerivative_ != nullptr)
 
         antiDerivative_->setDerivative(this);
     }
@@ -399,7 +399,7 @@ protected:
 
     inline void addEquation(Enode<Base>* i) {
         if (!deleted_) {
-            CPPADCG_ASSERT_UNKNOWN(std::find(enodes_.begin(), enodes_.end(), i) == enodes_.end());
+            CPPADCG_ASSERT_UNKNOWN(std::find(enodes_.begin(), enodes_.end(), i) == enodes_.end())
             enodes_.push_back(i);
         }
     }

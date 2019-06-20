@@ -75,7 +75,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseOneWithLoops(const std::map<size
             p++;
         }
     }
-    CPPADCG_ASSERT_UNKNOWN(p == nnz);
+    CPPADCG_ASSERT_UNKNOWN(p == nnz)
 
     analyseSparseJacobianWithLoops(rows, cols, locations,
                                    noLoopEvalSparsity, noLoopEvalLocations, loopsEvalSparsities, loopEqInfo);
@@ -424,7 +424,7 @@ std::vector<std::map<size_t, CG<Base> > > ModelCSourceGen<Base>::generateLoopRev
 
             w[i] = Base(1);
             std::vector<CGBase> dw = fun.Reverse(1, w);
-            CPPADCG_ASSERT_UNKNOWN(dw.size() == fun.Domain());
+            CPPADCG_ASSERT_UNKNOWN(dw.size() == fun.Domain())
             w[i] = Base(0);
 
             map<size_t, CGBase>& dyIDx = dyDx[i];

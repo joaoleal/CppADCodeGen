@@ -164,7 +164,7 @@ inline void CodeHandler<Base>::setZeroDependents(bool zeroDependents) {
 
 template<class Base>
 size_t CodeHandler<Base>::getIndependentVariableIndex(const Node& var) const {
-    CPPADCG_ASSERT_UNKNOWN(var.getOperationType() == CGOpCode::Inv);
+    CPPADCG_ASSERT_UNKNOWN(var.getOperationType() == CGOpCode::Inv)
 
     auto pos = var.getHandlerPosition();
     if (pos < _independentVariables.size() && &var == _independentVariables[pos]) {
@@ -181,7 +181,7 @@ size_t CodeHandler<Base>::getIndependentVariableIndex(const Node& var) const {
 
 template<class Base>
 size_t CodeHandler<Base>::getIndependentParameterIndex(const Node& var) const {
-    CPPADCG_ASSERT_UNKNOWN(var.getOperationType() == CGOpCode::InvPar);
+    CPPADCG_ASSERT_UNKNOWN(var.getOperationType() == CGOpCode::InvPar)
 
     auto pos = var.getHandlerPosition();
     auto n = _independentVariables.size();

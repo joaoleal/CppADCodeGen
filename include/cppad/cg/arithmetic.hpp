@@ -22,7 +22,7 @@ template<class Base>
 CodeHandler<Base>* getHandler(const CG<Base>& left,
                               const CG<Base>& right) {
 
-    CPPADCG_ASSERT_UNKNOWN(!left.isParameter() || !right.isParameter());
+    CPPADCG_ASSERT_UNKNOWN(!left.isParameter() || !right.isParameter())
 
     CodeHandler<Base>* lh = left.getCodeHandler();
     CodeHandler<Base>* rh = right.getCodeHandler();

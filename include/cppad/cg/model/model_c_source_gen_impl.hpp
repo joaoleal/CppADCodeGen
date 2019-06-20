@@ -405,7 +405,7 @@ void ModelCSourceGen<Base>::generateSparsity2DSource(const std::string& function
     const std::vector<size_t>& rows = sparsity.rows;
     const std::vector<size_t>& cols = sparsity.cols;
 
-    CPPADCG_ASSERT_UNKNOWN(rows.size() == cols.size());
+    CPPADCG_ASSERT_UNKNOWN(rows.size() == cols.size())
 
     LanguageC<Base>::printFunctionDeclaration(_cache, "void", function, {"unsigned long const** row",
                                                                          "unsigned long const** col",
@@ -443,7 +443,7 @@ void ModelCSourceGen<Base>::generateSparsity2DSource2(const std::string& functio
     for (size_t i = 0; i < sparsities.size(); i++) {
         const std::vector<size_t>& rows = sparsities[i].rows;
         const std::vector<size_t>& cols = sparsities[i].cols;
-        CPPADCG_ASSERT_UNKNOWN(rows.size() == cols.size());
+        CPPADCG_ASSERT_UNKNOWN(rows.size() == cols.size())
 
         nnzs[i] = rows.size();
 

@@ -163,7 +163,7 @@ public:
         _ss.clear();
         _ss.str("");
 
-        CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGOpCode::ArrayCreation);
+        CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGOpCode::ArrayCreation)
 
         _ss << "<mi>" << _tmpArrayName << "</mi>"
                 "<mfenced open='[' close=']'>"
@@ -181,7 +181,7 @@ public:
         _ss.clear();
         _ss.str("");
 
-        CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGOpCode::SparseArrayCreation);
+        CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGOpCode::SparseArrayCreation)
 
         _ss << "<mi>" << _tmpSparseArrayName << "</mi>"
                 "<mfenced open='[' close=']'>"
@@ -245,7 +245,7 @@ public:
         // if
         //  _minTemporaryID == _maxTemporaryID + 1
         // then no temporary variables are being used
-        CPPADCG_ASSERT_UNKNOWN(_minTemporaryID <= _maxTemporaryID + 1);
+        CPPADCG_ASSERT_UNKNOWN(_minTemporaryID <= _maxTemporaryID + 1)
     }
 
     inline void setParameterID(size_t minParameterID,

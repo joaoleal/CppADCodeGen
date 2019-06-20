@@ -298,7 +298,7 @@ public:
     inline void finishedJob() {
         using namespace std::chrono;
 
-        CPPADCG_ASSERT_UNKNOWN(_jobs.size() > 0);
+        CPPADCG_ASSERT_UNKNOWN(_jobs.size() > 0)
 
         Job& job = _jobs.back();
 

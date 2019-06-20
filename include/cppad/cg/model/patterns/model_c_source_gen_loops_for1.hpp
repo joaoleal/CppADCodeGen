@@ -73,7 +73,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
             p++;
         }
     }
-    CPPADCG_ASSERT_UNKNOWN(p == nnz);
+    CPPADCG_ASSERT_UNKNOWN(p == nnz)
 
     analyseSparseJacobianWithLoops(rows, cols, locations,
                                    noLoopEvalSparsity, noLoopEvalLocations, loopsEvalSparsities, loopEqInfo);
@@ -828,7 +828,7 @@ std::pair<CG<Base>, IndexPattern*> createForwardOneElement(CodeHandler<Base>& ha
     for (const std::pair<size_t, size_t>& itIt : iter2jcols) {
         size_t iter = itIt.first;
         size_t jcol = itIt.second;
-        CPPADCG_ASSERT_UNKNOWN(positions[iter] != (std::numeric_limits<size_t>::max)());
+        CPPADCG_ASSERT_UNKNOWN(positions[iter] != (std::numeric_limits<size_t>::max)())
         locationsIter2Pos[iter] = positions[iter];
         jcol2CompressedLoc[jcol].insert(positions[iter]);
     }
@@ -893,7 +893,7 @@ std::map<size_t, std::map<size_t, CG<Base> > > ModelCSourceGen<Base>::generateLo
 
             dx[j] = Base(1);
             std::vector<CGBase> dy = fun.Forward(1, dx);
-            CPPADCG_ASSERT_UNKNOWN(dy.size() == fun.Range());
+            CPPADCG_ASSERT_UNKNOWN(dy.size() == fun.Range())
             dx[j] = Base(0);
 
             map<size_t, CGBase>& dyDxJT = dyDxT[j];

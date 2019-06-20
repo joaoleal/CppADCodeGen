@@ -117,7 +117,7 @@ public:
             if (!evalForwardValues(q, p, tx, tyb, ty.size()))
                 return false;
 
-            CPPADCG_ASSERT_UNKNOWN(tyb.size() == ty.size());
+            CPPADCG_ASSERT_UNKNOWN(tyb.size() == ty.size())
             for (size_t i = 0; i < ty.size(); i++) {
                 ty[i] = tyb[i];
             }
@@ -189,7 +189,7 @@ public:
         }
 
         CodeHandler<Base>* handler = findHandler(tx);
-        CPPADCG_ASSERT_UNKNOWN(handler != nullptr);
+        CPPADCG_ASSERT_UNKNOWN(handler != nullptr)
 
         size_t p1 = p + 1;
 
@@ -252,7 +252,7 @@ public:
             if (!evalReverseValues(p, tx, ty, pxb, py))
                 return false;
 
-            CPPADCG_ASSERT_UNKNOWN(pxb.size() == px.size());
+            CPPADCG_ASSERT_UNKNOWN(pxb.size() == px.size())
 
             for (size_t i = 0; i < px.size(); i++) {
                 px[i] = pxb[i];
@@ -361,7 +361,7 @@ public:
                 handler = findHandler(py);
             }
         }
-        CPPADCG_ASSERT_UNKNOWN(handler != nullptr);
+        CPPADCG_ASSERT_UNKNOWN(handler != nullptr)
 
         std::vector<OperationNode<Base>*> txArray(p1), tyArray(p1), pxArray(p1), pyArray(p1);
         for (size_t k = 0; k <= p; k++) {

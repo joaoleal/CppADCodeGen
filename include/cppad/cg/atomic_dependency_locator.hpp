@@ -158,20 +158,20 @@ private:
         indeps_[node] = atomIn;
 
         if (op == CGOpCode::AtomicForward) {
-            CPPADCG_ASSERT_UNKNOWN(node->getInfo().size() > 1);
-            CPPADCG_ASSERT_UNKNOWN(node->getArguments().size() > 1);
+            CPPADCG_ASSERT_UNKNOWN(node->getInfo().size() > 1)
+            CPPADCG_ASSERT_UNKNOWN(node->getArguments().size() > 1)
             size_t id = node->getInfo()[0];
 
 #ifndef NDEBUG
             size_t p = node->getInfo()[2];
-            CPPADCG_ASSERT_UNKNOWN(p == 0);
+            CPPADCG_ASSERT_UNKNOWN(p == 0)
 #endif
 
             OperationNode<Base>* tx = node->getArguments()[0].getOperation();
             OperationNode<Base>* ty = node->getArguments()[1].getOperation();
 
-            CPPADCG_ASSERT_UNKNOWN(tx != nullptr && tx->getOperationType() == CGOpCode::ArrayCreation);
-            CPPADCG_ASSERT_UNKNOWN(ty != nullptr && ty->getOperationType() == CGOpCode::ArrayCreation);
+            CPPADCG_ASSERT_UNKNOWN(tx != nullptr && tx->getOperationType() == CGOpCode::ArrayCreation)
+            CPPADCG_ASSERT_UNKNOWN(ty != nullptr && ty->getOperationType() == CGOpCode::ArrayCreation)
 
             auto& info = atomicInfo_[id];
             info.outerVars.outerIndeps.insert(atomIn.outerIndeps.begin(), atomIn.outerIndeps.end());

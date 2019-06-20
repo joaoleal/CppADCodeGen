@@ -215,7 +215,7 @@ protected:
 
 private:
     inline CppAD::vector<Base> sparsityIndeps(const CppAD::vector<CGB>& x) const {
-        CPPADCG_ASSERT_UNKNOWN(x.size() == xSparsity_.size());
+        CPPADCG_ASSERT_UNKNOWN(x.size() == xSparsity_.size())
 
         size_t n = x.size();
         CppAD::vector<Base> out(n);

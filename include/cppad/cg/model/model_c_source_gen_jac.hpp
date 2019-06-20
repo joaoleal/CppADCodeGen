@@ -213,8 +213,8 @@ void ModelCSourceGen<Base>::generateSparseJacobianForRevSource(bool forward,
     for (auto& it : jacInfo) {
         const std::vector<size_t>& els = it.second.indexes;
         const std::vector<set<size_t> >& location = it.second.locations;
-        CPPADCG_ASSERT_UNKNOWN(els.size() == location.size());
-        CPPADCG_ASSERT_UNKNOWN(els.size() > 0);
+        CPPADCG_ASSERT_UNKNOWN(els.size() == location.size())
+        CPPADCG_ASSERT_UNKNOWN(els.size() > 0)
 
         bool passed = true;
         size_t jacArrayStart = *location[0].begin();
@@ -310,7 +310,7 @@ std::string ModelCSourceGen<Base>::generateSparseJacobianForRevSingleThreadSourc
         size_t index = it.first;
         const std::vector<size_t>& els = it.second.indexes;
         const std::vector<std::set<size_t> >& location = it.second.locations;
-        CPPADCG_ASSERT_UNKNOWN(els.size() == location.size());
+        CPPADCG_ASSERT_UNKNOWN(els.size() == location.size())
 
         _cache << "\n";
         bool compressed = !it.second.ordered;
@@ -367,7 +367,7 @@ std::string ModelCSourceGen<Base>::generateSparseJacobianForRevMultiThreadSource
         size_t index = it.first;
         const std::vector<size_t>& els = it.second.indexes;
         const std::vector<std::set<size_t> >& location = it.second.locations;
-        CPPADCG_ASSERT_UNKNOWN(els.size() == location.size());
+        CPPADCG_ASSERT_UNKNOWN(els.size() == location.size())
 
         bool compressed = !it.second.ordered;
         if (!compressed) {

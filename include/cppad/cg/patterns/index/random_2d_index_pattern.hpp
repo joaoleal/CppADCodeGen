@@ -30,7 +30,7 @@ public:
 
     inline Random2DIndexPattern(const std::map<size_t, std::map<size_t, size_t> >& x2y2z) :
         indexes_(x2y2z) {
-        CPPADCG_ASSERT_UNKNOWN(!indexes_.empty());
+        CPPADCG_ASSERT_UNKNOWN(!indexes_.empty())
     }
 
     inline virtual ~Random2DIndexPattern() = default;

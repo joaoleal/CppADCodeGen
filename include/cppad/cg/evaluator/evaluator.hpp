@@ -188,7 +188,7 @@ public:
             thisOps.analyzeOutIndeps(indep_, indepSize, parameters_, paramSize);
 
             for (size_t i = 0; i < depSize; i++) {
-                CPPADCG_ASSERT_UNKNOWN(depth_ == 0);
+                CPPADCG_ASSERT_UNKNOWN(depth_ == 0)
                 depNew[i] = evalCG(depOld[i]);
             }
 

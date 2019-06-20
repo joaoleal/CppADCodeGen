@@ -60,7 +60,7 @@ public:
     template<class VectorSizeT>
     static inline std::map<size_t, IndexPattern*> detectLinearSections(const VectorSizeT& indexes,
                                                                        size_t maxCount = 0) {
-        CPPADCG_ASSERT_UNKNOWN(indexes.size() > 0);
+        CPPADCG_ASSERT_UNKNOWN(indexes.size() > 0)
 
         long dx = 1;
         long xOffset = 0;

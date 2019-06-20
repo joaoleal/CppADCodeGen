@@ -41,7 +41,7 @@ inline CG<Base>& CG<Base>::operator+=(const CG<Base> &right) {
             handler = node_->getCodeHandler();
 
         } else { // both left and right hand sides are variables
-            CPPADCG_ASSERT_UNKNOWN(node_->getCodeHandler() == right.node_->getCodeHandler());
+            CPPADCG_ASSERT_UNKNOWN(node_->getCodeHandler() == right.node_->getCodeHandler())
             handler = node_->getCodeHandler();
         }
 
@@ -74,7 +74,7 @@ inline CG<Base>& CG<Base>::operator-=(const CG<Base> &right) {
             handler = node_->getCodeHandler();
 
         } else { // both left and right hand sides are variables
-            CPPADCG_ASSERT_UNKNOWN(node_->getCodeHandler() == right.node_->getCodeHandler());
+            CPPADCG_ASSERT_UNKNOWN(node_->getCodeHandler() == right.node_->getCodeHandler())
             handler = node_->getCodeHandler();
         }
 
@@ -117,7 +117,7 @@ inline CG<Base>& CG<Base>::operator*=(const CG<Base> &right) {
             handler = node_->getCodeHandler();
 
         } else {  // both left and right hand sides are variables
-            CPPADCG_ASSERT_UNKNOWN(node_->getCodeHandler() == right.node_->getCodeHandler());
+            CPPADCG_ASSERT_UNKNOWN(node_->getCodeHandler() == right.node_->getCodeHandler())
             handler = node_->getCodeHandler();
         }
 
@@ -154,7 +154,7 @@ inline CG<Base>& CG<Base>::operator/=(const CG<Base> &right) {
             handler = node_->getCodeHandler();
 
         } else {  // both left and right hand sides are variables
-            CPPADCG_ASSERT_UNKNOWN(node_->getCodeHandler() == right.node_->getCodeHandler());
+            CPPADCG_ASSERT_UNKNOWN(node_->getCodeHandler() == right.node_->getCodeHandler())
             handler = node_->getCodeHandler();
         }
 

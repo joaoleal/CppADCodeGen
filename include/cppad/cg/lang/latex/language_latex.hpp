@@ -1134,14 +1134,14 @@ protected:
 
     inline const std::string& createVariableName(Node& var) {
         CGOpCode op = var.getOperationType();
-        CPPADCG_ASSERT_UNKNOWN(getVariableID(var) > 0);
-        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::AtomicForward);
-        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::AtomicReverse);
-        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::LoopStart);
-        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::LoopEnd);
-        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::Index);
-        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::IndexAssign);
-        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::IndexDeclaration);
+        CPPADCG_ASSERT_UNKNOWN(getVariableID(var) > 0)
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::AtomicForward)
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::AtomicReverse)
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::LoopStart)
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::LoopEnd)
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::Index)
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::IndexAssign)
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::IndexDeclaration)
 
         if (var.getName() == nullptr) {
             if (op == CGOpCode::ArrayCreation) {
@@ -1167,7 +1167,7 @@ protected:
             } else if (getVariableID(var) < _minTemporaryVarID) {
                 // dependent variable
                 std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(getVariableID(var));
-                CPPADCG_ASSERT_UNKNOWN(it != _dependentIDs.end());
+                CPPADCG_ASSERT_UNKNOWN(it != _dependentIDs.end())
 
                 size_t index = it->second;
                 var.setName(_nameGen->generateDependent(index));
@@ -1635,7 +1635,7 @@ protected:
     }
 
     virtual void printConditionalAssignment(Node& node) {
-        CPPADCG_ASSERT_UNKNOWN(getVariableID(node) > 0);
+        CPPADCG_ASSERT_UNKNOWN(getVariableID(node) > 0)
 
         const std::vector<Arg>& args = node.getArguments();
         const Arg &left = args[0];

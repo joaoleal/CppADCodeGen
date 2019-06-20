@@ -92,7 +92,7 @@ public:
         _freeArrayStartSpace[arrayStart] = arrayEnd;
         _freeArrayEndSpace[arrayEnd] = arrayStart;
 
-        CPPADCG_ASSERT_UNKNOWN(_freeArrayStartSpace.size() == _freeArrayEndSpace.size());
+        CPPADCG_ASSERT_UNKNOWN(_freeArrayStartSpace.size() == _freeArrayEndSpace.size())
     }
 
     inline size_t reserveArraySpace(const OperationNode<Base>& newArray) {
@@ -211,7 +211,7 @@ public:
             _tmpArrayValues[bestStart + i] = &args[i];
         }
 
-        CPPADCG_ASSERT_UNKNOWN(_freeArrayStartSpace.size() == _freeArrayEndSpace.size());
+        CPPADCG_ASSERT_UNKNOWN(_freeArrayStartSpace.size() == _freeArrayEndSpace.size())
 
         return bestStart;
     }

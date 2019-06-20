@@ -85,10 +85,10 @@ public:
             replaceOnGraph_(nullptr),
             clone_(nullptr),
             replaceArgument_(nullptr) {
-        CPPADCG_ASSERT_UNKNOWN(paths_->size() == replaceOnPath_->size());
+        CPPADCG_ASSERT_UNKNOWN(paths_->size() == replaceOnPath_->size())
 #ifndef NDEBUG
         for (size_t i = 0; i < paths.size(); ++i) {
-            CPPADCG_ASSERT_UNKNOWN(paths[i]->size() == replaceOnPath[i]->size());
+            CPPADCG_ASSERT_UNKNOWN(paths[i]->size() == replaceOnPath[i]->size())
         }
 #endif
     }
@@ -138,7 +138,7 @@ protected:
      *        is not virtual (hides a method in EvaluatorOperations)
      */
     inline ActiveOut evalOperation(OperationNode<Scalar>& node) {
-        CPPADCG_ASSERT_UNKNOWN(this->depth_ > 0);
+        CPPADCG_ASSERT_UNKNOWN(this->depth_ > 0)
 
         if(paths_ != nullptr) {
             const auto& paths = *paths_;

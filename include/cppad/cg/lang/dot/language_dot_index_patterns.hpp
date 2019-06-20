@@ -74,7 +74,7 @@ inline void LanguageDot<Base>::printRandomIndexPatternDeclaration(std::ostringst
 
             printStaticIndexArray(os, ip->getName(), y);
         } else {
-            CPPADCG_ASSERT_UNKNOWN(ip->getType() == IndexPatternType::Random2D);
+            CPPADCG_ASSERT_UNKNOWN(ip->getType() == IndexPatternType::Random2D)
             /**
              * 2D
              */
@@ -159,7 +159,7 @@ inline void LanguageDot<Base>::indexPattern2String(std::ostream& os,
             const SectionedIndexPattern* lip = static_cast<const SectionedIndexPattern*> (&ip);
             const std::map<size_t, IndexPattern*>& sections = lip->getLinearSections();
             size_t sSize = sections.size();
-            CPPADCG_ASSERT_UNKNOWN(sSize > 1);
+            CPPADCG_ASSERT_UNKNOWN(sSize > 1)
 
             std::map<size_t, IndexPattern*>::const_iterator its = sections.begin();
             for (size_t s = 0; s < sSize - 1; s++) {

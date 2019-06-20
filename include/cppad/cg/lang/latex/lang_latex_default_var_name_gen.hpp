@@ -153,7 +153,7 @@ public:
         _ss.clear();
         _ss.str("");
 
-        CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGOpCode::ArrayCreation);
+        CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGOpCode::ArrayCreation)
 
         _ss << "\\&" << _tmpArrayName; /////////////////////////////////////////
         latexIndex(_ss, id - 1);
@@ -166,7 +166,7 @@ public:
         _ss.clear();
         _ss.str("");
 
-        CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGOpCode::SparseArrayCreation);
+        CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGOpCode::SparseArrayCreation)
 
         _ss << "\\&" << _tmpSparseArrayName; /////////////////////////////////////////
         latexIndex(_ss, id - 1);
@@ -224,7 +224,7 @@ public:
         // if
         //  _minTemporaryID == _maxTemporaryID + 1
         // then no temporary variables are being used
-        CPPADCG_ASSERT_UNKNOWN(_minTemporaryID <= _maxTemporaryID + 1);
+        CPPADCG_ASSERT_UNKNOWN(_minTemporaryID <= _maxTemporaryID + 1)
     }
 
     inline void setParameterID(size_t minParameterID,

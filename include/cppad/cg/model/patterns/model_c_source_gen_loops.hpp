@@ -227,7 +227,7 @@ LoopEndOperationNode<Base>* createLoopEnd(CodeHandler<Base>& handler,
             endArgs.push_back(*yIndexed);
         } else {
             OperationNode<Base>* n = depInfo.first.getOperationNode();
-            CPPADCG_ASSERT_UNKNOWN(n != nullptr);
+            CPPADCG_ASSERT_UNKNOWN(n != nullptr)
             endArgs.push_back(*n);
         }
     }
@@ -251,7 +251,7 @@ inline void moveNonIndexedOutsideLoop(CodeHandler<Base>& handler,
 
     const std::vector<Argument<Base> >& endArgs = loopEnd.getArguments();
     for (size_t i = 0; i < endArgs.size(); i++) {
-        CPPADCG_ASSERT_UNKNOWN(endArgs[i].getOperation() != nullptr);
+        CPPADCG_ASSERT_UNKNOWN(endArgs[i].getOperation() != nullptr)
         LoopNonIndexedLocator<Base>(handler, indexed, nonIndexed, loopIndex).findNonIndexedNodes(*endArgs[i].getOperation());
     }
 
@@ -390,7 +390,7 @@ OperationNode<Base>* createIndexConditionExpressionOp(CodeHandler<Base>& handler
 std::vector<size_t> createIndexConditionExpression(const std::set<size_t>& iterations,
                                                    const std::set<size_t>& usedIter,
                                                    size_t maxIter) {
-    CPPADCG_ASSERT_UNKNOWN(!iterations.empty());
+    CPPADCG_ASSERT_UNKNOWN(!iterations.empty())
 
     std::map<size_t, bool> allIters;
     for (size_t it : usedIter) {
@@ -860,7 +860,7 @@ inline void determineForRevUsagePatterns(const std::map<LoopModel<Base>*, std::m
 
                         size_t e = 0;
                         for (auto itE = compressed.begin(); itE != compressed.end(); ++itE, e++) {
-                            CPPADCG_ASSERT_UNKNOWN(origPos[*itE].size() == 1);
+                            CPPADCG_ASSERT_UNKNOWN(origPos[*itE].size() == 1)
                             resultPos[e][localIt] = *origPos[*itE].begin();
 
                             compressPos[e][localIt] = *itE;
@@ -980,7 +980,7 @@ void printForRevUsageFunction(std::ostringstream& out,
             "   unsigned long " << indexIt << ";\n"
             "   unsigned long " << keyIndexName << ";\n"
             "   unsigned long e;\n";
-    CPPADCG_ASSERT_UNKNOWN(indexIt != "e" && keyIndexName != "e");
+    CPPADCG_ASSERT_UNKNOWN(indexIt != "e" && keyIndexName != "e")
     if (maxCompressedSize > 0) {
         out << "   " << baseTypeName << " compressed[" << maxCompressedSize << "];\n";
     }
@@ -1013,7 +1013,7 @@ void printForRevUsageFunction(std::ostringstream& out,
         const set<size_t>& elPos = it.second;
         const std::vector<set<size_t> >& location = matrixInfo.at(index).locations;
         CPPADCG_ASSERT_UNKNOWN(elPos.size() <= location.size()); // it can be lower because not all elements have to be assigned
-        CPPADCG_ASSERT_UNKNOWN(elPos.size() > 0);
+        CPPADCG_ASSERT_UNKNOWN(elPos.size() > 0)
         bool rowOrdered = matrixInfo.at(index).ordered;
 
         out << "\n";
@@ -1078,7 +1078,7 @@ void printForRevUsageFunction(std::ostringstream& out,
                 }
 
                 if (group->startLocPattern.get() == nullptr) {
-                    CPPADCG_ASSERT_UNKNOWN(!group->elCount2elements.m.empty());
+                    CPPADCG_ASSERT_UNKNOWN(!group->elCount2elements.m.empty())
 
                     std::set<size_t> usedIter;
 
@@ -1095,7 +1095,7 @@ void printForRevUsageFunction(std::ostringstream& out,
                     bool withIfs = group->elCount2elements.size() > 1;
                     for (auto itc = group->elCount2elements.begin(); itc != group->elCount2elements.end(); ++itc) {
                         const ArrayElementGroup* eg = itc->second;
-                        CPPADCG_ASSERT_UNKNOWN(!eg->elements.empty());
+                        CPPADCG_ASSERT_UNKNOWN(!eg->elements.empty())
 
                         string indent2 = indent;
                         if (withIfs) {

@@ -274,8 +274,8 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceFromRev2(MultiThreadingTy
     for (auto& it : hessInfo) {
         const std::vector<size_t>& els = it.second.indexes;
         const std::vector<set<size_t> >& location = it.second.locations;
-        CPPADCG_ASSERT_UNKNOWN(els.size() == location.size());
-        CPPADCG_ASSERT_UNKNOWN(!els.empty());
+        CPPADCG_ASSERT_UNKNOWN(els.size() == location.size())
+        CPPADCG_ASSERT_UNKNOWN(!els.empty())
 
         bool passed = true;
         size_t hessRowStart = *location[0].begin();
@@ -363,8 +363,8 @@ std::string ModelCSourceGen<Base>::generateSparseHessianRev2SingleThreadSource(c
         size_t index = it.first;
         const std::vector<size_t>& els = it.second.indexes;
         const std::vector<std::set<size_t> >& location = it.second.locations;
-        CPPADCG_ASSERT_UNKNOWN(els.size() == location.size());
-        CPPADCG_ASSERT_UNKNOWN(!els.empty());
+        CPPADCG_ASSERT_UNKNOWN(els.size() == location.size())
+        CPPADCG_ASSERT_UNKNOWN(!els.empty())
 
         _cache << "\n";
         bool compressed = !it.second.ordered;
@@ -399,8 +399,8 @@ std::string ModelCSourceGen<Base>::generateSparseHessianRev2MultiThreadSource(co
                                                                               const std::string& functionRev2,
                                                                               const std::string& rev2Suffix,
                                                                               MultiThreadingType multiThreadingType) {
-    CPPADCG_ASSERT_UNKNOWN(_multiThreading);
-    CPPADCG_ASSERT_UNKNOWN(multiThreadingType != MultiThreadingType::NONE);
+    CPPADCG_ASSERT_UNKNOWN(_multiThreading)
+    CPPADCG_ASSERT_UNKNOWN(multiThreadingType != MultiThreadingType::NONE)
 
     LanguageC<Base> langC(_baseTypeName);
     std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
@@ -423,7 +423,7 @@ std::string ModelCSourceGen<Base>::generateSparseHessianRev2MultiThreadSource(co
         size_t index = it.first;
         const std::vector<size_t>& els = it.second.indexes;
         const std::vector<std::set<size_t> >& location = it.second.locations;
-        CPPADCG_ASSERT_UNKNOWN(els.size() == location.size());
+        CPPADCG_ASSERT_UNKNOWN(els.size() == location.size())
 
         bool compressed = !it.second.ordered;
         if (!compressed) {

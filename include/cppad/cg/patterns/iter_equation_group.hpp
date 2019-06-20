@@ -84,7 +84,7 @@ public:
             return; // already evaluated
         }
 
-        CPPADCG_ASSERT_UNKNOWN(model != nullptr);
+        CPPADCG_ASSERT_UNKNOWN(model != nullptr)
         size_t iterationCount = model->getIterationCount();
 
         const std::vector<std::vector<LoopPosition> >& indexedIndepIndexes = model->getIndexedIndepIndexes();

@@ -530,14 +530,14 @@ protected:
 
     inline const std::string& createVariableName(OperationNode<Base>& var) {
         CGOpCode op = var.getOperationType();
-        CPPADCG_ASSERT_UNKNOWN(getVariableID(var) > 0);
-        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::AtomicForward);
-        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::AtomicReverse);
-        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::LoopStart);
-        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::LoopEnd);
-        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::Index);
-        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::IndexAssign);
-        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::IndexDeclaration);
+        CPPADCG_ASSERT_UNKNOWN(getVariableID(var) > 0)
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::AtomicForward)
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::AtomicReverse)
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::LoopStart)
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::LoopEnd)
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::Index)
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::IndexAssign)
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::IndexDeclaration)
 
         if (var.getName() == nullptr) {
             if (op == CGOpCode::ArrayCreation) {
@@ -563,7 +563,7 @@ protected:
             } else if (getVariableID(var) < _minTemporaryVarID) {
                 // dependent variable
                 std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(getVariableID(var));
-                CPPADCG_ASSERT_UNKNOWN(it != _dependentIDs.end());
+                CPPADCG_ASSERT_UNKNOWN(it != _dependentIDs.end())
 
                 size_t index = it->second;
                 var.setName(_nameGen->generateDependent(index));
@@ -698,7 +698,7 @@ protected:
                            const std::string& style = "") {
         size_t na = node.getArguments().size();
         size_t nna = args.size();
-        CPPADCG_ASSERT_UNKNOWN(na >= nna);
+        CPPADCG_ASSERT_UNKNOWN(na >= nna)
 
         for (size_t i = 0; i < na; ++i) {
             if (i > 0)
@@ -720,8 +720,8 @@ protected:
         size_t na = node.getArguments().size();
         size_t nna = args.size();
         size_t ns = styles.size();
-        CPPADCG_ASSERT_UNKNOWN(na >= nna);
-        CPPADCG_ASSERT_UNKNOWN(na >= ns);
+        CPPADCG_ASSERT_UNKNOWN(na >= nna)
+        CPPADCG_ASSERT_UNKNOWN(na >= ns)
 
         std::string style;
         for (size_t i = 0; i < args.size(); ++i) {
@@ -990,7 +990,7 @@ protected:
     }
 
     virtual std::string printConditionalAssignment(OperationNode<Base>& node) {
-        CPPADCG_ASSERT_UNKNOWN(getVariableID(node) > 0);
+        CPPADCG_ASSERT_UNKNOWN(getVariableID(node) > 0)
 
         const std::vector<Argument<Base> >& args = node.getArguments();
         const Argument<Base>& left = args[0];

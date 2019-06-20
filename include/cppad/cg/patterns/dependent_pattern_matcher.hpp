@@ -702,7 +702,7 @@ private:
      * @return The new tape without loop equations
      */
     virtual LoopFreeModel<Base>* createNewTape() {
-        CPPADCG_ASSERT_UNKNOWN(handler_ == independents_[0].getCodeHandler());
+        CPPADCG_ASSERT_UNKNOWN(handler_ == independents_[0].getCodeHandler())
 
         size_t m = dependents_.size();
         std::vector<bool> inLoop(m, false);

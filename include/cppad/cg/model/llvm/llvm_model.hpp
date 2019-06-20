@@ -53,7 +53,7 @@ protected:
         FunctorGenericModel<Base>(name),
         _dynLib(dynLib) {
 
-        CPPADCG_ASSERT_UNKNOWN(_dynLib != nullptr);
+        CPPADCG_ASSERT_UNKNOWN(_dynLib != nullptr)
 
         this->init();
     }

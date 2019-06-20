@@ -150,12 +150,12 @@ public:
     }
 
     inline const VectorSet& getHessianTempEqsSparsity() const {
-        CPPADCG_ASSERT_UNKNOWN(hessSparsity_);
+        CPPADCG_ASSERT_UNKNOWN(hessSparsity_)
         return hessTapeTempSparsity_;
     }
 
     inline const VectorSet& getHessianOrigEqsSparsity() const {
-        CPPADCG_ASSERT_UNKNOWN(hessSparsity_);
+        CPPADCG_ASSERT_UNKNOWN(hessSparsity_)
         return hessTapeOrigEqSparsity_;
     }
 

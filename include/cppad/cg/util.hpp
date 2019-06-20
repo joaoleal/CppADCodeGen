@@ -43,7 +43,7 @@ void zeroOrderDependency(ADFun<Base>& fun,
 template<class VectorSet>
 inline bool isIdentityPattern(const VectorSet& pattern,
                               size_t mRows) {
-    CPPADCG_ASSERT_UNKNOWN(pattern.size() >= mRows);
+    CPPADCG_ASSERT_UNKNOWN(pattern.size() >= mRows)
 
     for (size_t i = 0; i < mRows; i++) {
         if (pattern[i].size() != 1 || *pattern[i].begin() != i) {
@@ -57,7 +57,7 @@ template<class VectorSet>
 inline VectorSet transposePattern(const VectorSet& pattern,
                                   size_t mRows,
                                   size_t nCols) {
-    CPPADCG_ASSERT_UNKNOWN(pattern.size() >= mRows);
+    CPPADCG_ASSERT_UNKNOWN(pattern.size() >= mRows)
 
     VectorSet transpose(nCols);
     for (size_t i = 0; i < mRows; i++) {
@@ -81,7 +81,7 @@ template<class VectorSet, class VectorSet2>
 inline void addTransMatrixSparsity(const VectorSet& a,
                                    size_t mRows,
                                    VectorSet2& result) {
-    CPPADCG_ASSERT_UNKNOWN(a.size() >= mRows);
+    CPPADCG_ASSERT_UNKNOWN(a.size() >= mRows)
 
     for (size_t i = 0; i < mRows; i++) {
         for (size_t j : a[i]) {
@@ -116,8 +116,8 @@ template<class VectorSet, class VectorSet2>
 inline void addMatrixSparsity(const VectorSet& a,
                               size_t mRows,
                               VectorSet2& result) {
-    CPPADCG_ASSERT_UNKNOWN(result.size() >= mRows);
-    CPPADCG_ASSERT_UNKNOWN(a.size() <= mRows);
+    CPPADCG_ASSERT_UNKNOWN(result.size() >= mRows)
+    CPPADCG_ASSERT_UNKNOWN(a.size() <= mRows)
 
     for (size_t i = 0; i < mRows; i++) {
         if (result[i].empty()) {
@@ -138,7 +138,7 @@ inline void addMatrixSparsity(const VectorSet& a,
 template<class VectorSet, class VectorSet2>
 inline void addMatrixSparsity(const VectorSet& a,
                               VectorSet2& result) {
-    CPPADCG_ASSERT_UNKNOWN(result.size() == a.size());
+    CPPADCG_ASSERT_UNKNOWN(result.size() == a.size())
 
     addMatrixSparsity<VectorSet, VectorSet2>(a, a.size(), result);
 }
@@ -180,9 +180,9 @@ inline void multMatrixMatrixSparsity(const VectorSet& a,
                                      size_t m,
                                      size_t n,
                                      size_t q) {
-    CPPADCG_ASSERT_UNKNOWN(a.size() >= m);
-    CPPADCG_ASSERT_UNKNOWN(b.size() >= n);
-    CPPADCG_ASSERT_UNKNOWN(result.size() >= m);
+    CPPADCG_ASSERT_UNKNOWN(a.size() >= m)
+    CPPADCG_ASSERT_UNKNOWN(b.size() >= n)
+    CPPADCG_ASSERT_UNKNOWN(result.size() >= m)
 
     //check if b is identity
     if (n == q) {
@@ -230,9 +230,9 @@ inline void multMatrixTransMatrixSparsity(const VectorSet& a,
                                           size_t m,
                                           size_t n,
                                           size_t q) {
-    CPPADCG_ASSERT_UNKNOWN(a.size() >= m);
-    CPPADCG_ASSERT_UNKNOWN(b.size() >= m);
-    CPPADCG_ASSERT_UNKNOWN(result.size() >= n);
+    CPPADCG_ASSERT_UNKNOWN(a.size() >= m)
+    CPPADCG_ASSERT_UNKNOWN(b.size() >= m)
+    CPPADCG_ASSERT_UNKNOWN(result.size() >= n)
 
     //check if B is empty
     bool empty = true;
@@ -299,8 +299,8 @@ inline void multMatrixMatrixSparsityTrans(const VectorSet& aT,
                                           size_t m,
                                           size_t n,
                                           size_t q) {
-    CPPADCG_ASSERT_UNKNOWN(aT.size() >= m);
-    CPPADCG_ASSERT_UNKNOWN(b.size() >= m);
+    CPPADCG_ASSERT_UNKNOWN(aT.size() >= m)
+    CPPADCG_ASSERT_UNKNOWN(b.size() >= m)
 
     //check if b is empty
     bool empty = true;

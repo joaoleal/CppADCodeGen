@@ -155,10 +155,10 @@ inline std::ostream& operator<<(std::ostream& os, const CGOpCode& op) {
             "numberOp"
     };
     // check ensuring conversion to size_t is as expected
-    CPPADCG_ASSERT_UNKNOWN(size_t(CGOpCode::NumberOp) + 1 == sizeof(OpNameTable)/sizeof(OpNameTable[0]));
+    CPPADCG_ASSERT_UNKNOWN(size_t(CGOpCode::NumberOp) + 1 == sizeof(OpNameTable)/sizeof(OpNameTable[0]))
 
     // this test ensures that all indices are within the table
-    CPPADCG_ASSERT_UNKNOWN(int(op) >= 0 && size_t(op) < size_t(CGOpCode::NumberOp));
+    CPPADCG_ASSERT_UNKNOWN(int(op) >= 0 && size_t(op) < size_t(CGOpCode::NumberOp))
     
     os << OpNameTable[size_t(op)];
 

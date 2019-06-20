@@ -71,7 +71,7 @@ inline void LanguageMathML<Base>::printRandomIndexPatternDeclaration(std::ostrin
             os << indentation;
             printStaticIndexArray(os, ip->getName(), y);
         } else {
-            CPPADCG_ASSERT_UNKNOWN(ip->getType() == IndexPatternType::Random2D);
+            CPPADCG_ASSERT_UNKNOWN(ip->getType() == IndexPatternType::Random2D)
             /**
              * 2D
              */
@@ -173,7 +173,7 @@ inline void LanguageMathML<Base>::indexPattern2String(std::ostream& os,
             const auto* lip = static_cast<const SectionedIndexPattern*> (&ip);
             const std::map<size_t, IndexPattern*>& sections = lip->getLinearSections();
             size_t sSize = sections.size();
-            CPPADCG_ASSERT_UNKNOWN(sSize > 1);
+            CPPADCG_ASSERT_UNKNOWN(sSize > 1)
 
             auto its = sections.begin();
             for (size_t s = 0; s < sSize - 1; s++) {

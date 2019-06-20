@@ -132,7 +132,7 @@ size_t CodeHandler<Base>::LoopData::addIndependentIndexPattern(IndexPattern& pat
 
 template<class Base>
 void CodeHandler<Base>::LoopData::addLoopEndNode(OperationNode<Base>& node) {
-    CPPADCG_ASSERT_UNKNOWN(node.getOperationType() == CGOpCode::LoopEnd);
+    CPPADCG_ASSERT_UNKNOWN(node.getOperationType() == CGOpCode::LoopEnd)
     LoopEndOperationNode<Base>& loopEnd = static_cast<LoopEndOperationNode<Base>&> (node);
     endNodes.push_back(&loopEnd);
 }

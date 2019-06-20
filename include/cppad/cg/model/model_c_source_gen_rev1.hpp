@@ -119,7 +119,7 @@ void ModelCSourceGen<Base>::generateSparseReverseOneSourcesWithAtomics(const std
 
         w[i] = py;
         vector<CGBase> dw = _fun.Reverse(1, w);
-        CPPADCG_ASSERT_UNKNOWN(dw.size() == n);
+        CPPADCG_ASSERT_UNKNOWN(dw.size() == n)
         w[i] = Base(0);
 
         vector<CGBase> dwCustom;

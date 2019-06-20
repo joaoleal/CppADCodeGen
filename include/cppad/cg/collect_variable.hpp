@@ -27,9 +27,9 @@ inline CG<Base> CodeHandler<Base>::collectVariable(OperationNode<Base>& expressi
                                                    const SourceCodePath& path1,
                                                    const SourceCodePath& path2,
                                                    size_t lastCommon) {
-    CPPADCG_ASSERT_UNKNOWN(lastCommon >= 0);
-    CPPADCG_ASSERT_UNKNOWN(path1.size() > lastCommon);
-    CPPADCG_ASSERT_UNKNOWN(path2.size() > lastCommon);
+    CPPADCG_ASSERT_UNKNOWN(lastCommon >= 0)
+    CPPADCG_ASSERT_UNKNOWN(path1.size() > lastCommon)
+    CPPADCG_ASSERT_UNKNOWN(path2.size() > lastCommon)
 
 #ifndef NDEBUG
     /**
@@ -37,7 +37,7 @@ inline CG<Base> CodeHandler<Base>::collectVariable(OperationNode<Base>& expressi
      */
     for(size_t i = 0;i < lastCommon; ++i) {
         // compare with the first path
-        CPPADCG_ASSERT_UNKNOWN(path2[i] == path1[i]);
+        CPPADCG_ASSERT_UNKNOWN(path2[i] == path1[i])
     }
 #endif
 
@@ -180,12 +180,12 @@ inline CG<Base> CodeHandler<Base>::collectVariableAddSub(const SourceCodePath& p
                 c = -c;
 
             } else if (op == CGOpCode::Mul) {
-                CPPADCG_ASSERT_UNKNOWN(p[i].argIndex == 0 || p[i].argIndex == 1);
+                CPPADCG_ASSERT_UNKNOWN(p[i].argIndex == 0 || p[i].argIndex == 1)
                 const auto& pArgs = node->getArguments();
                 c *= (p[i].argIndex == 0) ? pArgs[1] : pArgs[0];
 
             } else if (op == CGOpCode::Div) {
-                CPPADCG_ASSERT_UNKNOWN(p[i].argIndex == 0);
+                CPPADCG_ASSERT_UNKNOWN(p[i].argIndex == 0)
                 c /= CG<Base>(node->getArguments()[1]);
 
             } else if (op == CGOpCode::Alias) {
@@ -193,7 +193,7 @@ inline CG<Base> CodeHandler<Base>::collectVariableAddSub(const SourceCodePath& p
 
             } else {
                 // should never get here
-                CPPADCG_ASSERT_UNKNOWN(false);
+                CPPADCG_ASSERT_UNKNOWN(false)
             }
 
         }

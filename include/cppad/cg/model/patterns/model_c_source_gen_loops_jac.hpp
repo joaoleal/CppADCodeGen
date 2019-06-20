@@ -46,8 +46,8 @@ void ModelCSourceGen<Base>::analyseSparseJacobianWithLoops(const std::vector<siz
     using namespace std;
     using namespace loops;
 
-    CPPADCG_ASSERT_UNKNOWN(rows.size() == cols.size());
-    CPPADCG_ASSERT_UNKNOWN(rows.size() == location.size());
+    CPPADCG_ASSERT_UNKNOWN(rows.size() == cols.size())
+    CPPADCG_ASSERT_UNKNOWN(rows.size() == location.size())
 
     /**
      * determine sparsities
@@ -105,7 +105,7 @@ void ModelCSourceGen<Base>::analyseSparseJacobianWithLoops(const std::vector<siz
             /**
              * Equation present in the model without loops
              */
-            CPPADCG_ASSERT_UNKNOWN(_funNoLoops != nullptr);
+            CPPADCG_ASSERT_UNKNOWN(_funNoLoops != nullptr)
             size_t il = _funNoLoops->getLocalDependentIndex(i);
 
             noLoopEvalSparsity[il].insert(j);

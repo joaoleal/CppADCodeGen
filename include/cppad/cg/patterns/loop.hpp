@@ -184,7 +184,7 @@ public:
     }
 
     inline void setLinkedDependents(const std::set<std::set<size_t>*>& newLoopRelations) {
-        CPPADCG_ASSERT_UNKNOWN(eqGroups_.size() == 1);
+        CPPADCG_ASSERT_UNKNOWN(eqGroups_.size() == 1)
 
         eqGroups_[0].linkedDependents.clear();
         eqGroups_[0].linkedDependents.reserve(newLoopRelations.size());
@@ -603,7 +603,7 @@ private:
 
     void addOperationArguments2Loop(const OperationNode<Base>* op,
                                     const OperationIndexedIndependents<Base>& eqOpIndeIndep) {
-        CPPADCG_ASSERT_UNKNOWN(!dep2Iteration_.empty());
+        CPPADCG_ASSERT_UNKNOWN(!dep2Iteration_.empty())
 
         OperationIndexedIndependents<Base>& loopOpIndeIndep = indexedOpIndep.op2Arguments[op];
         loopOpIndeIndep.arg2Independents.resize(eqOpIndeIndep.arg2Independents.size());
@@ -750,7 +750,7 @@ private:
          * create the tape for the reference iteration
          ******************************************************************/
         // indexed independents
-        CPPADCG_ASSERT_UNKNOWN(indexedIndep2clone_.size() == independentsIndexed_.size());
+        CPPADCG_ASSERT_UNKNOWN(indexedIndep2clone_.size() == independentsIndexed_.size())
 
         std::vector<const OperationNode<Base>*> indexedCloneOrder;
         indexedCloneOrder.reserve(indexedIndep2clone_.size());

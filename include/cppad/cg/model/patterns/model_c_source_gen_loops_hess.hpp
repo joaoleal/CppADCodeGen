@@ -1194,7 +1194,7 @@ inline void generateLoopForJacHes(ADFun<CG<Base> >& fun,
 
             tx1v[j1] = Base(1);
             std::vector<CGB> dy = fun.Forward(1, tx1v);
-            CPPADCG_ASSERT_UNKNOWN(dy.size() == m);
+            CPPADCG_ASSERT_UNKNOWN(dy.size() == m)
             tx1v[j1] = Base(0);
 
             // save Jacobian
@@ -1210,7 +1210,7 @@ inline void generateLoopForJacHes(ADFun<CG<Base> >& fun,
                 for (size_t l = 0; l < vw.size(); l++) {
 
                     std::vector<CGB> px = fun.Reverse(2, vw[l]);
-                    CPPADCG_ASSERT_UNKNOWN(px.size() == 2 * n);
+                    CPPADCG_ASSERT_UNKNOWN(px.size() == 2 * n)
 
                     // save Hessian
                     map<size_t, CGB>& hessRow = vhess[l][j1];
