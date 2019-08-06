@@ -62,9 +62,9 @@ install:
   - make install
   - cd ../..
 # get Eigen:
-  - wget http://bitbucket.org/eigen/eigen/get/3.3.4.tar.bz2
-  - tar -jxf 3.3.4.tar.bz2
-  - cd eigen-eigen-5a0156e40feb
+  - wget http://bitbucket.org/eigen/eigen/get/3.3.7.tar.bz2
+  - tar -jxf 3.3.7.tar.bz2
+  - cd eigen-eigen-323c052e1731
   - mkdir build
   - mkdir install
   - EIGEN_HOME=`pwd`/install/include/eigen3
