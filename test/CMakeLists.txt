@@ -25,8 +25,8 @@ INCLUDE(ExternalProject)
 SET_DIRECTORY_PROPERTIES(PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/test/googletest)
 
 # Add gtest
-OPTION(GOOGLETEST_SVN "Download GoogleTest from the SVN repositoty" OFF)
-IF(GOOGLETEST_SVN)
+OPTION(GOOGLETEST_GIT "Download GoogleTest from the GIT repositoty" OFF)
+IF(GOOGLETEST_GIT)
   configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
   execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
     RESULT_VARIABLE result
