@@ -27,22 +27,29 @@ SET_DIRECTORY_PROPERTIES(PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/test/googletes
 # Add gtest
 OPTION(GOOGLETEST_SVN "Download GoogleTest from the SVN repositoty" OFF)
 IF(GOOGLETEST_SVN)
-  # Download from SVN repository
-    ExternalProject_Add(
-        googletest
-        SVN_REPOSITORY http://googletest.googlecode.com/svn/trunk/
-        TIMEOUT 10
-        # Force separate output paths for debug and release builds to allow easy
-        # identification of correct lib in subsequent TARGET_LINK_LIBRARIES commands
-        CMAKE_ARGS -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=DebugLibs
-                   -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=ReleaseLibs
-                   -Dgtest_force_shared_crt=ON
-        # Disable install step
-        INSTALL_COMMAND ""
-        # Wrap download, configure and build steps in a script to log output
-        LOG_DOWNLOAD ON
-        LOG_CONFIGURE ON
-        LOG_BUILD ON)
+  configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
+  execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
+  if(result)
+    message(FATAL_ERROR "CMake step for googletest failed: ${result}")
+  endif()
+  execute_process(COMMAND ${CMAKE_COMMAND} --build .
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download )
+  if(result)
+    message(FATAL_ERROR "Build step for googletest failed: ${result}")
+  endif()
+
+  # Prevent overriding the parent project's compiler/linker
+  # settings on Windows
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+  # Add googletest directly to our build. This defines
+  # the gtest and gtest_main targets.
+  add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
+                   ${CMAKE_CURRENT_BINARY_DIR}/googletest-build
+                   EXCLUDE_FROM_ALL)
 ELSE()
     # find installed in system
     FIND_PATH(GOOGLETEST_SOURCE_DIR NAMES "src/gtest_main.cc"
@@ -68,39 +75,20 @@ ELSE()
         LOG_BUILD ON)
 ENDIF()
 
-# Specify include dir
-ExternalProject_Get_Property(googletest source_dir)
-SET(gtest_source_dir ${source_dir})
+# The gtest/gtest_main targets carry header search path
+# dependencies automatically when using CMake 2.8.11 or
+# later. Otherwise we have to add them here ourselves.
+if (CMAKE_VERSION VERSION_LESS 2.8.11)
+  include_directories("${gtest_SOURCE_DIR}/include")
+endif()
 
-# Specify MainTest's link libraries
-ExternalProject_Get_Property(googletest binary_dir)
-SET(GTEST_LIBS_DIR ${binary_dir})
-
-INCLUDE_DIRECTORIES("${gtest_source_dir}/include")
+INCLUDE_DIRECTORIES("${gtest_SOURCE_DIR}/include")
 
 ################################################################################
 # add gtest dependency
 ################################################################################
 FUNCTION(add_gest_link_libraries test_target_name use_main)
-    IF(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        TARGET_LINK_LIBRARIES(${test_target_name} ${GTEST_LIBS_DIR}/libgtest.a)
-        IF(${use_main})
-            TARGET_LINK_LIBRARIES(${test_target_name} ${GTEST_LIBS_DIR}/libgtest_main.a)
-        ENDIF()
-        TARGET_LINK_LIBRARIES(${test_target_name} pthread)
-    ELSE()
-        TARGET_LINK_LIBRARIES(${test_target_name}
-                              debug ${GTEST_LIBS_DIR}/DebugLibs/${CMAKE_FIND_LIBRARY_PREFIXES}gtest${CMAKE_FIND_LIBRARY_SUFFIXES}
-                              optimized ${GTEST_LIBS_DIR}/ReleaseLibs/${CMAKE_FIND_LIBRARY_PREFIXES}gtest${CMAKE_FIND_LIBRARY_SUFFIXES})
-        IF(${use_main})
-            TARGET_LINK_LIBRARIES(${test_target_name}
-                                  debug ${GTEST_LIBS_DIR}/DebugLibs/${CMAKE_FIND_LIBRARY_PREFIXES}gtest_main${CMAKE_FIND_LIBRARY_SUFFIXES}
-                                  optimized ${GTEST_LIBS_DIR}/ReleaseLibs/${CMAKE_FIND_LIBRARY_PREFIXES}gtest_main${CMAKE_FIND_LIBRARY_SUFFIXES})
-        ENDIF()
-  ENDIF()
-
-  # Create dependency of test on googletest
-  ADD_DEPENDENCIES(${test_target_name} googletest)
+    TARGET_LINK_LIBRARIES(${test_target_name} gtest_main)
 ENDFUNCTION()
 
 ################################################################################
@@ -140,10 +128,6 @@ FUNCTION(add_cppadcg_test source_file)
 
     # Specify MainTest's link libraries
     add_gest_link_libraries(${test_target_name} ON)
-
-    IF( UNIX )
-        TARGET_LINK_LIBRARIES(${test_target_name} ${DL_LIBRARIES})
-    ENDIF()
 
     ADD_TEST(NAME ${test_target_name}
             COMMAND ${test_target_name})
