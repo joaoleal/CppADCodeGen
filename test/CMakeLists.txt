@@ -207,9 +207,6 @@ ENDIF()
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
-# enable c++11 functions in cppad
-ADD_DEFINITIONS(-DCPPAD_USE_CPLUSPLUS_2011=1)
-
 ################################################################################
 
 INCLUDE(${CMAKE_SOURCE_DIR}/cmake/PrecompiledHeaders.cmake)
