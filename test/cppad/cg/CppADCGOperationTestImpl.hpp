@@ -82,7 +82,12 @@ void CppADCGOperationTest::compile(const std::string& source, const std::string&
          *   -Wl,-soname, library  Pass suitable options to linker
          *
          */
-        std::string linker = "-Wl,-soname," + library;
+#if CPPAD_CG_SYSTEM_APPLE
+        const std::string linkerName = "-install_name";
+#elif CPPAD_CG_SYSTEM_LINUX
+        const std::string linkerName = "-soname";
+#endif
+        std::string linker = "-Wl," + linkerName + "," + library;
         execl("/usr/bin/gcc", "gcc", "-x", "c", "-O0", "-pipe", "-", "-fPIC", "-shared",
               linker.c_str(), "-o", library.c_str(), (char *) nullptr);
 
