@@ -103,6 +103,10 @@ FUNCTION(add_cppadcg_test source_file)
 
     # Specify MainTest's link libraries
     add_gest_link_libraries(${test_target_name} ON)
+  
+    IF( UNIX )
+        TARGET_LINK_LIBRARIES(${test_target_name} ${DL_LIBRARIES})
+    ENDIF()
 
     ADD_TEST(NAME ${test_target_name}
             COMMAND ${test_target_name})
