@@ -290,8 +290,8 @@ public:
      * Provides the name used by an atomic function with a given ID.
      *
      * @param id the atomic function ID.
-     * @return a pointer to the atomic function name if it was registered
-     *         or nullptr otherwise
+     * @return the atomic function name if it was registered 
+     *         or an empty string otherwise.
      */
     inline const std::string getAtomicFunctionName(size_t id) const;
 
