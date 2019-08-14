@@ -293,7 +293,7 @@ public:
      * @return the atomic function name if it was registered 
      *         or an empty string otherwise.
      */
-    inline const std::string getAtomicFunctionName(size_t id) const;
+    inline std::string getAtomicFunctionName(size_t id) const;
 
     /**
      * Provides a map with all the currently registered atomic functions.

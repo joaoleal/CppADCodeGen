@@ -175,7 +175,7 @@ inline void CodeHandler<Base>::markVisited(const Node& node) {
 }
 
 template<class Base>
-inline const std::string CodeHandler<Base>::getAtomicFunctionName(size_t id) const {
+inline std::string CodeHandler<Base>::getAtomicFunctionName(size_t id) const {
     typename std::map<size_t, CGAbstractAtomicFun<Base>*>::const_iterator it;
     it = _atomicFunctions.find(id);
     if (it != _atomicFunctions.end())
