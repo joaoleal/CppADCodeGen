@@ -4,7 +4,6 @@
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2012 Ciengis
- *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
