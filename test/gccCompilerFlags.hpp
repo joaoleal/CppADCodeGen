@@ -20,7 +20,7 @@ namespace CppAD {
 namespace cg {
 
 template<class Base>
-void prepareTestCompilerFlags(GccCompiler<Base>& compiler) {
+void prepareTestCompilerFlags(AbstractCCompiler<Base>& compiler) {
     std::vector<std::string> cFlags = compiler.getCompileFlags(); // copy
     cFlags.emplace_back("-O0");
     cFlags.emplace_back("-g");

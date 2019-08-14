@@ -75,7 +75,7 @@ TEST_F(CppADCGTest, EigenADCGD) {
     using Eigen::Matrix;
 
     using CGD = CG<double>;
-    using ADCG = AD<CGD>;
+    using ADCGD = AD<CGD>;
 
     using traits = Eigen::NumTraits<ADCGD>;
 

@@ -24,7 +24,7 @@ class vector;
 template<class Base>
 class AD;
 
-template<class Base>
+template<class Base, class RecBase>
 class ADFun;
 
 namespace cg {

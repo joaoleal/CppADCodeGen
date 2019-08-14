@@ -1,5 +1,6 @@
 # --------------------------------------------------------------------------
 #  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+#    Copyright (C) 2018 Joao Leal
 #    Copyright (C) 2012 Ciengis
 #
 #  CppADCodeGen is distributed under multiple licenses:
@@ -25,12 +26,13 @@ INCLUDE(ExternalProject)
 SET_DIRECTORY_PROPERTIES(PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/test/googletest)
 
 # Add gtest
-OPTION(GOOGLETEST_SVN "Download GoogleTest from the SVN repositoty" OFF)
-IF(GOOGLETEST_SVN)
+OPTION(GOOGLETEST_GIT "Download GoogleTest from the GIT repositoty" OFF)
+IF(GOOGLETEST_GIT)
   # Download from SVN repository
     ExternalProject_Add(
         googletest
-        SVN_REPOSITORY http://googletest.googlecode.com/svn/trunk/
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG release-1.8.1
         TIMEOUT 10
         # Force separate output paths for debug and release builds to allow easy
         # identification of correct lib in subsequent TARGET_LINK_LIBRARIES commands
@@ -74,18 +76,39 @@ SET(gtest_source_dir ${source_dir})
 
 # Specify MainTest's link libraries
 ExternalProject_Get_Property(googletest binary_dir)
-SET(GTEST_LIBS_DIR ${binary_dir})
+IF(GOOGLETEST_GIT)
+    SET(GTEST_LIBS_DIR ${binary_dir}/googlemock/gtest)
+ELSE()
+    SET(GTEST_LIBS_DIR ${binary_dir})
+ENDIF()
 
-INCLUDE_DIRECTORIES("${gtest_source_dir}/include")
+INCLUDE_DIRECTORIES("${gtest_source_dir}/googletest/include")
+
+SET(GTEST_LIBRARY_PATH ${GTEST_LIBS_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}gtest.a)
+SET(GTEST_MAIN_PATH    ${GTEST_LIBS_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}gtest_main.a)
+
+ADD_LIBRARY(gtest UNKNOWN IMPORTED)
+SET_TARGET_PROPERTIES(gtest PROPERTIES
+                      "IMPORTED_LOCATION" "${GTEST_LIBRARY_PATH}"
+                      "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
+                      "INTERFACE_INCLUDE_DIRECTORIES" "${GTEST_INCLUDE_DIRS}")
+ADD_DEPENDENCIES(gtest googletest)
+
+ADD_LIBRARY(gtestmain UNKNOWN IMPORTED)
+SET_TARGET_PROPERTIES(gtestmain PROPERTIES
+                      "IMPORTED_LOCATION" "${GTEST_MAIN_PATH}"
+                      "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
+                      "INTERFACE_INCLUDE_DIRECTORIES" "${GTEST_INCLUDE_DIRS}")
+ADD_DEPENDENCIES(gtestmain googletest)
 
 ################################################################################
 # add gtest dependency
 ################################################################################
 FUNCTION(add_gest_link_libraries test_target_name use_main)
     IF(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        TARGET_LINK_LIBRARIES(${test_target_name} ${GTEST_LIBS_DIR}/libgtest.a)
+        TARGET_LINK_LIBRARIES(${test_target_name} gtest)
         IF(${use_main})
-            TARGET_LINK_LIBRARIES(${test_target_name} ${GTEST_LIBS_DIR}/libgtest_main.a)
+            TARGET_LINK_LIBRARIES(${test_target_name} gtestmain)
         ENDIF()
         TARGET_LINK_LIBRARIES(${test_target_name} pthread)
     ELSE()
@@ -122,6 +145,7 @@ ENDFUNCTION()
 ################################################################################
 # add test function
 ################################################################################
+ADD_CUSTOM_TARGET(build_tests)
 FUNCTION(add_cppadcg_test source_file)
 
     GET_FILENAME_COMPONENT(test_target_name "${source_file}" NAME_WE)
@@ -159,6 +183,7 @@ FUNCTION(add_cppadcg_test source_file)
                          --leak-check=full
                          --track-origins=yes
                          --leak-resolution=high
+                         --vgdb=no
                          --quiet
                          --error-exitcode=1
                          --log-file=${CMAKE_CURRENT_BINARY_DIR}/valgrind.log.${test_target_name}
@@ -173,6 +198,8 @@ FUNCTION(add_cppadcg_test source_file)
     IF(USE_PRECOMPILED_HEADERS)
         depends_on_precompile_header(${test_target_name} "CppADCGTest.hpp")
     ENDIF()
+
+    ADD_DEPENDENCIES(build_tests ${test_target_name})
 
 ENDFUNCTION()
 ################################################################################
@@ -206,9 +233,6 @@ ENDIF()
 ################################################################################
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
-
-# enable c++11 functions in cppad
-ADD_DEFINITIONS(-DCPPAD_USE_CPLUSPLUS_2011=1)
 
 ################################################################################
 

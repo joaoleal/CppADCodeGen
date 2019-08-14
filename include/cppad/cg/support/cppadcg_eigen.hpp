@@ -164,6 +164,8 @@ struct NumTraits<CppAD::AD<CppAD::cg::CG<Base> > > {
 
 };
 
+#if EIGEN_VERSION_AT_LEAST(3,2,93)
+
 /**
  * Determines that the given binary operation of two numeric types involving
  * an AD<CG<Base> > is allowed and what the scalar return type is
@@ -203,7 +205,9 @@ struct ScalarBinaryOpTraits<Base, CppAD::cg::CG<Base>, BinOp> {
     using ReturnType = CppAD::cg::CG<Base>;
 };
 
-}
+#endif // #ifdef EIGEN_VERSION_AT_LEAST(3,2,93)
+
+} // namespace Eigen
 
 namespace CppAD {
 namespace cg {
