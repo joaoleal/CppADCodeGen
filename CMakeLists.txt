@@ -149,6 +149,19 @@ IF(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -ggdb -DNDEBUG -D_FORTIFY_SOURCE=2")
 ENDIF()
 
+
+# ----------------------------------------------------------------------------
+# Check if it is possible to use LLVM/Clang for JIT
+# ----------------------------------------------------------------------------
+IF((("${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}" MATCHES "^(3.2|3.6|3.8|4.0|5.0|6.0)$") AND CLANG_FOUND)
+        OR
+    ("${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}" MATCHES "^(3.3|3.4)$")
+  )
+    SET(CPPADCG_USE_LLVM ON)
+ELSE()
+    SET(CPPADCG_USE_LLVM OFF)
+ENDIF()
+
 # ----------------------------------------------------------------------------
 # Currently building tests as normal executables
 # ----------------------------------------------------------------------------

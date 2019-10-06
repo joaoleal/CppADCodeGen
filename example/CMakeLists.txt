@@ -74,6 +74,29 @@ IF(UNIX)
                       COMMAND dynamic_linux)
 
     ############################################################################
+    #                                  LLVM
+    ############################################################################
+    IF(CPPADCG_USE_LLVM)
+
+        INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR} ${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS} ${DL_INCLUDE_DIRS})
+        LINK_DIRECTORIES(${LLVM_LIBRARY_DIRS})
+        ADD_DEFINITIONS(${LLVM_CFLAGS_NO_NDEBUG} -DLLVM_WITH_NDEBUG=${LLVM_WITH_NDEBUG})
+
+        ADD_EXECUTABLE(jit_linux jit_linux.cpp)
+        SET(EXAMPLES_COMMAND "${EXAMPLES_COMMAND} COMMAND dynamic_linux")
+
+        TARGET_LINK_LIBRARIES(jit_linux ${DL_LIBRARIES})
+        ADD_CUSTOM_TARGET(example_jit_linux COMMAND jit_linux)
+
+        TARGET_LINK_LIBRARIES(jit_linux ${LLVM_MODULE_LIBS} ${LLVM_LDFLAGS})
+
+        IF("${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}" MATCHES "^(3.2|3.6|3.8|4.0|5.0|6.0)$")
+            TARGET_LINK_LIBRARIES(jit_linux ${CLANG_LIBS})
+        ENDIF()
+
+    ENDIF()
+
+    ############################################################################
     #                                  lagrangian
     ############################################################################
     ADD_EXECUTABLE(lagrangian lagrangian.cpp)
