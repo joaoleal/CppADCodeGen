@@ -57,7 +57,7 @@ inline cg::CodeHandler<Base>* findCodeHandler(const cg::CG<Base>& left,
     } else if (!falseCase.isParameter()) {
         handler = fh;
     } else {
-        CPPAD_ASSERT_UNKNOWN(0);
+        CPPAD_ASSERT_UNKNOWN(0)
         throw cg::CGException("Unexpected error!");
     }
 
@@ -230,7 +230,7 @@ inline cg::CG<Base> CondExpOp(enum CompareOp cop,
             return CondExpGt(left, right, trueCase, falseCase);
 
         default:
-            CPPAD_ASSERT_UNKNOWN(0);
+            CPPAD_ASSERT_UNKNOWN(0)
             return trueCase;
     }
 }

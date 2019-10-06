@@ -260,7 +260,7 @@ public:
 
             for (size_t i = 0; i < n; i++) {
                 for (size_t j : a[i]) {
-                    CPPAD_ASSERT_UNKNOWN(j < q);
+                    CPPAD_ASSERT_UNKNOWN(j < q)
                     v[i].insert(j);
                 }
             }
@@ -322,7 +322,7 @@ private:
 
     static void toCG(const CppAD::vector<Base>& from,
                      CppAD::vector<CGB>& to) {
-        CPPAD_ASSERT_UNKNOWN(from.size() == to.size());
+        CPPAD_ASSERT_UNKNOWN(from.size() == to.size())
 
         for (size_t i = 0; i < from.size(); i++) {
             to[i] = from[i];
@@ -331,7 +331,7 @@ private:
 
     static void fromCG(const CppAD::vector<CGB>& from,
                        CppAD::vector<Base>& to) {
-        CPPAD_ASSERT_UNKNOWN(from.size() == to.size());
+        CPPAD_ASSERT_UNKNOWN(from.size() == to.size())
 
         for (size_t i = 0; i < from.size(); i++) {
             CPPADCG_ASSERT_KNOWN(from[i].isValueDefined(), "No value defined")
