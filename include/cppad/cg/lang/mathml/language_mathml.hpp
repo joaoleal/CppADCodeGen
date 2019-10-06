@@ -2074,7 +2074,8 @@ protected:
                 return;
 
             default:
-                CPPAD_ASSERT_UNKNOWN(0);
+                CPPAD_ASSERT_UNKNOWN(0)
+                break;
         }
         throw CGException("Invalid comparison operator code"); // should never get here
     }
