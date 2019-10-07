@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2014 Ciengis
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -31,6 +32,10 @@
 #include <cppad/cg/model/llvm/v5_0/llvm5_0.hpp>
 #elif LLVM_VERSION_MAJOR==6 && LLVM_VERSION_MINOR==0
 #include <cppad/cg/model/llvm/v6_0/llvm6_0.hpp>
+#elif LLVM_VERSION_MAJOR==7 && LLVM_VERSION_MINOR==0
+#include <cppad/cg/model/llvm/v7_0/llvm7_0.hpp>
+#elif LLVM_VERSION_MAJOR==8 && LLVM_VERSION_MINOR==0
+#include <cppad/cg/model/llvm/v8_0/llvm8_0.hpp>
 #endif
 
 #endif

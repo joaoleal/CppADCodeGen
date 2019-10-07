@@ -17,9 +17,6 @@
 
 #include "CppADCGModelTest.hpp"
 
-#define STRINGIFY(X) STRINGIFY2(X)
-#define STRINGIFY2(X) #X
-
 using namespace CppAD;
 using namespace CppAD::cg;
 
@@ -66,7 +63,7 @@ TEST_F(LlvmModelTest, llvm) {
      * Create the dynamic library
      * (generate and compile source code)
      */
-    ModelCSourceGen<double> compHelp(*fun.get(), "mySmallModel");
+    ModelCSourceGen<double> compHelp(*fun, "mySmallModel");
     compHelp.setCreateForwardZero(true);
     compHelp.setCreateJacobian(true);
     compHelp.setCreateHessian(true);
@@ -83,9 +80,9 @@ TEST_F(LlvmModelTest, llvm) {
 
     std::unique_ptr<LlvmModelLibrary<Base> > llvmModelLib = p.create();
     std::unique_ptr<GenericModel<Base> > model = llvmModelLib->model("mySmallModel");
-    ASSERT_TRUE(model.get() != nullptr);
+    ASSERT_TRUE(model != nullptr);
 
-    this->testModelResults(*llvmModelLib, *model, *fun.get(), x);
+    this->testModelResults(*llvmModelLib, *model, *fun, x);
 
     model.reset(nullptr); // must be freed before llvm_shutdown()
     llvmModelLib.reset(nullptr); // must be freed before llvm_shutdown()
@@ -106,7 +103,7 @@ TEST_F(LlvmModelTest, llvm_externalCompiler) {
      * Create the dynamic library
      * (generate and compile source code)
      */
-    ModelCSourceGen<double> compHelp(*fun.get(), "mySmallModel");
+    ModelCSourceGen<double> compHelp(*fun, "mySmallModel");
     compHelp.setCreateForwardZero(true);
     compHelp.setCreateJacobian(true);
     compHelp.setCreateHessian(true);
@@ -121,13 +118,13 @@ TEST_F(LlvmModelTest, llvm_externalCompiler) {
 
     LlvmModelLibraryProcessor<double> p(compDynHelp);
 
-    ClangCompiler<double> clang("/usr/bin/clang-" STRINGIFY(LLVM_VERSION_MAJOR) "." STRINGIFY(LLVM_VERSION_MINOR));
+    ClangCompiler<double> clang("/usr/bin/clang-" + p.getVersion());
 
     std::unique_ptr<LlvmModelLibrary<Base> > llvmModelLib = p.create(clang);
     std::unique_ptr<GenericModel<Base> > model = llvmModelLib->model("mySmallModel");
-    ASSERT_TRUE(model.get() != nullptr);
+    ASSERT_TRUE(model != nullptr);
 
-    this->testModelResults(*llvmModelLib, *model, *fun.get(), x);
+    this->testModelResults(*llvmModelLib, *model, *fun, x);
 
     model.reset(nullptr); // must be freed before llvm_shutdown()
     llvmModelLib.reset(nullptr); // must be freed before llvm_shutdown()

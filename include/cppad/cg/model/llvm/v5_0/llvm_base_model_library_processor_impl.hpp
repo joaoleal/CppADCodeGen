@@ -22,7 +22,7 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Useful class for generating a JIT evaluated model library (LLVM 5.0 and 6.0).
+ * Useful class for generating a JIT evaluated model library (LLVM 5.0, 6.0, 7.0, 8.0).
  *
  * @author Joao Leal
  */
@@ -48,6 +48,10 @@ public:
     }
 
     virtual ~LlvmBaseModelLibraryProcessorImpl() = default;
+
+    inline const std::string& getVersion() const {
+        return _version;
+    }
 
     /**
      * Define additional header paths.
