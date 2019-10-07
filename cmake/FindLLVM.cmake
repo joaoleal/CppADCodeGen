@@ -1,6 +1,7 @@
 # ----------------------------------------------------------------------------
 #  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
 #    Copyright (C) 2013 Ciengis
+#    Copyright (C) 2019 Joao Leal
 #
 #  CppADCodeGen is distributed under multiple licenses:
 #
@@ -24,7 +25,7 @@
 #  LLVM_MODULE_LIBS      - list of llvm libs for working with modules.
 
 IF(LLVM_FIND_VERSION AND LLVM_FIND_VERSION_MAJOR LESS 4 AND NOT LLVM_FIND_VERSION_MINOR)
-    MESSAGE(FATAL_ERROR "When requesting a specific version of LLVM lower than 4.0, you must provide at least the major and minor version numbers, e.g., 3.8")
+    MESSAGE(FATAL_ERROR "When requesting a specific version of LLVM higher or equal to 7.0 you should only proide the major version, on LLVM versions lower than 4.0, you must provide at least the major and minor version numbers, e.g., 3.8")
 ENDIF()
 
 # Lets make sure cache doesn't ruin the day
@@ -40,7 +41,7 @@ UNSET(LLVM_MODULE_LIBS CACHE)
 
 MACRO(find_llvm_iteratively)
     IF(NOT LLVM_CONFIG AND NOT LLVM_FIND_VERSION_EXACT)
-        SET(_LLVM_KNOWN_VERSIONS ${LLVM_ADDITIONAL_VERSIONS} "6.0" "5.0" "4.0" "3.8" "3.7" "3.6" "3.5" "3.4" "3.3" "3.2")
+        SET(_LLVM_KNOWN_VERSIONS ${LLVM_ADDITIONAL_VERSIONS} "8" "7" "6.0" "5.0" "4.0" "3.8" "3.7" "3.6" "3.5" "3.4" "3.3" "3.2")
 
         # Select acceptable versions.
         FOREACH(version ${_LLVM_KNOWN_VERSIONS})

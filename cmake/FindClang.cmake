@@ -41,27 +41,19 @@ MACRO(findClangStaticLib _libname_)
   ENDIF()
 ENDMACRO()
 
+findClangStaticLib(clang NAMES clang libclang) # LibClang: high-level C interface
+
 # Clang shared library provides just the limited C interface, so it
 # can not be used.  We look for the static libraries.
-findClangStaticLib(clangFrontendTool)
-findClangStaticLib(clangFrontend)
-findClangStaticLib(clangDriver)
-findClangStaticLib(clangSerialization)
-findClangStaticLib(clangCodeGen)
-findClangStaticLib(clangParse)
+SET(CLANG_LIBNAMES clangCodeGen clangFrontendTool clangFrontend clangDriver clangSerialization clangTooling
+                   clangParse clangSema clangChecker clangRewrite clangRewriteFrontend
+                   clangStaticAnalyzerFrontend clangStaticAnalyzerCheckers
+                   clangStaticAnalyzerCore clangAnalysis clangARCMigrate clangEdit clangAST clangASTMatchers clangLex
+                   clangBasic clangRewriteCore)
 
-findClangStaticLib(clangSema)
-findClangStaticLib(clangStaticAnalyzerFrontend)
-findClangStaticLib(clangStaticAnalyzerCheckers)
-findClangStaticLib(clangStaticAnalyzerCore)
-findClangStaticLib(clangAnalysis)
-findClangStaticLib(clangARCMigrate)
-findClangStaticLib(clangRewriteFrontend)
-findClangStaticLib(clangRewriteCore)
-findClangStaticLib(clangEdit)
-findClangStaticLib(clangAST)
-findClangStaticLib(clangLex)
-findClangStaticLib(clangBasic)
+foreach(LIBNAME ${CLANG_LIBNAMES})
+    findClangStaticLib(${LIBNAME})
+endforeach()
 
 UNSET(CLANG_INCLUDE_DIRS CACHE)
 FIND_PATH(CLANG_INCLUDE_DIRS clang/Basic/Version.h HINTS ${LLVM_INCLUDE_DIRS})
