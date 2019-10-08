@@ -49,6 +49,9 @@ public:
 
     virtual ~LlvmBaseModelLibraryProcessorImpl() = default;
 
+    /**
+     * @return The version of LLVM (and Clang).
+     */
     inline const std::string& getVersion() const {
         return _version;
     }
