@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -33,7 +34,7 @@ public:
         this->verbose_ = false;
     }
 
-    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& x) {
+    std::vector<ADCGD> model(const std::vector<ADCGD>& x) override {
         std::vector<ADCGD> y(m);
 
         y[0] = 1.0 / x[0];
@@ -41,7 +42,7 @@ public:
         return y;
     }
 
-    virtual std::vector<ADCGD> modelOuter(const std::vector<ADCGD>& y) {
+    std::vector<ADCGD> modelOuter(const std::vector<ADCGD>& y) override {
         std::vector<ADCGD> z(1);
 
         z[0] = y[0];
@@ -67,7 +68,7 @@ public:
         this->verbose_ = false;
     }
 
-    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& x) {
+    std::vector<ADCGD> model(const std::vector<ADCGD>& x) override {
         std::vector<ADCGD> y(m);
 
         y[0] = cos(x[0]);
@@ -97,7 +98,7 @@ public:
         this->verbose_ = false;
     }
 
-    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& x) {
+    std::vector<ADCGD> model(const std::vector<ADCGD>& x) override {
         std::vector<ADCGD> y(m);
 
         y[0] = x[0] * 2 + x[1] * 3;
@@ -105,7 +106,7 @@ public:
         return y;
     }
 
-    virtual std::vector<ADCGD> modelOuter(const std::vector<ADCGD>& y) {
+    std::vector<ADCGD> modelOuter(const std::vector<ADCGD>& y) override {
         std::vector<ADCGD> z(m);
 
         z[0] = 2 * y[0] * y[0];
@@ -131,7 +132,7 @@ public:
         this->verbose_ = false;
     }
 
-    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& x) {
+    std::vector<ADCGD> model(const std::vector<ADCGD>& x) override {
         std::vector<ADCGD> y(m);
 
         y[0] = cos(x[0]);
@@ -142,7 +143,7 @@ public:
         return y;
     }
 
-    virtual std::vector<ADCGD> modelOuter(const std::vector<ADCGD>& y) {
+    std::vector<ADCGD> modelOuter(const std::vector<ADCGD>& y) override {
         std::vector<ADCGD> z(m - 1);
 
         z[0] = 2 * y[0];

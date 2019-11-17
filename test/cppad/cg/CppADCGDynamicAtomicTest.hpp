@@ -37,11 +37,11 @@ protected:
     std::unique_ptr<CGAtomicFun<Base>> _atomFun;
 public:
 
-    inline CppADCGDynamicAtomicTest(const std::string& modelName,
+    inline CppADCGDynamicAtomicTest(std::string modelName,
                                     bool verbose = false,
                                     bool printValues = false) :
         CppADCGTest(verbose, printValues),
-        _modelName(modelName),
+        _modelName(std::move(modelName)),
         _funInner(nullptr),
         _funOuter(nullptr) {
         //this->verbose_ = true;
@@ -60,7 +60,7 @@ public:
         return Z;
     }
 
-    virtual void TearDown() {
+    void TearDown() override {
         _dynamicLib.reset();
         _dynamicLibOuter.reset();
         _modelLib.reset();
@@ -70,8 +70,7 @@ public:
         _atomFun.reset();
     }
 
-    virtual ~CppADCGDynamicAtomicTest() {
-    }
+    virtual ~CppADCGDynamicAtomicTest() = default;
 
     /**
      * Tests one compiled model used as an atomic function by an ADFun.
@@ -247,9 +246,9 @@ public:
             ASSERT_EQ(dwOrig.size(), n * k1);
             ASSERT_EQ(dwOrig.size(), dwInner.size());
             ASSERT_EQ(dwOrig.size(), dwOuter.size());
-            for (size_t j = 0; j < n; j++) {
-                ASSERT_TRUE(nearEqual(dwInner[j * k1], dwOrig[j * k1].getValue()));
-                ASSERT_TRUE(nearEqual(dwOuter[j * k1], dwOrig[j * k1].getValue()));
+            for (size_t j2 = 0; j2 < n; j2++) {
+                ASSERT_TRUE(nearEqual(dwInner[j2 * k1], dwOrig[j2 * k1].getValue()));
+                ASSERT_TRUE(nearEqual(dwOuter[j2 * k1], dwOrig[j2 * k1].getValue()));
             }
         }
 
@@ -371,7 +370,7 @@ public:
         ASSERT_TRUE(_modelLib != nullptr);
 
         unique_ptr<GenericModel<Base> > modelLibOuter = _dynamicLibOuter->model(_modelName + "_outer");
-        ASSERT_TRUE(modelLibOuter.get() != nullptr);
+        ASSERT_TRUE(modelLibOuter != nullptr);
 
         test2LevelAtomicLibModel(_modelLib.get(), modelLibOuter.get(),
                                  x, xNorm, eqNorm, epsilonR, epsilonA);
@@ -589,8 +588,8 @@ private:
             // (location of the elements is different then if py.size() == m)
             ASSERT_EQ(dwOrig.size(), n * k1);
             ASSERT_EQ(dwOrig.size(), dwOuter.size());
-            for (size_t j = 0; j < n; j++) {
-                ASSERT_TRUE(nearEqual(dwOuter[j * k1], dwOrig[j * k1].getValue()));
+            for (size_t j2 = 0; j2 < n; j2++) {
+                ASSERT_TRUE(nearEqual(dwOuter[j2 * k1], dwOrig[j2 * k1].getValue()));
             }
         }
 
@@ -727,8 +726,8 @@ private:
             // only compare second order information
             ASSERT_EQ(dw.size(), n * k1);
             ASSERT_EQ(dw.size(), dwAtom.size());
-            for (size_t j = 0; j < n; j++) {
-                ASSERT_TRUE(nearEqual(dw[j * k1 + 1].getValue(), dwAtom[j * k1 + 1].getValue()));
+            for (size_t j2 = 0; j2 < n; j2++) {
+                ASSERT_TRUE(nearEqual(dw[j2 * k1 + 1].getValue(), dwAtom[j2 * k1 + 1].getValue()));
             }
         }
 
@@ -1087,10 +1086,10 @@ private:
          * Create the dynamic library model
          */
         ModelCSourceGen<double> cSourceInner(*_funInner, _modelName);
-        if (jacInner.size() > 0) {
+        if (!jacInner.empty()) {
             cSourceInner.setCustomSparseJacobianElements(jacInner);
         }
-        if (hessInner.size() > 0) {
+        if (!hessInner.empty()) {
             cSourceInner.setCustomSparseHessianElements(hessInner);
         }
 
@@ -1105,10 +1104,10 @@ private:
         CppAD::Independent(u2);
 
         CGAtomicFunBridge<double> atomicfun(_modelName, *_funInner, true);
-        if (jacInner.size() > 0) {
+        if (!jacInner.empty()) {
             atomicfun.setCustomSparseJacobianElements(jacInner);
         }
-        if (hessInner.size() > 0) {
+        if (!hessInner.empty()) {
             atomicfun.setCustomSparseHessianElements(hessInner);
         }
 
@@ -1136,10 +1135,10 @@ private:
         cSourceOuter.setCreateHessian(true);
         cSourceOuter.setCreateSparseJacobian(true);
         cSourceOuter.setCreateSparseHessian(true);
-        if (jacOuter.size() > 0) {
+        if (!jacOuter.empty()) {
             cSourceOuter.setCustomSparseJacobianElements(jacOuter);
         }
-        if (hessOuter.size() > 0) {
+        if (!hessOuter.empty()) {
             cSourceOuter.setCustomSparseHessianElements(hessOuter);
         }
 

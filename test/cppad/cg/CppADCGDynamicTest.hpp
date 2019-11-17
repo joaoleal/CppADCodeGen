@@ -2,6 +2,7 @@
 #define CPPAD_CG_TEST_CPPADCGDYNAMICTEST_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -40,11 +41,11 @@ protected:
     ThreadPoolScheduleStrategy _multithreadScheduler;
 public:
 
-    inline CppADCGDynamicTest(const std::string& testName,
+    inline CppADCGDynamicTest(std::string testName,
                               bool verbose = false,
                               bool printValues = false) :
         CppADCGModelTest(verbose, printValues),
-        _name(testName),
+        _name(std::move(testName)),
         _denseJacobian(true),
         _denseHessian(true),
         _forwardOne(true),

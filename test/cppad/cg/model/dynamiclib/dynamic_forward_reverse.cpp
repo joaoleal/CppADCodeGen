@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -38,7 +39,7 @@ public:
         _fun(nullptr) {
     }
 
-    virtual void SetUp() {
+    void SetUp() override {
         // use a special object for source code generation
         using Base = double;
         using CGD = CG<Base>;
@@ -94,7 +95,7 @@ public:
         ASSERT_EQ(_model->Range(), _fun->Range());
     }
 
-    virtual void TearDown() {
+    void TearDown() override {
         _dynamicLib.reset(nullptr);
         _model.reset(nullptr);
         delete _fun;

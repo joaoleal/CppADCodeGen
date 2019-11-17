@@ -213,12 +213,12 @@ private:
                 tx[j * k1 + 1] = 1;
 
                 vector<CGD> y_pOrig = _fun2->Forward(1, x_pOrig);
-                vector<double> y_pOutter = modelLibOuter->ForwardOne(tx);
+                vector<double> y_pOuter = modelLibOuter->ForwardOne(tx);
 
                 x_pOrig[j] = 0;
                 tx[j * k1 + 1] = 0;
 
-                ASSERT_TRUE(compareValues(y_pOutter, y_pOrig, epsilonR, epsilonA));
+                ASSERT_TRUE(compareValues(y_pOuter, y_pOrig, epsilonR, epsilonA));
             }
         }
 
@@ -244,12 +244,12 @@ private:
                 wOrig[i] = 1;
 
                 vector<CGD> dwOrig = _fun2->Reverse(1, wOrig);
-                vector<double> dwOutter = modelLibOuter->ReverseOne(tx, ty, w);
+                vector<double> dwOuter = modelLibOuter->ReverseOne(tx, ty, w);
 
                 w[i] = 0;
                 wOrig[i] = 0;
 
-                ASSERT_TRUE(compareValues(dwOutter, dwOrig, epsilonR, epsilonA));
+                ASSERT_TRUE(compareValues(dwOuter, dwOrig, epsilonR, epsilonA));
             }
         }
         /**
@@ -281,7 +281,7 @@ private:
 
                 _fun2->Forward(1, x_pOrig);
                 vector<CGD> dwOrig = _fun2->Reverse(2, pyOrig);
-                vector<double> dwOutter = modelLibOuter->ReverseTwo(tx, ty, py);
+                vector<double> dwOuter = modelLibOuter->ReverseTwo(tx, ty, py);
 
                 x_pOrig[j] = 0;
                 tx[j * k1 + 1] = 0;
@@ -289,9 +289,9 @@ private:
                 // only compare second order information
                 // (location of the elements is different then if py.size() == m)
                 ASSERT_EQ(dwOrig.size(), n * k1);
-                ASSERT_EQ(dwOrig.size(), dwOutter.size());
+                ASSERT_EQ(dwOrig.size(), dwOuter.size());
                 for (size_t j = 0; j < n; j++) {
-                    ASSERT_TRUE(nearEqual(dwOutter[j * k1], dwOrig[j * k1].getValue()));
+                    ASSERT_TRUE(nearEqual(dwOuter[j * k1], dwOrig[j * k1].getValue()));
                 }
             }
         }
@@ -517,7 +517,7 @@ private:
         GccCompiler<double> compiler2;
         prepareTestCompilerFlags(compiler2);
 
-        DynamicModelLibraryProcessor<double> p2(compDynHelp2, "outterModel");
+        DynamicModelLibraryProcessor<double> p2(compDynHelp2, "outerModel");
         _dynamicLib2 = p2.createDynamicLibrary(compiler2);
 
         /**
