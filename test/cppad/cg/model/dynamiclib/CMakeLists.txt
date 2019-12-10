@@ -18,11 +18,11 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 IF( UNIX )
     add_cppadcg_test(dynamic.cpp)
+    add_cppadcg_test(cg_atomic_generic_model.cpp)
+    # add_cppadcg_test(dynamic_atomic_nonlinear_outer.cpp) # not supported yet
     add_cppadcg_test(dynamic_atomic.cpp)
     add_cppadcg_test(dynamic_atomic_2.cpp)
     add_cppadcg_test(dynamic_atomic_3.cpp)
-    #add_cppadcg_test(dynamic_atomic_4.cpp)
-    #add_cppadcg_test(dynamic_atomic_5.cpp)
     add_cppadcg_test(dynamic_cond_exp.cpp)
     add_cppadcg_test(dynamic_forward_reverse.cpp)
     add_cppadcg_test(dynamic_forward_reverse_2.cpp)

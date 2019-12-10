@@ -436,6 +436,29 @@ inline bool intersects(const std::set<size_t>& a,
     return false;
 }
 
+template<class VectorSizet, class VectorSet>
+inline CppAD::sparse_rc<VectorSizet> toSparsityPattern(const VectorSet& inPattern,
+                                                       size_t m, size_t n) {
+
+    CppAD::sparse_rc<VectorSizet> pattern;
+
+    size_t nnz = 0;
+    for (const auto& p: inPattern) {
+        nnz += p.size();
+    }
+
+    pattern.resize(m, n, nnz);
+
+    size_t e = 0;
+    for (size_t i = 0; i < inPattern.size(); ++i) {
+        for (size_t j : inPattern[i]) {
+            pattern.set(e++, i, j);
+        }
+    }
+
+    return pattern;
+}
+
 /**
  * Finds the first non-null code handler
  *
@@ -667,6 +690,19 @@ inline void print(const std::vector<Base>& v) {
     }
     std::cout << "]";
     std::cout.flush();
+}
+
+template<class VectorSize, class VectorBase>
+inline void printTripletMatrix(const VectorSize &rows,
+                               const VectorSize &cols,
+                               const VectorBase &values) {
+    size_t n = values.size();
+    assert(rows.size() == n);
+    assert(cols.size() == n);
+
+    for (size_t i = 0; i < n; ++i) {
+        std::cout << "[ " << rows[i] << ", " << cols[i] << "] -> " << values[i] << std::endl;
+    }
 }
 
 /***************************************************************************

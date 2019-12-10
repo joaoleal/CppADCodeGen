@@ -106,6 +106,10 @@ protected:
                                                            ArrayView<const T2> orig,
                                                            T epsilonR = std::numeric_limits<T>::epsilon() * 100,
                                                            T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
+        if (cgen.size() != orig.size())
+            return ::testing::AssertionFailure() << "Dimensions do not match (" << cgen.size() << " != " << orig.size()
+                                                 << ").";
+
         std::ostringstream ss;
         for (size_t i = 0; i < cgen.size(); i++) {
             ::testing::AssertionResult r = nearEqual(cgen[i], orig[i], epsilonR, epsilonA);

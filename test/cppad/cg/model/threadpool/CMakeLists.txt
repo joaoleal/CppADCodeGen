@@ -30,4 +30,3 @@ add_cppadcg_test(dynamiclib_pthreadpool.cpp)
 IF (OPENMP_FOUND)
   #add_cppadcg_test(dynamiclib_openmp.cpp) # disabled until OpenMP allows libraries to be loaded dynamically and then gracefully closed
 ENDIF()
-#add_cppadcg_test(dynamiclib_pthreadpool_distillation.cpp) # works fine but it is too large for simple tests

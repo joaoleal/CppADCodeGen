@@ -2,6 +2,7 @@
 #define CPPAD_CG_TEST_CPPADCGDYNAMICATOMICTEST_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -73,7 +74,7 @@ public:
         return yOuter;
     }
 
-    virtual void TearDown() {
+    void TearDown() override {
         _dynamicLib.reset(nullptr);
         _dynamicLib2.reset(nullptr);
         _modelLib.reset(nullptr);
@@ -85,7 +86,7 @@ public:
         _fun2 = nullptr;
     }
 
-    virtual ~CppADCGDynamicAtomicNestedTest() {
+    ~CppADCGDynamicAtomicNestedTest() override {
         delete _atomicInnerModel;
         delete _fun;
         delete _fun2;
@@ -306,7 +307,7 @@ private:
         /**
          * Jacobian sparsity
          */
-        const std::vector<bool> jacSparsityOrig = jacobianSparsity < std::vector<bool>, CGD > (*_fun2);
+        const std::vector<bool> jacSparsityOrig = jacobianSparsity<std::vector<bool>, CGD> (*_fun2);
         const std::vector<bool> jacSparsityOuter = modelLibOuter->JacobianSparsityBool();
 
         compareBoolValues(jacSparsityOrig, jacSparsityOuter);
@@ -332,7 +333,7 @@ private:
         /**
          * Hessian sparsity
          */
-        const std::vector<bool> hessSparsityOrig = hessianSparsity < std::vector<bool>, CGD > (*_fun2);
+        const std::vector<bool> hessSparsityOrig = hessianSparsity<std::vector<bool>, CGD> (*_fun2);
         const std::vector<bool> hessSparsityOuter = modelLibOuter->HessianSparsityBool();
 
         compareBoolValues(hessSparsityOrig, hessSparsityOuter);
@@ -572,10 +573,10 @@ private:
          * Create the dynamic library model
          */
         ModelCSourceGen<double> compHelp1(*_fun, _modelName);
-        if (jacInner.size() > 0) {
+        if (!jacInner.empty()) {
             compHelp1.setCustomSparseJacobianElements(jacInner);
         }
-        if (hessInner.size() > 0) {
+        if (!hessInner.empty()) {
             compHelp1.setCustomSparseHessianElements(hessInner);
         }
 
@@ -590,10 +591,10 @@ private:
         CppAD::Independent(u2);
 
         CGAtomicFunBridge<double> atomicfun(_modelName, *_fun, true);
-        if (jacInner.size() > 0) {
+        if (!jacInner.empty()) {
             atomicfun.setCustomSparseJacobianElements(jacInner);
         }
-        if (hessInner.size() > 0) {
+        if (!hessInner.empty()) {
             atomicfun.setCustomSparseHessianElements(hessInner);
         }
 
@@ -619,10 +620,10 @@ private:
         compHelp2.setCreateHessian(true);
         compHelp2.setCreateSparseJacobian(true);
         compHelp2.setCreateSparseHessian(true);
-        if (jacOuter.size() > 0) {
+        if (!jacOuter.empty()) {
             compHelp2.setCustomSparseJacobianElements(jacOuter);
         }
-        if (hessOuter.size() > 0) {
+        if (!hessOuter.empty()) {
             compHelp2.setCustomSparseHessianElements(hessOuter);
         }
 
