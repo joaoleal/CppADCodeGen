@@ -186,7 +186,9 @@ protected:
         }
         vector<std::set<size_t> > st(n);
 
-        rev_sparse_jac(m, rt, st, x);
+        bool ok = rev_sparse_jac(m, rt, st, x);
+        if (!ok)
+            throw CGException("False returned from rev_sparse_jac() in the atomic function \"", this->afun_name(), "\".");
 
         for (size_t j = 0; j < n; j++) {
             for (size_t i : st[j]) {
