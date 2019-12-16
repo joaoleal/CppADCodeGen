@@ -27,6 +27,7 @@ namespace cg {
 template <class Base>
 class CGAbstractAtomicFun : public BaseAbstractAtomicFun<Base> {
 public:
+    using Super = BaseAbstractAtomicFun<Base>;
     using CGB = CppAD::cg::CG<Base>;
     using Arg = Argument<Base>;
 protected:
@@ -53,18 +54,17 @@ protected:
      *                   dependent variables (ty) and any previous
      *                   evaluation of other forward/reverse modes.
      */
-    CGAbstractAtomicFun(const std::string& name,
-                        bool standAlone = false) :
-        BaseAbstractAtomicFun<Base>(name),
-        id_(createNewAtomicFunctionID()),
-        standAlone_(standAlone) {
-        CPPADCG_ASSERT_KNOWN(!name.empty(), "The atomic function name cannot be empty");
+    explicit CGAbstractAtomicFun(const std::string& name,
+                                 bool standAlone = false) :
+            Super(name),
+            id_(createNewAtomicFunctionID()),
+            standAlone_(standAlone) {
+        CPPADCG_ASSERT_KNOWN(!name.empty(), "The atomic function name cannot be empty")
         this->option(CppAD::atomic_base<CGB>::set_sparsity_enum);
     }
 
 public:
-    virtual ~CGAbstractAtomicFun() {
-    }
+    virtual ~CGAbstractAtomicFun() = default;
 
     template <class ADVector>
     void operator()(const ADVector& ax,
@@ -118,7 +118,7 @@ public:
             if (!evalForwardValues(q, p, tx, tyb, ty.size()))
                 return false;
 
-            CPPADCG_ASSERT_UNKNOWN(tyb.size() == ty.size());
+            CPPADCG_ASSERT_UNKNOWN(tyb.size() == ty.size())
             for (size_t i = 0; i < ty.size(); i++) {
                 ty[i] = tyb[i];
             }
@@ -162,7 +162,7 @@ public:
             }
 
             for (size_t i = 0; i < m; i++) {
-                vyLocal[i * (p + 1) + 1] = s[i].size() > 0;
+                vyLocal[i * (p + 1) + 1] = !s[i].empty();
             }
 
             if (p == 1) {
@@ -190,7 +190,7 @@ public:
         }
 
         CodeHandler<Base>* handler = findHandler(tx);
-        CPPADCG_ASSERT_UNKNOWN(handler != nullptr);
+        CPPADCG_ASSERT_UNKNOWN(handler != nullptr)
 
         size_t p1 = p + 1;
 
@@ -221,7 +221,7 @@ public:
                         ty[pos].setValue(tyb[pos]);
                     }
                 } else {
-                    CPPADCG_ASSERT_KNOWN(tyb.size() == 0 || IdenticalZero(tyb[pos]), "Invalid value");
+                    CPPADCG_ASSERT_KNOWN(tyb.size() == 0 || IdenticalZero(tyb[pos]), "Invalid value")
                     ty[pos] = 0; // not a variable (zero)
                 }
             }
@@ -251,7 +251,7 @@ public:
             if (!evalReverseValues(p, tx, ty, pxb, py))
                 return false;
 
-            CPPADCG_ASSERT_UNKNOWN(pxb.size() == px.size());
+            CPPADCG_ASSERT_UNKNOWN(pxb.size() == px.size())
 
             for (size_t i = 0; i < px.size(); i++) {
                 px[i] = pxb[i];
@@ -292,7 +292,7 @@ public:
         }
 
         for (size_t j = 0; j < n; j++) {
-            vxLocal[j * p1 + p] = st[j].size() > 0;
+            vxLocal[j * p1 + p] = !st[j].empty();
         }
 
         if (p >= 1) {
@@ -320,7 +320,7 @@ public:
             this->rev_sparse_hes(vx, s, t, 1, r, u, v, x);
 
             for (size_t j = 0; j < n; j++) {
-                vxLocal[j * p1 + p - 1] = v[j].size() > 0;
+                vxLocal[j * p1 + p - 1] = !v[j].empty();
             }
         }
 
@@ -360,7 +360,7 @@ public:
                 handler = findHandler(py);
             }
         }
-        CPPADCG_ASSERT_UNKNOWN(handler != nullptr);
+        CPPADCG_ASSERT_UNKNOWN(handler != nullptr)
 
         std::vector<OperationNode<Base>*> txArray(p1), tyArray(p1), pxArray(p1), pyArray(p1);
         for (size_t k = 0; k <= p; k++) {
@@ -493,7 +493,7 @@ public:
      * Uses an internal counter to produce IDs for atomic functions.
      */
     static size_t createNewAtomicFunctionID() {
-        CPPAD_ASSERT_FIRST_CALL_NOT_PARALLEL;
+        CPPAD_ASSERT_FIRST_CALL_NOT_PARALLEL
         static size_t count = 0;
         count++;
         return count;

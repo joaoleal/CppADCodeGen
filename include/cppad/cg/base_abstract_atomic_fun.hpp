@@ -2,6 +2,7 @@
 #define CPPAD_CG_BASE_ABSTRACT_ATOMIC_FUN_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -36,9 +37,9 @@ protected:
      * 
      * @param name The atomic function name.
      */
-    BaseAbstractAtomicFun(const std::string& name) :
-        atomic_base<CGB>(name) {
-        CPPADCG_ASSERT_KNOWN(!name.empty(), "The atomic function name cannot be empty");
+    explicit BaseAbstractAtomicFun(const std::string& name) :
+            atomic_base<CGB>(name) {
+        CPPADCG_ASSERT_KNOWN(!name.empty(), "The atomic function name cannot be empty")
     }
 
 public:
@@ -50,8 +51,7 @@ public:
         this->atomic_base<CGB>::operator()(ax, ay, id);
     }
 
-    virtual ~BaseAbstractAtomicFun() {
-    }
+    virtual ~BaseAbstractAtomicFun() = default;
 
 protected:
 
@@ -80,7 +80,7 @@ protected:
                                                  const CppAD::vector<CGB>& tx,
                                                  size_t p,
                                                  size_t k) {
-        CPPADCG_ASSERT_UNKNOWN(k <= p);
+        CPPADCG_ASSERT_UNKNOWN(k <= p)
         size_t n = tx.size() / (p + 1);
         std::vector<Arg> arrayArgs(n);
         for (size_t i = 0; i < n; i++) {
@@ -108,7 +108,7 @@ protected:
                                                        size_t p,
                                                        size_t k) {
         size_t p1 = p + 1;
-        CPPADCG_ASSERT_UNKNOWN(k < p1);
+        CPPADCG_ASSERT_UNKNOWN(k < p1)
         size_t n = py.size() / p1;
 
         std::vector<Arg> arrayArgs;
