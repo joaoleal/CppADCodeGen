@@ -2,6 +2,7 @@
 #define CPPAD_CG_LINUX_SYSTEM_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -114,13 +115,32 @@ inline void createFolder(const std::string& folder) {
     }
 }
 
-inline std::string createPath(const std::string& baseFolder,
+inline std::string createPath(std::initializer_list<std::string> folders,
                               const std::string& file) {
-    if (!baseFolder.empty() && baseFolder.back() == '/') {
-        return baseFolder + file;
-    } else {
-        return baseFolder + "/" + file;
+    std::string path;
+
+    size_t n = file.size();
+    for (const std::string& folder: folders)
+        n += folder.size() + 1;
+    path.reserve(n);
+
+    for (const std::string& folder: folders) {
+        if (!folder.empty() && folder.back() == '/') {
+            path += folder;
+        } else {
+            path += folder;
+            path += "/";
+        }
     }
+
+    path += file;
+
+    return path;
+}
+
+inline std::string createPath(const std::string& folder,
+                              const std::string& file) {
+    return createPath({folder}, file);
 }
 
 inline std::string escapePath(const std::string& path) {

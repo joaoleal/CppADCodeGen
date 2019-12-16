@@ -51,6 +51,16 @@ inline std::string createPath(const std::string& baseFolder,
                               const std::string& file);
 
 /**
+ * Creates a new path (system dependent)
+ *
+ * @param folders the names of the folders in the path to the file
+ * @param file the file or folder name
+ * @return the new path
+ */
+inline std::string createPath(std::initializer_list<std::string> folders,
+                              const std::string& file);
+
+/**
  * Escapes a file or folder path (system dependent)
  * 
  * @param path the file/folder path
