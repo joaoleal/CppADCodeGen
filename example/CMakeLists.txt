@@ -43,13 +43,13 @@ IF(PDFLATEX_COMPILER)
     ADD_DEFINITIONS(-DPDFLATEX_COMPILER="${PDFLATEX_COMPILER}")
 ENDIF()
 
-link_file("${CMAKE_CURRENT_SOURCE_DIR}/latex_template.tex"
-          "${CMAKE_CURRENT_BINARY_DIR}/latex_template.tex")
+link_file("${CMAKE_CURRENT_SOURCE_DIR}/resources"
+          "${CMAKE_CURRENT_BINARY_DIR}/resources")
 
 # copy template (if required)
-ADD_CUSTOM_TARGET(link_or_copy_latex_template
-                  DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/latex_template.tex")
-ADD_DEPENDENCIES(source_generation_latex link_or_copy_latex_template)
+ADD_CUSTOM_TARGET(link_or_copy_resources
+                  DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/resources")
+ADD_DEPENDENCIES(source_generation_latex link_or_copy_resources)
 
 ################################################################################
 #                             source_generation_dot
@@ -117,7 +117,7 @@ ENDIF(UNIX)
 
 
 ADD_CUSTOM_TARGET(examples)
-                  
+
 ADD_DEPENDENCIES(examples example_source_generation_c)
 ADD_DEPENDENCIES(examples example_source_generation_latex)
 ADD_DEPENDENCIES(examples example_source_generation_mathml)
