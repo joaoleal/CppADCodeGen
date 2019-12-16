@@ -794,21 +794,63 @@ public:
         _reverseTwo = create;
     }
 
+    /**
+     * Specifies a user defined Jacobian sparsity to be computed.
+     * The elements can be provided in any order as long as they are a subset
+     * of the full Jacobian sparsity pattern.
+     *
+     * @param row The indices of the equations/dependents for the sparsity
+     *            pattern in the order they will be provided
+     * @param col The indices of the independent variables for the sparsity
+     *            pattern in the order they will be provided
+     */
     inline void setCustomSparseJacobianElements(const std::vector<size_t>& row,
                                                 const std::vector<size_t>& col) {
         _custom_jac = Position(row, col);
     }
 
+    /**
+     * Specifies a user defined Jacobian sparsity to be computed.
+     * The elements must be a subset of the full Jacobian sparsity pattern.
+     *
+     * @tparam VectorSet A vector of sets
+     * @param elements The indices of the independent variables (defined in a
+     *                 set) for each equation/dependent variable (the vector
+     *                 must not be larger than the number dependent variables).
+     */
     template<class VectorSet>
     inline void setCustomSparseJacobianElements(const VectorSet& elements) {
         _custom_jac = Position(elements);
     }
 
+    /**
+     * Specifies a user defined Hessian sparsity to be computed.
+     * This can be used, for instance, to request only half of the Hessian
+     * to be computed due to its symmetry.
+     * The elements can be provided in any order as long as they are a subset
+     * of the full Hessian sparsity pattern.
+     *
+     * @param row The row indices of the independent variables for the sparsity
+     *            pattern in the order they will be provided
+     * @param col The column indices of the independent variables for the
+     *            sparsity pattern in the order they will be provided
+     */
     inline void setCustomSparseHessianElements(const std::vector<size_t>& row,
                                                const std::vector<size_t>& col) {
         _custom_hess = Position(row, col);
     }
 
+    /**
+     * Specifies a user defined Hessian sparsity to be computed.
+     * This can be used, for instance, to request only half of the Hessian
+     * to be computed due to its symmetry.
+     * The elements must be a subset of the full Hessian sparsity pattern.
+     *
+     * @tparam VectorSet A vector of sets
+     * @param elements The indices of the independent variables for the sparsity
+     *                 pattern (the vector must not be larger than the number
+     *                 independent variables).
+     */
     template<class VectorSet>
     inline void setCustomSparseHessianElements(const VectorSet& elements) {
         _custom_hess = Position(elements);
