@@ -1263,6 +1263,15 @@ protected:
             case CGOpCode::Sqrt:
             case CGOpCode::Tanh:
             case CGOpCode::Tan:
+#if CPPAD_USE_CPLUSPLUS_2011
+            case CGOpCode::Erf:
+            case CGOpCode::Erfc:
+            case CGOpCode::Asinh:
+            case CGOpCode::Acosh:
+            case CGOpCode::Atanh:
+            case CGOpCode::Expm1:
+            case CGOpCode::Log1p:
+#endif
                 printUnaryFunction(node);
                 break;
             case CGOpCode::AtomicForward: // atomicFunction.forward(q, p, vx, vy, tx, ty)
@@ -1423,6 +1432,29 @@ protected:
             case CGOpCode::Tan:
                 _code << "\\tan";
                 break;
+#if CPPAD_USE_CPLUSPLUS_2011
+            case CGOpCode::Erf:
+                _code << "\\operatorname{erf}";
+                break;
+            case CGOpCode::Erfc:
+                _code << "\\operatorname{erfc}";
+                break;
+            case CGOpCode::Asinh:
+                _code << "\\operatorname{arcsinh}";
+                break;
+            case CGOpCode::Acosh:
+                _code << "\\operatorname{arccosh}";
+                break;
+            case CGOpCode::Atanh:
+                _code << "\\operatorname{arctanh}";
+                break;
+            case CGOpCode::Expm1:
+                _code << "\\operatorname{expm1}";
+                break;
+            case CGOpCode::Log1p:
+                _code << "\\operatorname{log1p}";
+                break;
+#endif
             default:
                 throw CGException("Unknown function name for operation code '", op.getOperationType(), "'.");
         }
@@ -2106,6 +2138,15 @@ protected:
             case CGOpCode::Sign:
             case CGOpCode::Sinh:
             case CGOpCode::Sin:
+#if CPPAD_USE_CPLUSPLUS_2011
+            case CGOpCode::Erf:
+            case CGOpCode::Erfc:
+            case CGOpCode::Asinh:
+            case CGOpCode::Acosh:
+            case CGOpCode::Atanh:
+            case CGOpCode::Expm1:
+            case CGOpCode::Log1p:
+#endif
             case CGOpCode::Sqrt:
             case CGOpCode::Tanh:
             case CGOpCode::Tan:
