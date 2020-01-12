@@ -76,7 +76,7 @@ inline const std::string* CodeHandler<Base>::LoopData::getLoopName(size_t id) co
     typename std::map<size_t, LoopModel<Base>*>::const_iterator it;
     it = loopModels.find(id);
     if (it != loopModels.end())
-        return &(it->second->afun_name());
+        return &(it->second->atomic_name());
     else
         return nullptr;
 }

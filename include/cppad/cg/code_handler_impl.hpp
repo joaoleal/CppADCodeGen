@@ -179,7 +179,7 @@ inline std::string CodeHandler<Base>::getAtomicFunctionName(size_t id) const {
     typename std::map<size_t, CGAbstractAtomicFun<Base>*>::const_iterator it;
     it = _atomicFunctions.find(id);
     if (it != _atomicFunctions.end())
-        return it->second->afun_name();
+        return it->second->atomic_name();
     else
         return std::string();
 }
@@ -414,9 +414,8 @@ void CodeHandler<Base>::generateCode(std::ostream& out,
     nameGen.setTemporaryVariableID(_minTemporaryVarID, _idCount - 1, _idArrayCount - 1, _idSparseArrayCount - 1);
 
     std::map<std::string, size_t> atomicFunctionName2Id;
-    typename std::map<size_t, CGAbstractAtomicFun < Base>*>::iterator itA;
-    for (itA = _atomicFunctions.begin(); itA != _atomicFunctions.end(); ++itA) {
-        atomicFunctionName2Id[itA->second->afun_name()] = itA->first;
+    for (const auto& pair: _atomicFunctions) {
+        atomicFunctionName2Id[pair.second->atomic_name()] = pair.first;
     }
 
     std::map<size_t, size_t> atomicFunctionId2Index;
@@ -1437,7 +1436,7 @@ void CodeHandler<Base>::registerAtomicFunction(CGAbstractAtomicFun<Base>& atomic
         _atomicFunctions.insert(it, std::pair<size_t, CGAbstractAtomicFun<Base>*>(atomic.getId(), &atomic));
     } else if(it->second != &atomic) {
         throw CGException("The same atomic function ID (", id, ") is being used for different atomic functions: '",
-                          atomic.afun_name(), "' (", &atomic, ") and '", it->second->afun_name(), "' (", it->second, ").");
+                          atomic.atomic_name(), "' (", &atomic, ") and '", it->second->atomic_name(), "' (", it->second, ").");
     }
 }
 
@@ -1480,7 +1479,7 @@ void CodeHandler<Base>::checkVariableCreation(Node& root) {
             size_t id = arg.getInfo()[0];
 
             size_t pos;
-            const std::string& atomicName = _atomicFunctions.at(id)->afun_name();
+            const std::string& atomicName = _atomicFunctions.at(id)->atomic_name();
             std::map<std::string, size_t>::const_iterator itName2Idx;
             itName2Idx = _atomicFunctionName2Index.find(atomicName);
 

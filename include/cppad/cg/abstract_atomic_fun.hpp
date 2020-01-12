@@ -427,7 +427,7 @@ public:
         CppAD::vector<std::set<size_t> > s(m);
         bool good = this->for_sparse_jac(n, r, s, x);
         if (!good)
-            throw CGException("Failed to compute jacobian sparsity pattern for atomic function '", this->afun_name(), "'");
+            throw CGException("Failed to compute jacobian sparsity pattern for atomic function '", this->atomic_name(), "'");
 
         return s;
     }
@@ -443,7 +443,7 @@ public:
         CppAD::vector<std::set<size_t> > st(n);
         bool good = this->rev_sparse_jac(m, rt, st, x);
         if (!good)
-            throw CGException("Failed to compute jacobian sparsity pattern for atomic function '", this->afun_name(), "'");
+            throw CGException("Failed to compute jacobian sparsity pattern for atomic function '", this->atomic_name(), "'");
 
         CppAD::vector<std::set<size_t>> s = transposePattern(st, n, m);
 
@@ -484,7 +484,7 @@ public:
 
         bool good = this->rev_sparse_hes(vx, s, t, n, r, u, v, x);
         if (!good)
-            throw CGException("Failed to compute Hessian sparsity pattern for atomic function '", this->afun_name(), "'");
+            throw CGException("Failed to compute Hessian sparsity pattern for atomic function '", this->atomic_name(), "'");
 
         return v;
     }

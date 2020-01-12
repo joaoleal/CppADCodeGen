@@ -50,6 +50,7 @@ CPPAD_CG_CREATE_OPERATION(tanh, Tanh)
 #if CPPAD_USE_CPLUSPLUS_2011
 // c++11 functions
 CPPAD_CG_CREATE_OPERATION(erf, Erf)
+CPPAD_CG_CREATE_OPERATION(erfc, Erfc)
 CPPAD_CG_CREATE_OPERATION(asinh, Asinh)
 CPPAD_CG_CREATE_OPERATION(acosh, Acosh)
 CPPAD_CG_CREATE_OPERATION(atanh, Atanh)
@@ -82,6 +83,7 @@ namespace cg  {
   
 #if CPPAD_USE_CPLUSPLUS_2011
   using CppAD::erf;
+  using CppAD::erfc;
   using CppAD::asinh;
   using CppAD::acosh;
   using CppAD::atanh;

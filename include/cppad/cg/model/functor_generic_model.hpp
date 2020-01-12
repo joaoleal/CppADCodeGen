@@ -110,7 +110,7 @@ public:
 
     bool addAtomicFunction(atomic_base<Base>& atomic) override {
         return addExternalFunction<atomic_base<Base>, AtomicExternalFunctionWrapper<Base> >
-                (atomic, atomic.afun_name());
+                (atomic, atomic.atomic_name());
     }
 
     bool addExternalModel(GenericModel<Base>& atomic) override {

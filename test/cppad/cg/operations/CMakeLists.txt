@@ -32,7 +32,8 @@ add_cppadcg_test(cond_exp.cpp)
 add_cppadcg_test(cos.cpp)
 add_cppadcg_test(cosh.cpp)
 add_cppadcg_test(div.cpp)
-#add_cppadcg_test(erf.cpp) # a bug/missing feature in CppAD causes this test to fail
+add_cppadcg_test(erf.cpp) # a bug/missing feature in CppAD causes this test to fail
+add_cppadcg_test(erfc.cpp)
 add_cppadcg_test(exp.cpp)
 add_cppadcg_test(expm1.cpp)
 add_cppadcg_test(log.cpp)
