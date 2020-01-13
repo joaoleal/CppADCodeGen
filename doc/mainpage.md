@@ -36,7 +36,7 @@ See epl-v10.txt and gpl3.txt for a copy of the licenses.
 
 CppADCodeGen is a C++11 header only library, therefore there aren't many dependencies:
 
- - **CppAD** (2019),
+ - **CppAD** (2020),
  - A **C++11** compiler (such as GCC and Clang),
  - Clang/LLVM (only required for JIT compilation), and
  - Eigen 3 (required when DAE differentiation index reduction is used).
@@ -85,6 +85,39 @@ See the [wiki](https://github.com/joaoleal/CppADCodeGen/wiki).
 
 The folder example includes some simple use cases.
 
+## Testing ##
+
+Get the sources from GitHub:
+```
+    git clone https://github.com/joaoleal/CppADCodeGen.git CppADCodeGen
+```
+Create a new folder for the tests:
+```
+    cd make-build-debug
+    cmake ../CppADCodeGen
+```
+Testing requires [google-test](https://github.com/google/googletest) (version 1.8.1).
+Either install it in your system or configure CppADCodeGen to download the sources from GitHub by replacing the previous line with:
+```
+    cmake -DGOOGLETEST_GIT=ON ../CppADCodeGen 
+```
+
+Then compile the tests:
+```
+    make build_tests
+```
+
+Run the complete set of tests:
+```
+    make test
+```
+If [valgrind](https://valgrind.org/) is available in your system, CppADCodeGen will also perform memory checks which can
+lead to a very lengthy test execution.
+It is possible to disable memory validations by turning off the CMake option `USE_VALGRIND`.
+For instance, by calling the following command before running the tests:
+ ```
+     cmake -DUSE_VALGRIND=OFF ../CppADCodeGen 
+ ```
 ---
 
 ## Repository Content

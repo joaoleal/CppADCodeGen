@@ -245,7 +245,7 @@ inline size_t colorForwardJacobianHessian(const ADFun<Base>& fun,
     size_t i, j1, j11, j2, c, k;
 
     using Set_type = typename VectorSet::value_type;
-    using SparsityPattern = typename local::internal_sparsity<Set_type>::pattern_type;
+    using SparsityPattern = typename local::sparse::internal_pattern<Set_type>::pattern_type;
     using SparIter = typename SparsityPattern::const_iterator;
 
     size_t n = fun.Domain();

@@ -49,6 +49,7 @@ enum class CGOpCode {
     Cos,                  // cos(variable)
     Div,                  // a / b
     Erf,                  // erf(variable)
+    Erfc,                 // erfc(variable)
     Exp,                  // exp(variable)
     Expm1,                // expm1(variable)
     Inv,                  //                             independent variable
@@ -114,6 +115,7 @@ inline std::ostream& operator<<(std::ostream& os, const CGOpCode& op) {
             "cos($1)",                // Cos
             "$1 / $2",                // Div
             "erf($1)",                // Erf
+            "erfc($1)",               // Erfc
             "exp($1)",                // Exp
             "expm1($1)",              // Expm1
             "independent()",          // Inv

@@ -74,6 +74,15 @@ IF(UNIX)
                       COMMAND dynamic_linux)
 
     ############################################################################
+    #                                  atomic
+    ############################################################################
+    ADD_EXECUTABLE(atomic atomic.cpp)
+    SET(EXAMPLES_COMMAND "${EXAMPLES_COMMAND} COMMAND atomic")
+    TARGET_LINK_LIBRARIES(atomic ${DL_LIBRARIES})
+    ADD_CUSTOM_TARGET(example_atomic
+                      COMMAND atomic)
+
+    ############################################################################
     #                                  LLVM
     ############################################################################
     IF(CPPADCG_USE_LLVM)
@@ -123,6 +132,7 @@ ADD_DEPENDENCIES(examples example_source_generation_latex)
 ADD_DEPENDENCIES(examples example_source_generation_mathml)
 ADD_DEPENDENCIES(examples example_source_generation_dot)
 IF(UNIX)
+    ADD_DEPENDENCIES(examples example_atomic)
     ADD_DEPENDENCIES(examples example_dynamic_linux)
     ADD_DEPENDENCIES(examples example_lagrangian)
 ENDIF()

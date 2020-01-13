@@ -449,6 +449,10 @@ inline cg::CG<Base> tanh(const cg::CG<Base>& x);
 template<class Base>
 inline cg::CG<Base> erf(const cg::CG<Base>& x);
 
+// complementary error function
+template<class Base>
+inline cg::CG<Base> erfc(const cg::CG<Base>& var);
+
 // inverse hyperbolic sin
 template<class Base>
 inline cg::CG<Base> asinh(const cg::CG<Base>& x);

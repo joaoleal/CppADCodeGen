@@ -777,6 +777,15 @@ protected:
             case CGOpCode::Sqrt:
             case CGOpCode::Tanh:
             case CGOpCode::Tan:
+#if CPPAD_USE_CPLUSPLUS_2011
+            case CGOpCode::Erf:
+            case CGOpCode::Erfc:
+            case CGOpCode::Asinh:
+            case CGOpCode::Acosh:
+            case CGOpCode::Atanh:
+            case CGOpCode::Expm1:
+            case CGOpCode::Log1p:
+#endif
                 return printUnaryFunction(node);
             case CGOpCode::AtomicForward: // atomicFunction.forward(q, p, vx, vy, tx, ty)
                 return printAtomicForwardOp(node);
@@ -1428,6 +1437,15 @@ protected:
             case CGOpCode::Sqrt:
             case CGOpCode::Tanh:
             case CGOpCode::Tan:
+#if CPPAD_USE_CPLUSPLUS_2011
+            case CGOpCode::Erf:
+            case CGOpCode::Erfc:
+            case CGOpCode::Asinh:
+            case CGOpCode::Acosh:
+            case CGOpCode::Atanh:
+            case CGOpCode::Expm1:
+            case CGOpCode::Log1p:
+#endif
                 return true;
             default:
                 return false;

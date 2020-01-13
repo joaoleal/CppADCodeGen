@@ -249,6 +249,7 @@ protected:
 #if CPPAD_USE_CPLUSPLUS_2011
     // c++11 functions
     friend CG<Base> erf<Base>(const CG<Base>& var); // error function
+    friend CG<Base> erfc<Base>(const CG<Base>& var); // complementary error function
     friend CG<Base> asinh<Base>(const CG<Base>& var); // inverse hyperbolic sin
     friend CG<Base> acosh<Base>(const CG<Base>& var); // inverse hyperbolic cosine
     friend CG<Base> atanh<Base>(const CG<Base>& var); // inverse hyperbolic tangent
