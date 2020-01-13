@@ -50,7 +50,7 @@ install:
   # get CppAD:
   # - git clone https://github.com/coin-or/CppAD.git cppad
   # - cd cppad
-  - CPPAD_VERSION_NAME=20200000.1
+  - CPPAD_VERSION_NAME=20200000.2
   - wget https://github.com/coin-or/CppAD/archive/${CPPAD_VERSION_NAME}.tar.gz
   - tar -xzf ${CPPAD_VERSION_NAME}.tar.gz
   - cd CppAD-${CPPAD_VERSION_NAME}
