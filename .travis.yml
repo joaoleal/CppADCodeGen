@@ -19,7 +19,6 @@ matrix:
             - texlive-extra-utils
             - texlive-fonts-extra
             - texlive-latex-recommended
-            - latex-xcolor
       env:
         - LLVM_VERSION=8
     - os: linux
@@ -37,7 +36,6 @@ matrix:
             - texlive-extra-utils
             - texlive-fonts-extra
             - texlive-latex-recommended
-            - latex-xcolor
       env:
         - LLVM_VERSION=8
     - os: linux
