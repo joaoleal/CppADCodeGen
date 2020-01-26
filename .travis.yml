@@ -3,46 +3,85 @@ language: cpp
 matrix:
   include:
     - os: linux
+      dist: bionic
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - kubuntu-backports
+          packages:
+            - cmake
+            - libclang-8-dev
+            - llvm-8-dev
+            - clang-8
+            - gcc-7
+            - g++-7
+            - texlive-extra-utils
+            - texlive-fonts-extra
+            - texlive-latex-recommended
+      env:
+        - LLVM_VERSION=8
+    - os: linux
+      dist: bionic
+      compiler: clang
+      addons:
+        apt:
+          sources:
+            - kubuntu-backports
+          packages:
+            - cmake
+            - libclang-8-dev
+            - llvm-8-dev
+            - clang-8
+            - texlive-extra-utils
+            - texlive-fonts-extra
+            - texlive-latex-recommended
+      env:
+        - LLVM_VERSION=8
+    - os: linux
       dist: trusty
-      compiler:
-        - clang
-        - gcc
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-precise-3.6
+            - ubuntu-toolchain-r-test
+            - kubuntu-backports
+          packages:
+            - cmake
+            - libclang-3.6-dev
+            - llvm-3.6-dev
+            - clang-3.6
+            - gcc-6
+            - g++-6
+            - texlive-extra-utils
+            - texlive-fonts-extra
+            - texlive-latex-recommended
+            - latex-xcolor
+      env:
+        - LLVM_VERSION=3.6
     - os: osx
       osx_image: xcode10.1
       compiler: clang
+      env:
+        - LLVM_VERSION=3.6
+      addons:
+        apt:
+          sources:
+            - kubuntu-backports
+          packages:
+            - cmake
+            - texlive-extra-utils
+            - texlive-fonts-extra
+            - texlive-latex-recommended
+            - latex-xcolor
 
 # use travis-ci docker based infrastructure
 sudo: false
 
-addons:
-  apt:
-    sources:
-      - kubuntu-backports
-      - ubuntu-toolchain-r-test
-      - llvm-toolchain-precise-3.6
-    packages:
-      - libclang-3.6-dev
-      - llvm-3.6-dev
-      - clang-3.6
-      - gcc-6
-      - g++-6
-      - cmake
-      # - libgtest-dev # get it from the Git repository
-      - gdb
-      - texlive-extra-utils
-      - texlive-fonts-extra
-      - texlive-latex-recommended
-      - latex-xcolor
-
-env:
-  global:
-  #- CPPAD_HOME=`pwd`/cppadcg_deps/cppad/install/include
-  #- CPPAD_HOME=`pwd`/cppadcg_deps/CppAD-20170000.8/install/include
-  #- EIGEN_HOME=`pwd`/cppadcg_deps/eigen-eigen-5a0156e40feb/install/include
-
 before_install:
-  - if [ "$CXX" == "g++" ]; then export CC="$(which gcc-6)" CXX="$(which g++-6)"; fi
-  # - if [ "$CXX" == "clang++" ]; then export CC="$(which clang-3.8)" CXX="$(which clang++-3.8)"; fi
+  - if [ "$CXX" == "g++" ];     then export CC="$(which gcc-6)"   CXX="$(which g++-6)"; fi
+  - if [ "$CXX" == "clang++" ]; then export CC="$(which clang-8)" CXX="$(which clang++-8)"; fi
 
 install:
   - mkdir cppadcg_deps
@@ -76,7 +115,7 @@ install:
 script:
   - mkdir build
   - cd build
-  - cmake -DCMAKE_BUILD_TYPE=DEBUG -DGOOGLETEST_GIT=ON -DUSE_VALGRIND=OFF -DENABLE_THREAD_POOL_TESTS=OFF -DLLVM_VERSION=3.6 -DCPPAD_HOME=$CPPAD_HOME -DEIGEN3_INCLUDE_DIR=$EIGEN_HOME ..
+  - cmake -DCMAKE_BUILD_TYPE=DEBUG -DGOOGLETEST_GIT=ON -DUSE_VALGRIND=OFF -DENABLE_THREAD_POOL_TESTS=OFF -DLLVM_VERSION=${LLVM_VERSION} -DCPPAD_HOME=$CPPAD_HOME -DEIGEN3_INCLUDE_DIR=$EIGEN_HOME ..
   - cd test
   - make -j2 build_tests
   - CTEST_OUTPUT_ON_FAILURE=TRUE make test
