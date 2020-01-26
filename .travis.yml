@@ -7,6 +7,8 @@ matrix:
       compiler: gcc
       addons:
         apt:
+          sources:
+            - kubuntu-backports
           packages:
             - cmake
             - libclang-8-dev
@@ -25,6 +27,8 @@ matrix:
       compiler: clang
       addons:
         apt:
+          sources:
+            - kubuntu-backports
           packages:
             - cmake
             - libclang-8-dev
@@ -65,8 +69,14 @@ matrix:
         - LLVM_VERSION=3.6
       addons:
         apt:
+          sources:
+            - kubuntu-backports
           packages:
             - cmake
+            - texlive-extra-utils
+            - texlive-fonts-extra
+            - texlive-latex-recommended
+            - latex-xcolor
 
 # use travis-ci docker based infrastructure
 sudo: false
