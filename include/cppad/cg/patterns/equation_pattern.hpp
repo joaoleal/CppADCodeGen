@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -230,8 +231,7 @@ public:
 
     }
 
-    virtual ~EquationPattern() {
-    }
+    virtual ~EquationPattern() = default;
 
 private:
 
@@ -254,7 +254,7 @@ private:
         } else if (dep1.isVariable() && dep2.isVariable()) {
             OperationNode<Base>* depRefOp = dep1.getOperationNode();
             OperationNode<Base>* dep2Op = dep2.getOperationNode();
-            CPPADCG_ASSERT_UNKNOWN(depRefOp->getOperationType() != CGOpCode::Inv);
+            CPPADCG_ASSERT_UNKNOWN(depRefOp->getOperationType() != CGOpCode::Inv)
 
             return comparePath(depRefOp, dep2Op, dep2Index, varColor);
         }
@@ -272,13 +272,13 @@ private:
         }
 
         while (scRef->getOperationType() == CGOpCode::Alias) {
-            CPPADCG_ASSERT_KNOWN(scRef->getArguments().size() == 1, "Invalid number of arguments for alias");
+            CPPADCG_ASSERT_KNOWN(scRef->getArguments().size() == 1, "Invalid number of arguments for alias")
             OperationNode<Base>* sc = scRef->getArguments()[0].getOperation();
             if (sc != nullptr && sc->getOperationType() == CGOpCode::Inv) break;  // an alias is used to distinguish between indexed dependents and indexed independents
             scRef = sc;
         }
         while (sc2->getOperationType() == CGOpCode::Alias) {
-            CPPADCG_ASSERT_KNOWN(sc2->getArguments().size() == 1, "Invalid number of arguments for alias");
+            CPPADCG_ASSERT_KNOWN(sc2->getArguments().size() == 1, "Invalid number of arguments for alias")
             OperationNode<Base>* sc = sc2->getArguments()[0].getOperation();
             if (sc != nullptr && sc->getOperationType() == CGOpCode::Inv) break;  // an alias is used to distinguish between indexed dependents and indexed independents
             sc2 = sc;
@@ -307,7 +307,7 @@ private:
             return false;
         }
 
-        CPPADCG_ASSERT_UNKNOWN(scRef->getOperationType() != CGOpCode::Inv);
+        CPPADCG_ASSERT_UNKNOWN(scRef->getOperationType() != CGOpCode::Inv)
 
         const std::vector<size_t>& info1 = scRef->getInfo();
         const std::vector<size_t>& info2 = sc2->getInfo();
@@ -418,19 +418,19 @@ private:
                                 std::set<const OperationNode<Base>*>& indexedOperations) {
 
         while (scRef->getOperationType() == CGOpCode::Alias) {
-            CPPADCG_ASSERT_KNOWN(scRef->getArguments().size() == 1, "Invalid number of arguments for alias");
+            CPPADCG_ASSERT_KNOWN(scRef->getArguments().size() == 1, "Invalid number of arguments for alias")
             OperationNode<Base>* sc = scRef->getArguments()[0].getOperation();
             if (sc != nullptr && sc->getOperationType() == CGOpCode::Inv) break; // an alias is used to distinguish between indexed dependents and indexed independents
             scRef = sc;
         }
         while (sc2->getOperationType() == CGOpCode::Alias) {
-            CPPADCG_ASSERT_KNOWN(sc2->getArguments().size() == 1, "Invalid number of arguments for alias");
+            CPPADCG_ASSERT_KNOWN(sc2->getArguments().size() == 1, "Invalid number of arguments for alias")
             OperationNode<Base>* sc = sc2->getArguments()[0].getOperation();
             if (sc != nullptr && sc->getOperationType() == CGOpCode::Inv) break; // an alias is used to distinguish between indexed dependents and indexed independents
             sc2 = sc;
         }
 
-        CPPADCG_ASSERT_UNKNOWN(scRef->getOperationType() == sc2->getOperationType());
+        CPPADCG_ASSERT_UNKNOWN(scRef->getOperationType() == sc2->getOperationType())
 
         const std::vector<Argument<Base> >& argsRef = scRef->getArguments();
 
@@ -460,7 +460,7 @@ private:
 
                 if (!indexedArg) {
                     const std::vector<Argument<Base> >& args2 = sc2->getArguments();
-                    CPPADCG_ASSERT_UNKNOWN(size == args2.size());
+                    CPPADCG_ASSERT_UNKNOWN(size == args2.size())
                     indexedDependentPath |= findIndexedPath(argsRef[a].getOperation(), args2[a].getOperation(), varIndexed, indexedOperations);
                 }
             }

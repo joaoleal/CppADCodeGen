@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2016 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -148,15 +149,15 @@ inline void LanguageDot<Base>::indexPattern2String(std::ostream& os,
     switch (ip.getType()) {
         case IndexPatternType::Linear: // y = x * a + b
         {
-            CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes");
-            const LinearIndexPattern& lip = static_cast<const LinearIndexPattern&> (ip);
+            CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes")
+            const auto& lip = static_cast<const LinearIndexPattern&> (ip);
             linearIndexPattern2String(os, lip, *indexes[0]);
             return;
         }
         case IndexPatternType::Sectioned:
         {
-            CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes");
-            const SectionedIndexPattern* lip = static_cast<const SectionedIndexPattern*> (&ip);
+            CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes")
+            const auto* lip = static_cast<const SectionedIndexPattern*> (&ip);
             const std::map<size_t, IndexPattern*>& sections = lip->getLinearSections();
             size_t sSize = sections.size();
             CPPADCG_ASSERT_UNKNOWN(sSize > 1);
@@ -178,8 +179,8 @@ inline void LanguageDot<Base>::indexPattern2String(std::ostream& os,
 
         case IndexPatternType::Plane2D: // y = f(x) + f(z)
         {
-            CPPADCG_ASSERT_KNOWN(indexes.size() >= 1, "Invalid number of indexes");
-            const Plane2DIndexPattern& pip = static_cast<const Plane2DIndexPattern&> (ip);
+            CPPADCG_ASSERT_KNOWN(indexes.size() >= 1, "Invalid number of indexes")
+            const auto& pip = static_cast<const Plane2DIndexPattern&> (ip);
             bool useParens = pip.getPattern1() != nullptr && pip.getPattern2() != nullptr;
 
             if (useParens) os << "(";
@@ -198,17 +199,17 @@ inline void LanguageDot<Base>::indexPattern2String(std::ostream& os,
         }
         case IndexPatternType::Random1D:
         {
-            CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes");
-            const Random1DIndexPattern& rip = static_cast<const Random1DIndexPattern&> (ip);
-            CPPADCG_ASSERT_KNOWN(!rip.getName().empty(), "Invalid name for array");
+            CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes")
+            const auto& rip = static_cast<const Random1DIndexPattern&> (ip);
+            CPPADCG_ASSERT_KNOWN(!rip.getName().empty(), "Invalid name for array")
             os << rip.getName() << "[" << (*indexes[0]->getName()) << "]";
             return;
         }
         case IndexPatternType::Random2D:
         {
-            CPPADCG_ASSERT_KNOWN(indexes.size() == 2, "Invalid number of indexes");
-            const Random2DIndexPattern& rip = static_cast<const Random2DIndexPattern&> (ip);
-            CPPADCG_ASSERT_KNOWN(!rip.getName().empty(), "Invalid name for array");
+            CPPADCG_ASSERT_KNOWN(indexes.size() == 2, "Invalid number of indexes")
+            const auto& rip = static_cast<const Random2DIndexPattern&> (ip);
+            CPPADCG_ASSERT_KNOWN(!rip.getName().empty(), "Invalid name for array")
             os << rip.getName() <<
                     "[" << (*indexes[0]->getName()) << "]"
                     "[" << (*indexes[1]->getName()) << "]";

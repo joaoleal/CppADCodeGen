@@ -20,7 +20,7 @@ namespace cg {
 
 template<class Base>
 void LanguageMathML<Base>::printArrayCreationOp(OperationNode<Base>& array) {
-    CPPADCG_ASSERT_KNOWN(array.getArguments().size() > 0, "Invalid number of arguments for array creation operation");
+    CPPADCG_ASSERT_KNOWN(array.getArguments().size() > 0, "Invalid number of arguments for array creation operation")
     const size_t id = getVariableID(array);
     const std::vector<Argument<Base> >& args = array.getArguments();
     const size_t argSize = args.size();
@@ -63,12 +63,12 @@ void LanguageMathML<Base>::printArrayCreationOp(OperationNode<Base>& array) {
 template<class Base>
 void LanguageMathML<Base>::printSparseArrayCreationOp(OperationNode<Base>& array) {
     const std::vector<size_t>& info = array.getInfo();
-    CPPADCG_ASSERT_KNOWN(info.size() > 0, "Invalid number of information elements for sparse array creation operation");
+    CPPADCG_ASSERT_KNOWN(!info.empty(), "Invalid number of information elements for sparse array creation operation")
 
     const std::vector<Argument<Base> >& args = array.getArguments();
     const size_t argSize = args.size();
 
-    CPPADCG_ASSERT_KNOWN(info.size() == argSize + 1, "Invalid number of arguments for sparse array creation operation");
+    CPPADCG_ASSERT_KNOWN(info.size() == argSize + 1, "Invalid number of arguments for sparse array creation operation")
 
     if (argSize == 0)
         return; // empty array
@@ -188,7 +188,7 @@ inline size_t LanguageMathML<Base>::printArrayCreationUsingLoop(size_t startPos,
                 return starti; // cannot determine consecutive elements
             }
 
-            LinearIndexPattern* refLIp = static_cast<LinearIndexPattern*> (refIp);
+            auto* refLIp = static_cast<LinearIndexPattern*> (refIp);
 
             for (; i < argSize; i++) {
                 if (isSameArgument(args[i], tmpArrayValues[startPos + i]))
@@ -208,7 +208,7 @@ inline size_t LanguageMathML<Base>::printArrayCreationUsingLoop(size_t startPos,
                 if (ip->getType() != IndexPatternType::Linear) {
                     break; // different pattern type
                 }
-                const LinearIndexPattern* lIp = static_cast<const LinearIndexPattern*> (ip);
+                const auto* lIp = static_cast<const LinearIndexPattern*> (ip);
                 if (refLIp->getLinearSlopeDx() != lIp->getLinearSlopeDx() ||
                         refLIp->getLinearSlopeDy() != lIp->getLinearSlopeDy() ||
                         refLIp->getXOffset() != lIp->getXOffset() ||
@@ -294,9 +294,9 @@ inline std::string LanguageMathML<Base>::getTempArrayName(const OperationNode<Ba
 
 template<class Base>
 void LanguageMathML<Base>::printArrayElementOp(OperationNode<Base>& op) {
-    CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for array element operation");
-    CPPADCG_ASSERT_KNOWN(op.getArguments()[0].getOperation() != nullptr, "Invalid argument for array element operation");
-    CPPADCG_ASSERT_KNOWN(op.getInfo().size() == 1, "Invalid number of information indexes for array element operation");
+    CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for array element operation")
+    CPPADCG_ASSERT_KNOWN(op.getArguments()[0].getOperation() != nullptr, "Invalid argument for array element operation")
+    CPPADCG_ASSERT_KNOWN(op.getInfo().size() == 1, "Invalid number of information indexes for array element operation")
 
     OperationNode<Base>& arrayOp = *op.getArguments()[0].getOperation();
     std::string arrayName;
@@ -337,7 +337,7 @@ inline void LanguageMathML<Base>::printArrayStructInit(const std::string& dataAr
                 << dataArrayName << "<mo>.</mo><mi>sparse</mi><mo>=</mo><mn>" << false << "</mn>";
     } else {
         // sparse array
-        CPPADCG_ASSERT_KNOWN(array.getOperationType() == CGOpCode::SparseArrayCreation, "Invalid node type");
+        CPPADCG_ASSERT_KNOWN(array.getOperationType() == CGOpCode::SparseArrayCreation, "Invalid node type")
         size_t nnz = array.getArguments().size();
         if (nnz > 0)
             _code << dataArrayName << "<mo>.</mo><mi>data</mi><mo>=</mo>" << aName;

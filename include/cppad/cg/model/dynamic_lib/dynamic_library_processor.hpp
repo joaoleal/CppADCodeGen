@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -49,10 +50,10 @@ public:
      * @param libraryName The path of the dynamic library to be created 
      *                    (without the extension)
      */
-    inline DynamicModelLibraryProcessor(ModelLibraryCSourceGen<Base>& modelLibGen,
-                                        const std::string& libraryName = "cppad_cg_model") :
+    inline explicit DynamicModelLibraryProcessor(ModelLibraryCSourceGen<Base>& modelLibGen,
+                                                 std::string libraryName = "cppad_cg_model") :
         ModelLibraryProcessor<Base>(modelLibGen),
-        _libraryName(libraryName),
+        _libraryName(std::move(libraryName)),
         _customLibExtension(nullptr) {
     }
 
@@ -61,7 +62,7 @@ public:
     }
 
     inline void setLibraryName(const std::string& libraryName) {
-        CPPADCG_ASSERT_KNOWN(!libraryName.empty(), "Library name cannot be empty");
+        CPPADCG_ASSERT_KNOWN(!libraryName.empty(), "Library name cannot be empty")
 
         _libraryName = libraryName;
     }

@@ -49,16 +49,16 @@ protected:
     size_t _maxTemporarySparseArrayID;
 public:
 
-    inline LangMathMLDefaultVariableNameGenerator(const std::string& depName = "y",
-                                                  const std::string& indepName = "x",
-                                                  const std::string& tmpName = "v",
-                                                  const std::string& tmpArrayName = "a",
-                                                  const std::string& tmpSparseArrayName = "s") :
-        _depName(depName),
-        _indepName(indepName),
-        _tmpName(tmpName),
-        _tmpArrayName(tmpArrayName),
-        _tmpSparseArrayName(tmpSparseArrayName),
+    inline LangMathMLDefaultVariableNameGenerator(std::string depName = "y",
+                                                  std::string indepName = "x",
+                                                  std::string tmpName = "v",
+                                                  std::string tmpArrayName = "a",
+                                                  std::string tmpSparseArrayName = "s") :
+        _depName(std::move(depName)),
+        _indepName(std::move(indepName)),
+        _tmpName(std::move(tmpName)),
+        _tmpArrayName(std::move(tmpArrayName)),
+        _tmpSparseArrayName(std::move(tmpSparseArrayName)),
         _minTemporaryID(0), // not really required (but it avoids warnings)
         _maxTemporaryID(0), // not really required (but it avoids warnings)
         _maxTemporaryArrayID(0), // not really required (but it avoids warnings)
@@ -139,7 +139,7 @@ public:
         _ss.clear();
         _ss.str("");
 
-        CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGOpCode::ArrayCreation);
+        CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGOpCode::ArrayCreation)
 
         _ss << "<mi>" << _tmpArrayName << "</mi>"
                 "<mfenced open='[' close=']'>"
@@ -157,7 +157,7 @@ public:
         _ss.clear();
         _ss.str("");
 
-        CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGOpCode::SparseArrayCreation);
+        CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGOpCode::SparseArrayCreation)
 
         _ss << "<mi>" << _tmpSparseArrayName << "</mi>"
                 "<mfenced open='[' close=']'>"
@@ -173,8 +173,8 @@ public:
     std::string generateIndexedDependent(const OperationNode<Base>& var,
                                          size_t id,
                                          const IndexPattern& ip) override {
-        CPPADCG_ASSERT_KNOWN(var.getOperationType() == CGOpCode::LoopIndexedDep, "Invalid node type");
-        CPPADCG_ASSERT_KNOWN(!var.getArguments().empty(), "Invalid number of arguments");
+        CPPADCG_ASSERT_KNOWN(var.getOperationType() == CGOpCode::LoopIndexedDep, "Invalid node type")
+        CPPADCG_ASSERT_KNOWN(!var.getArguments().empty(), "Invalid number of arguments")
 
         _ss.clear();
         _ss.str("");
@@ -192,8 +192,8 @@ public:
     std::string generateIndexedIndependent(const OperationNode<Base>& independent,
                                            size_t id,
                                            const IndexPattern& ip) override {
-        CPPADCG_ASSERT_KNOWN(independent.getOperationType() == CGOpCode::LoopIndexedIndep, "Invalid node type");
-        CPPADCG_ASSERT_KNOWN(independent.getArguments().size() > 0, "Invalid number of arguments");
+        CPPADCG_ASSERT_KNOWN(independent.getOperationType() == CGOpCode::LoopIndexedIndep, "Invalid node type")
+        CPPADCG_ASSERT_KNOWN(independent.getArguments().size() > 0, "Invalid number of arguments")
 
         _ss.clear();
         _ss.str("");
@@ -221,7 +221,7 @@ public:
         // if
         //  _minTemporaryID == _maxTemporaryID + 1
         // then no temporary variables are being used
-        CPPADCG_ASSERT_UNKNOWN(_minTemporaryID <= _maxTemporaryID + 1);
+        CPPADCG_ASSERT_UNKNOWN(_minTemporaryID <= _maxTemporaryID + 1)
     }
 
     const std::string& getIndependentArrayName(const OperationNode<Base>& indep,
@@ -280,8 +280,8 @@ protected:
         std::vector<const OperationNode<Base>*> indexes(args.size() - offset);
 
         for (size_t a = offset; a < args.size(); a++) {
-            CPPADCG_ASSERT_KNOWN(args[a].getOperation() != nullptr, "Invalid argument");
-            CPPADCG_ASSERT_KNOWN(args[a].getOperation()->getOperationType() == CGOpCode::Index, "Invalid argument");
+            CPPADCG_ASSERT_KNOWN(args[a].getOperation() != nullptr, "Invalid argument")
+            CPPADCG_ASSERT_KNOWN(args[a].getOperation()->getOperationType() == CGOpCode::Index, "Invalid argument")
 
             indexes[a - offset] = &static_cast<const IndexOperationNode<Base>*> (args[a].getOperation())->getIndex();
         }

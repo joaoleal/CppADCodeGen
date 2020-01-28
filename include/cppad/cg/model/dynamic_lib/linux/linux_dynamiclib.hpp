@@ -38,24 +38,24 @@ protected:
     std::set<LinuxDynamicLibModel<Base>*> _models;
 public:
 
-    LinuxDynamicLib(const std::string& dynLibName,
-                    int dlOpenMode = RTLD_NOW) :
-        _dynLibName(dynLibName),
+    explicit LinuxDynamicLib(std::string dynLibName,
+                             int dlOpenMode = RTLD_NOW) :
+        _dynLibName(std::move(dynLibName)),
         _dynLibHandle(nullptr) {
 
         std::string path;
-        if (dynLibName[0] == '/') {
-            path = dynLibName; // absolute path
-        } else if (!(dynLibName[0] == '.' && dynLibName[1] == '/') &&
-                !(dynLibName[0] == '.' && dynLibName[1] == '.')) {
-            path = "./" + dynLibName; // relative path
+        if (_dynLibName[0] == '/') {
+            path = _dynLibName; // absolute path
+        } else if (!(_dynLibName[0] == '.' && _dynLibName[1] == '/') &&
+                   !(_dynLibName[0] == '.' && _dynLibName[1] == '.')) {
+            path = "./" + _dynLibName; // relative path
         } else {
-            path = dynLibName;
+            path = _dynLibName;
         }
 
         // load the dynamic library
         _dynLibHandle = dlopen(path.c_str(), dlOpenMode);
-        CPPADCG_ASSERT_KNOWN(_dynLibHandle != nullptr, ("Failed to dynamically load library '" + dynLibName + "': " + dlerror()).c_str());
+        CPPADCG_ASSERT_KNOWN(_dynLibHandle != nullptr, ("Failed to dynamically load library '" + _dynLibName + "': " + dlerror()).c_str())
 
         // validate the dynamic library
         this->validate();
@@ -66,7 +66,7 @@ public:
 
     virtual std::unique_ptr<LinuxDynamicLibModel<Base>> modelLinuxDyn(const std::string& modelName) {
         std::unique_ptr<LinuxDynamicLibModel<Base>> m;
-        std::set<std::string>::const_iterator it = this->_modelNames.find(modelName);
+        auto it = this->_modelNames.find(modelName);
         if (it == this->_modelNames.end()) {
             return m;
         }
