@@ -19,7 +19,11 @@
 using namespace CppAD;
 using namespace CppAD::cg;
 
-int main(void) {
+const int N = 2;
+const std::string LIBRARY_NAME = "./model_library";
+const std::string LIBRARY_NAME_EXT = LIBRARY_NAME + system::SystemInfo<>::DYNAMIC_LIB_EXTENSION;
+
+void compileLibrary() {
     // use a special object for source code generation
     using CGD = CG<double>;
     using ADCG = AD<CGD>;
@@ -29,7 +33,7 @@ int main(void) {
      **************************************************************************/
 
     // independent variable vector
-    std::vector<ADCG> x(2);
+    std::vector<ADCG> x(N);
     Independent(x);
 
     // dependent variable vector
@@ -54,7 +58,7 @@ int main(void) {
     ModelLibraryCSourceGen<double> libcgen(cgen);
 
     // compile source code
-    DynamicModelLibraryProcessor<double> p(libcgen);
+    DynamicModelLibraryProcessor<double> p(libcgen, LIBRARY_NAME);
 
     GccCompiler<double> compiler;
     std::unique_ptr<DynamicLib<double>> dynamicLib = p.createDynamicLibrary(compiler);
@@ -62,17 +66,28 @@ int main(void) {
     // save to files (not really required)
     SaveFilesModelLibraryProcessor<double> p2(libcgen);
     p2.saveSources();
+}
 
+void useLibrary() {
     /***************************************************************************
      *                       Use the dynamic library
      **************************************************************************/
-
-    std::unique_ptr<GenericModel<double>> model = dynamicLib->model("model");
-    std::vector<double> xv(x.size());
-    xv[0] = 2.5;
-    xv[1] = 3.5;
+    LinuxDynamicLib<double> dynamicLib(LIBRARY_NAME_EXT);
+    std::unique_ptr<GenericModel<double>> model = dynamicLib.model("model");
+    std::vector<double> xv{2.5, 3.5};
     std::vector<double> jac = model->Jacobian(xv);
 
     // print out the result
     std::cout << jac[0] << " " << jac[1] << std::endl;
+}
+
+int main() {
+    if (!system::isFile(LIBRARY_NAME_EXT)) {
+        std::cout << "Creating a new library" << std::endl;
+        compileLibrary();
+    } else {
+        std::cout << "Reusing existing library" << std::endl;
+    }
+
+    useLibrary();
 }
