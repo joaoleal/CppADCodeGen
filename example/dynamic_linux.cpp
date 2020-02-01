@@ -1,6 +1,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -61,7 +62,8 @@ void compileLibrary() {
     DynamicModelLibraryProcessor<double> p(libcgen, LIBRARY_NAME);
 
     GccCompiler<double> compiler;
-    std::unique_ptr<DynamicLib<double>> dynamicLib = p.createDynamicLibrary(compiler);
+    bool loadLib = false;
+    p.createDynamicLibrary(compiler, loadLib);
 
     // save to files (not really required)
     SaveFilesModelLibraryProcessor<double> p2(libcgen);

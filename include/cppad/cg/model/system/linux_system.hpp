@@ -180,11 +180,7 @@ inline bool isDirectory(const std::string& path) {
 
     if (stat(path.c_str(), &info) != 0) {
         return false;
-    } else if (info.st_mode & S_IFDIR) {
-        return true;
-    } else {
-        return false;
-    }
+    } else return (info.st_mode & S_IFDIR) != 0;
 }
 
 inline bool isFile(const std::string& path) {
