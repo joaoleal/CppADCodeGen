@@ -139,8 +139,8 @@ private:
                            size_t n,
                            size_t p,
                            size_t k) {
-        CPPADCG_ASSERT_KNOWN(!to.sparse, "output must be a dense array");
-        CPPADCG_ASSERT_KNOWN(to.size >= n, "invalid size");
+        CPPADCG_ASSERT_KNOWN(!to.sparse, "output must be a dense array")
+        CPPADCG_ASSERT_KNOWN(to.size >= n, "invalid size")
 
         Base* values = static_cast<Base*> (to.data);
 

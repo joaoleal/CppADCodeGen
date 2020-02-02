@@ -106,6 +106,10 @@ protected:
                                                            ArrayView<const T2> orig,
                                                            T epsilonR = std::numeric_limits<T>::epsilon() * 100,
                                                            T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
+        if (cgen.size() != orig.size())
+            return ::testing::AssertionFailure() << "Dimensions do not match (" << cgen.size() << " != " << orig.size()
+                                                 << ").";
+
         std::ostringstream ss;
         for (size_t i = 0; i < cgen.size(); i++) {
             ::testing::AssertionResult r = nearEqual(cgen[i], orig[i], epsilonR, epsilonA);
@@ -258,6 +262,56 @@ protected:
         }
 
         return ::testing::AssertionSuccess();
+    }
+
+    static CppAD::vector<AD<Base> > makeADVector(const CppAD::vector<Base>& x) {
+        size_t n = x.size();
+
+        CppAD::vector<AD<Base>> ax(n);
+        for (size_t j = 0; j < n; j++)
+            ax[j] = x[j];
+
+        return ax;
+    }
+
+    static std::vector<AD<Base> > makeADVector(const std::vector<Base>& x) {
+        size_t n = x.size();
+
+        std::vector<AD<Base>> ax(n);
+        for (size_t j = 0; j < n; j++)
+            ax[j] = x[j];
+
+        return ax;
+    }
+
+    static std::vector<ADCGD> makeADCGVector(const CppAD::vector<Base>& x) {
+        size_t n = x.size();
+
+        std::vector<ADCGD> ax(n);
+        for (size_t j = 0; j < n; j++)
+            ax[j] = x[j];
+
+        return ax;
+    }
+
+    static std::vector<ADCGD> makeADCGVector(const std::vector<Base>& x) {
+        size_t n = x.size();
+
+        std::vector<ADCGD> ax(n);
+        for (size_t j = 0; j < n; j++)
+            ax[j] = x[j];
+
+        return ax;
+    }
+
+    static CppAD::vector<CGD> makeCGVector(const CppAD::vector<Base>& x) {
+        size_t n = x.size();
+
+        CppAD::vector<CGD> x2(n);
+        for (size_t j = 0; j < n; j++)
+            x2[j] = x[j];
+
+        return x2;
     }
 };
 

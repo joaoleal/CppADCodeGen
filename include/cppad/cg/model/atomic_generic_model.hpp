@@ -104,6 +104,8 @@ public:
         }
 
         const std::vector<std::set<size_t> > jacSparsity = model_.JacobianSparsitySet();
+
+        // S(x) =  f'(x) * R
         CppAD::cg::multMatrixMatrixSparsity(jacSparsity, r, s, m, n, q);
 
         return true;
@@ -127,7 +129,8 @@ public:
 
         const std::vector<std::set<size_t> > jacSparsity = model_.JacobianSparsitySet();
 
-        CppAD::cg::multMatrixMatrixSparsityTrans(rT, jacSparsity, sT, m, n, q);
+        // S(x)^T = ( R * f'(x) )^T = f'(x)^T * R^T
+        CppAD::cg::multMatrixTransMatrixSparsity(jacSparsity, rT, sT, m, n, q);
 
         return true;
     }
@@ -160,12 +163,12 @@ public:
         const std::vector<std::set<size_t> > jacSparsity = model_.JacobianSparsitySet();
 
         /**
-         *  V(x)  =  f'^T(x) U(x)  +  Sum(  s(x)i  f''(x)  R(x)   )
+         *  V(x)  =  f'^T(x) U(x)  +  Sum(  s(x)i  f''(x)  R   )
          */
         // f'^T(x) U(x)
         CppAD::cg::multMatrixTransMatrixSparsity(jacSparsity, u, v, m, n, q);
 
-        // Sum(  s(x)i  f''(x)  R(x)   )
+        // Sum(  s(x)i  f''(x)  R   )
         bool allSelected = true;
         for (size_t i = 0; i < m; i++) {
             if (!s[i]) {
@@ -178,7 +181,7 @@ public:
             // TODO: use reverseTwo sparsity instead of the HessianSparsity (they can be different!!!)
             std::vector<std::set<size_t> > sparsitySF2R = model_.HessianSparsitySet(); // f''(x)
             sparsitySF2R.resize(n);
-            CppAD::cg::multMatrixTransMatrixSparsity(sparsitySF2R, r, v, n, n, q); // f''^T * R
+            CppAD::cg::multMatrixMatrixSparsity(sparsitySF2R, r, v, n, n, q); // f''(x) * R
         } else {
             std::vector<std::set<size_t> > sparsitySF2R(n);
             for (size_t i = 0; i < m; i++) {
@@ -186,7 +189,7 @@ public:
                     CppAD::cg::addMatrixSparsity(model_.HessianSparsitySet(i), sparsitySF2R); // f''_i(x)
                 }
             }
-            CppAD::cg::multMatrixTransMatrixSparsity(sparsitySF2R, r, v, n, n, q); // f''^T * R
+            CppAD::cg::multMatrixMatrixSparsity(sparsitySF2R, r, v, n, n, q); // f''(x) * R
         }
 
         /**

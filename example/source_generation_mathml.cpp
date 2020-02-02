@@ -13,7 +13,6 @@
  * Author: Joao Leal
  */
 #include <iosfwd>
-#include <vector>
 #include <cppad/cg.hpp>
 #include <cppad/cg/lang/mathml/mathml.hpp>
 
@@ -83,8 +82,8 @@ int main(void) {
                              "    for (var i = 0, len = selected.length; i < len; ++i)\n"
                              "        selected[i].classList.remove('selected');\n"
                              "    selected = [];\n"
-                             "    while (t != document) {\n"
-                             "        if (t.id !== null && t.id !== \"\" && t.id.charAt(0) == 'v') {\n"
+                             "    while (t !== document) {\n"
+                             "        if (t.id !== null && t.id !== \"\" && t.id.charAt(0) === 'v') {\n"
                              "            var baseId = t.id.split('_')[0];\n"
                              "            var el = document.getElementById(baseId);\n"
                              "            var n = 0;\n"

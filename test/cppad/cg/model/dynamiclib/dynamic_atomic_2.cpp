@@ -269,8 +269,8 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
         // (location of the elements is different then if py.size() == m)
         ASSERT_EQ(pxOrig.size(), n * k1);
         ASSERT_EQ(pxOrig.size(), pxInner.size());
-        for (size_t j = 0; j < n; j++) {
-            ASSERT_TRUE(nearEqual(pxInner[j * k1], pxOrig[j * k1].getValue()));
+        for (size_t j2 = 0; j2 < n; j2++) {
+            ASSERT_TRUE(nearEqual(pxInner[j2 * k1], pxOrig[j2 * k1].getValue()));
         }
     }
 
@@ -278,36 +278,36 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
      * Jacobian
      */
     std::vector<CGD> jacOrig = _fun->Jacobian(xOrig);
-    std::vector<double> jacOutter = _model->Jacobian(x);
-    ASSERT_TRUE(compareValues(jacOutter, jacOrig));
+    std::vector<double> jacOuter = _model->Jacobian(x);
+    ASSERT_TRUE(compareValues(jacOuter, jacOrig));
 
     /**
      * Jacobian sparsity
      */
     const std::vector<bool> jacSparsityOrig = jacobianForwardSparsity < std::vector<bool>, CGD > (*_fun);
-    const std::vector<bool> jacSparsityOutter = _model->JacobianSparsityBool();
+    const std::vector<bool> jacSparsityOuter = _model->JacobianSparsityBool();
 
-    compareBoolValues(jacSparsityOrig, jacSparsityOutter);
+    compareBoolValues(jacSparsityOrig, jacSparsityOuter);
 
     /**
      * Sparse jacobian
      */
     jacOrig = _fun->SparseJacobian(xOrig);
-    jacOutter = _model->SparseJacobian(x);
-    ASSERT_TRUE(compareValues(jacOutter, jacOrig));
+    jacOuter = _model->SparseJacobian(x);
+    ASSERT_TRUE(compareValues(jacOuter, jacOrig));
 
     // sparse reverse
     std::vector<size_t> row, col;
-    generateSparsityIndexes(jacSparsityOutter, m, n, row, col);
+    generateSparsityIndexes(jacSparsityOuter, m, n, row, col);
 
-    jacOutter.resize(row.size());
-    _model->SparseJacobian(x, par, jacOutter, row, col);
+    jacOuter.resize(row.size());
+    _model->SparseJacobian(x, par, jacOuter, row, col);
 
     sparse_jacobian_work workOrig;
     jacOrig.resize(row.size());
     _fun->SparseJacobianReverse(xOrig, jacSparsityOrig, row, col, jacOrig, workOrig);
 
-    ASSERT_TRUE(compareValues(jacOutter, jacOrig));
+    ASSERT_TRUE(compareValues(jacOuter, jacOrig));
 
     /**
      * Hessian
@@ -317,13 +317,13 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
         wOrig[i] = 1;
     }
     std::vector<CGD> hessOrig = _fun->Hessian(xOrig, wOrig);
-    std::vector<double> hessOutter = _model->Hessian(x, par, stdw);
-    ASSERT_TRUE(compareValues(hessOutter, hessOrig));
+    std::vector<double> hessOuter = _model->Hessian(x, par, stdw);
+    ASSERT_TRUE(compareValues(hessOuter, hessOrig));
 
     /**
      * Sparse Hessian
      */
     hessOrig = _fun->SparseHessian(xOrig, wOrig);
-    hessOutter = _model->SparseHessian(x, par, stdw);
-    ASSERT_TRUE(compareValues(hessOutter, hessOrig));
+    hessOuter = _model->SparseHessian(x, par, stdw);
+    ASSERT_TRUE(compareValues(hessOuter, hessOrig));
 }

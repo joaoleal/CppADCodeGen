@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2015 Ciengis
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -28,6 +29,7 @@ namespace cg {
 template<class Base>
 class LlvmModelLibraryProcessor : public LlvmBaseModelLibraryProcessor<Base> {
 protected:
+    const std::string _version;
     std::vector<std::string> _includePaths;
     std::shared_ptr<llvm::LLVMContext> _context; // should be deleted after _linker and _module (it must come first)
     std::unique_ptr<llvm::Linker> _linker;
@@ -39,10 +41,17 @@ public:
      * @param librarySourceGen
      */
     LlvmModelLibraryProcessor(ModelLibraryCSourceGen<Base>& librarySourceGen) :
-            LlvmBaseModelLibraryProcessor<Base>(librarySourceGen) {
+            LlvmBaseModelLibraryProcessor<Base>(librarySourceGen),
+            _version("3.6") {
     }
 
-    virtual ~LlvmModelLibraryProcessor() {
+    virtual ~LlvmModelLibraryProcessor() = default;
+
+    /**
+     * @return The version of LLVM (and Clang).
+     */
+    inline const std::string& getVersion() const {
+        return _version;
     }
 
     /**

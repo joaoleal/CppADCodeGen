@@ -27,7 +27,7 @@ namespace cg {
 
 class CppADCGDynamicTest : public CppADCGModelTest {
 public:
-    using CGD = CG<double>;
+    using CGD = CG<Base>;
     using ADCG = AD<CGD>;
 protected:
     const std::string _name;
@@ -39,278 +39,162 @@ protected:
     MultiThreadingType _multithread;
     bool _multithreadDisabled;
     ThreadPoolScheduleStrategy _multithreadScheduler;
+    std::vector<Base> _xTape;
+    std::vector<Base> _xRun;
+    std::vector<Base> _parTape;
+    std::vector<Base> _parRun;
+    size_t _maxAssignPerFunc = 100;
+    double epsilonR = 1e-14;
+    double epsilonA = 1e-14;
+    std::vector<Base> _xNorm;
+    std::vector<Base> _eqNorm;
+    std::unique_ptr<ADFun<CGD>> _fun;
+    std::unique_ptr<DynamicLib<Base>> _dynamicLib;
+    std::unique_ptr<GenericModel<Base>> _model;
+    std::vector<size_t> _jacRow;
+    std::vector<size_t> _jacCol;
+    std::vector<size_t> _hessRow;
+    std::vector<size_t> _hessCol;
 public:
 
     explicit CppADCGDynamicTest(std::string testName,
                                 bool verbose = false,
                                 bool printValues = false) :
-        CppADCGModelTest(verbose, printValues),
-        _name(std::move(testName)),
-        _denseJacobian(true),
-        _denseHessian(true),
-        _forwardOne(true),
-        _reverseOne(true),
-        _reverseTwo(true),
-        _multithread(MultiThreadingType::NONE),
-        _multithreadDisabled(false),
-        _multithreadScheduler(ThreadPoolScheduleStrategy::DYNAMIC) {
+            CppADCGModelTest(verbose, printValues),
+            _name(std::move(testName)),
+            _denseJacobian(true),
+            _denseHessian(true),
+            _forwardOne(true),
+            _reverseOne(true),
+            _reverseTwo(true),
+            _multithread(MultiThreadingType::NONE),
+            _multithreadDisabled(false),
+            _multithreadScheduler(ThreadPoolScheduleStrategy::DYNAMIC) {
     }
 
     virtual std::vector<ADCGD> model(const std::vector<ADCGD>& ind,
                                      const std::vector<ADCGD>& p) = 0;
 
-    void testDynamicFull(std::vector<ADCG>& ax,
-                         const std::vector<double>& x,
-                         size_t maxAssignPerFunc = 100,
-                         double epsilonR = 1e-14,
-                         double epsilonA = 1e-14) {
-        std::vector<ADCG> ap;
-        const std::vector<double> p;
-
-        testDynamicFull(ax, ap, x, p, maxAssignPerFunc, epsilonR, epsilonA);
-    }
-
-    void testDynamicFull(std::vector<ADCG>& ax,
-                         std::vector<ADCG>& ap,
-                         const std::vector<double>& x,
-                         const std::vector<double>& p,
-                         size_t maxAssignPerFunc = 100,
-                         double epsilonR = 1e-14,
-                         double epsilonA = 1e-14) {
-        const std::vector<double> xNorm(x.size(), 1.0);
-        const std::vector<double> eqNorm;
-
-        testDynamicFull(ax, ap, x, p, xNorm, eqNorm, maxAssignPerFunc, epsilonR, epsilonA);
-    }
-
-    void testDynamicFull(std::vector<ADCG>& ax,
-                         const std::vector<double>& x,
-                         const std::vector<double>& xNorm,
-                         const std::vector<double>& eqNorm,
-                         size_t maxAssignPerFunc = 100,
-                         double epsilonR = 1e-14,
-                         double epsilonA = 1e-14) {
-        std::vector<ADCG> ap;
-        const std::vector<double> p;
-        testDynamicFull(ax, ap, x, p, xNorm, eqNorm, maxAssignPerFunc, epsilonR, epsilonA);
-    }
-
-    void testDynamicFull(std::vector<ADCG>& ax,
-                         std::vector<ADCG>& ap,
-                         const std::vector<double>& x,
-                         const std::vector<double>& p,
-                         const std::vector<double>& xNorm,
-                         const std::vector<double>& eqNorm,
-                         size_t maxAssignPerFunc = 100,
-                         double epsilonR = 1e-14,
-                         double epsilonA = 1e-14) {
-        ASSERT_EQ(ax.size(), x.size());
-        ASSERT_EQ(x.size(), xNorm.size());
+    void SetUp() override {
+        ASSERT_EQ(_xTape.size(), _xRun.size());
+        ASSERT_TRUE(_xNorm.empty() || _xRun.size() == _xNorm.size());
 
         using namespace std;
 
         // use a special object for source code generation
+        std::vector<ADCGD> xTape = makeADCGVector(_xTape);
+        std::vector<ADCGD> pTape = makeADCGVector(_parTape);
+
         // declare independent variables, dynamic parameters, starting recording
         size_t abort_op_index = 0;
         bool record_compare = true;
-        CppAD::Independent(ax, abort_op_index, record_compare, ap);
+        CppAD::Independent(xTape, abort_op_index, record_compare, pTape);
 
-        for (size_t i = 0; i < ax.size(); i++)
-            ax[i] *= xNorm[i];
+        if (!_xNorm.empty()) {
+            for (size_t i = 0; i < xTape.size(); i++)
+                xTape[i] *= _xNorm[i];
+        }
 
         // dependent variable vector
-        std::vector<ADCG> ay = model(ax, ap);
+        std::vector<ADCG> Z = model(xTape, pTape);
 
-        if (!eqNorm.empty()) {
-            ASSERT_EQ(ay.size(), eqNorm.size());
-            for (size_t i = 0; i < ay.size(); i++)
-                ay[i] /= eqNorm[i];
+        if (!_eqNorm.empty()) {
+            ASSERT_EQ(Z.size(), _eqNorm.size());
+            for (size_t i = 0; i < Z.size(); i++)
+                Z[i] /= _eqNorm[i];
         }
 
         /**
          * create the CppAD tape as usual
          */
-        // create f: ax -> ay and vectors used for derivative calculations
-        ADFun<CGD> fun;
-        fun.Dependent(ay);
+        // create f: U -> Z and vectors used for derivative calculations
+        _fun.reset(new ADFun<CGD>());
+        _fun->Dependent(Z);
 
         /**
          * Create the dynamic library
          * (generate and compile source code)
          */
-        ModelCSourceGen<double> modelSrcGen(fun, _name + "dynamic");
+        ModelCSourceGen<double> modelSourceGen(*_fun, _name + "dynamic");
 
-        modelSrcGen.setCreateForwardZero(true);
-        modelSrcGen.setCreateJacobian(_denseJacobian);
-        modelSrcGen.setCreateHessian(_denseHessian);
-        modelSrcGen.setCreateSparseJacobian(true);
-        modelSrcGen.setCreateSparseHessian(true);
-        modelSrcGen.setCreateForwardOne(_forwardOne);
-        modelSrcGen.setCreateReverseOne(_reverseOne);
-        modelSrcGen.setCreateReverseTwo(_reverseTwo);
-        modelSrcGen.setMaxAssignmentsPerFunc(maxAssignPerFunc);
-        modelSrcGen.setMultiThreading(true);
+        modelSourceGen.setCreateForwardZero(true);
+        modelSourceGen.setCreateJacobian(_denseJacobian);
+        modelSourceGen.setCreateHessian(_denseHessian);
+        modelSourceGen.setCreateSparseJacobian(true);
+        modelSourceGen.setCreateSparseHessian(true);
+        modelSourceGen.setCreateForwardOne(_forwardOne);
+        modelSourceGen.setCreateReverseOne(_reverseOne);
+        modelSourceGen.setCreateReverseTwo(_reverseTwo);
+        modelSourceGen.setMaxAssignmentsPerFunc(_maxAssignPerFunc);
+        modelSourceGen.setMultiThreading(true);
 
-        ModelLibraryCSourceGen<double> libSrcGen(modelSrcGen);
-        libSrcGen.setMultiThreading(_multithread);
+        if (!_jacRow.empty())
+            modelSourceGen.setCustomSparseJacobianElements(_jacRow, _jacCol);
 
-        SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(libSrcGen, "sources_" + _name + "_1");
+        if (!_hessRow.empty())
+            modelSourceGen.setCustomSparseHessianElements(_hessRow, _hessCol);
 
-        DynamicModelLibraryProcessor<double> libProc(libSrcGen);
+        ModelLibraryCSourceGen<double> libSourceGen(modelSourceGen);
+        libSourceGen.setMultiThreading(_multithread);
+
+        SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(libSourceGen, "sources_" + _name + "_1");
+
+        DynamicModelLibraryProcessor<double> p(libSourceGen);
         GccCompiler<double> compiler;
         //compiler.setSaveToDiskFirst(true); // useful to detect problem
         prepareTestCompilerFlags(compiler);
-        if (libSrcGen.getMultiThreading() == MultiThreadingType::OPENMP) {
+        if(libSourceGen.getMultiThreading() == MultiThreadingType::OPENMP) {
             compiler.addCompileFlag("-fopenmp");
             compiler.addCompileFlag("-pthread");
             compiler.addCompileLibFlag("-fopenmp");
 
 #ifdef CPPAD_CG_SYSTEM_LINUX
             // this is required because the OpenMP implementation in GCC causes a segmentation fault on dlclose
-            libProc.getOptions() ["dlOpenMode"] = std::to_string(RTLD_NOW | RTLD_NODELETE);
+            p.getOptions()["dlOpenMode"] = std::to_string(RTLD_NOW | RTLD_NODELETE);
 #endif
-        } else if (libSrcGen.getMultiThreading() == MultiThreadingType::PTHREADS) {
+        } else if(libSourceGen.getMultiThreading() == MultiThreadingType::PTHREADS) {
             compiler.addCompileFlag("-pthread");
         }
 
-        std::unique_ptr<DynamicLib<double>> dynamicLib = libProc.createDynamicLibrary(compiler);
-        dynamicLib->setThreadPoolVerbose(this->verbose_);
-        dynamicLib->setThreadNumber(2);
-        dynamicLib->setThreadPoolDisabled(_multithreadDisabled);
-        dynamicLib->setThreadPoolSchedulerStrategy(_multithreadScheduler);
-        dynamicLib->setThreadPoolGuidedMaxWork(0.75);
+        _dynamicLib = p.createDynamicLibrary(compiler);
+        _dynamicLib->setThreadPoolVerbose(this->verbose_);
+        _dynamicLib->setThreadNumber(2);
+        _dynamicLib->setThreadPoolDisabled(_multithreadDisabled);
+        _dynamicLib->setThreadPoolSchedulerStrategy(_multithreadScheduler);
+        _dynamicLib->setThreadPoolGuidedMaxWork(0.75);
 
         /**
          * test the library
          */
-        std::unique_ptr<GenericModel<double>> model = dynamicLib->model(_name + "dynamic");
-        ASSERT_TRUE(model != nullptr);
-
-        testModelResults(*dynamicLib, *model, fun, x, p, epsilonR, epsilonA, _denseJacobian, _denseHessian);
+        _model = _dynamicLib->model(_name + "dynamic");
+        ASSERT_TRUE(_model != nullptr);
     }
 
-    void testDynamicCustomElements(std::vector<ADCG>& ax,
-                                   const std::vector<double>& x,
-                                   const std::vector<size_t>& jacRow, const std::vector<size_t>& jacCol,
-                                   const std::vector<size_t>& hessRow, const std::vector<size_t>& hessCol) {
-        std::vector<ADCG> ap;
-        std::vector<double> p;
-
-        testDynamicCustomElements(ax, ap, x, p, jacRow, jacCol, hessRow, hessCol);
+    void TearDown() override {
+        _fun.reset();
     }
 
-    void testDynamicCustomElements(std::vector<ADCG>& ax,
-                                   std::vector<ADCG>& ap,
-                                   const std::vector<double>& x,
-                                   const std::vector<double>& p,
-                                   const std::vector<size_t>& jacRow, const std::vector<size_t>& jacCol,
-                                   const std::vector<size_t>& hessRow, const std::vector<size_t>& hessCol) {
-        using namespace std;
+    void testForwardZero() {
+        this->testForwardZeroResults(*_model, *_fun, _xRun, _parRun, epsilonR, epsilonA);
+    }
 
-        size_t abort_op_index = 0;
-        bool record_compare = true;
-        CppAD::Independent(ax, abort_op_index, record_compare, ap);
+    // Jacobian
+    void testDenseJacobian () {
+        this->testDenseJacResults(*_model, *_fun, _xRun,  _parRun, epsilonR, epsilonA);
+    }
 
-        // dependent variable vector
-        std::vector<ADCG> ay = model(ax, ap);
+    void testDenseHessian() {
+        this->testDenseHessianResults(*_model, *_fun, _xRun,  _parRun, epsilonR, epsilonA);
+    }
 
-        /**
-         * create the CppAD tape as usual
-         */
-        // create f: ax -> ay and vectors used for derivative calculations
-        ADFun<CGD> fun(ax, ay);
+    // sparse Jacobian
+    void testJacobian() {
+        this->testJacobianResults(*_dynamicLib, *_model, *_fun, _xRun,  _parRun, !_jacRow.empty(),epsilonR, epsilonA);
+    }
 
-        /**
-         * Create the dynamic library
-         * (generate and compile source code)
-         */
-        ModelCSourceGen<double> modelSrcGen(fun, _name + "dynamic2");
-
-        modelSrcGen.setCreateForwardOne(_forwardOne);
-        modelSrcGen.setCreateReverseOne(_reverseOne);
-        modelSrcGen.setCreateReverseTwo(_reverseTwo);
-
-        modelSrcGen.setCreateSparseJacobian(true);
-        modelSrcGen.setCustomSparseJacobianElements(jacRow, jacCol);
-
-        modelSrcGen.setCreateSparseHessian(true);
-        modelSrcGen.setCustomSparseHessianElements(hessRow, hessCol);
-
-        modelSrcGen.setMultiThreading(true);
-
-        ModelLibraryCSourceGen<double> libSrcGen(modelSrcGen);
-        libSrcGen.setMultiThreading(_multithread);
-
-        SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(libSrcGen, "sources_" + _name + "_2");
-
-        DynamicModelLibraryProcessor<double> dmlp(libSrcGen, "cppad_cg_model_2");
-
-        GccCompiler<double> compiler;
-        prepareTestCompilerFlags(compiler);
-        if (libSrcGen.getMultiThreading() == MultiThreadingType::OPENMP) {
-            compiler.addCompileFlag("-fopenmp");
-            compiler.addCompileFlag("-pthread");
-            compiler.addCompileLibFlag("-fopenmp");
-
-#ifdef CPPAD_CG_SYSTEM_LINUX
-            // this is required because the OpenMP implementation in GCC causes a segmentation fault on dlclose
-            dmlp.getOptions() ["dlOpenMode"] = std::to_string(RTLD_NOW | RTLD_NODELETE);
-#endif
-        } else if (libSrcGen.getMultiThreading() == MultiThreadingType::PTHREADS) {
-            compiler.addCompileFlag("-pthread");
-        }
-
-        std::unique_ptr<DynamicLib<double>> dynamicLib = dmlp.createDynamicLibrary(compiler);
-        dynamicLib->setThreadPoolVerbose(this->verbose_);
-        dynamicLib->setThreadNumber(2);
-        dynamicLib->setThreadPoolDisabled(_multithreadDisabled);
-        dynamicLib->setThreadPoolSchedulerStrategy(_multithreadScheduler);
-        dynamicLib->setThreadPoolGuidedMaxWork(0.75);
-
-        /**
-         * test the library
-         */
-        std::unique_ptr<GenericModel<double>> model = dynamicLib->model(_name + "dynamic2");
-        ASSERT_TRUE(model != nullptr);
-
-        // dimensions
-        ASSERT_EQ(model->Domain(), fun.Domain());
-        ASSERT_EQ(model->Range(), fun.Range());
-
-        /**
-         */
-        std::vector<CGD> x2(x.size());
-        for (size_t i = 0; i < x.size(); i++) {
-            x2[i] = x[i];
-        }
-
-        std::vector<size_t> row, col;
-
-        // sparse Jacobian
-        std::vector<double> jacCGen;
-        model->SparseJacobian(x, p, jacCGen, row, col);
-        std::vector<CG<double> > jacSparse(row.size());
-
-        std::vector<CGD> jac = fun.Jacobian(x2);
-        for (size_t i = 0; i < row.size(); i++) {
-            jacSparse[i] = jac[row[i] * x.size() + col[i]];
-        }
-
-        ASSERT_TRUE(compareValues(jacCGen, jacSparse));
-
-        // sparse Hessian
-        std::vector<double> w(ay.size(), 1.0);
-        std::vector<double> hessCGen;
-        model->SparseHessian(x, p, w, hessCGen, row, col);
-        std::vector<CG<double> > hessSparse(row.size());
-
-        std::vector<CGD> w2(ay.size(), 1.0);
-        std::vector<CGD> hess = fun.Hessian(x2, w2);
-        for (size_t i = 0; i < row.size(); i++) {
-            hessSparse[i] = hess[row[i] * x.size() + col[i]];
-        }
-
-        ASSERT_TRUE(compareValues(hessCGen, hessSparse));
+    // sparse Hessian
+    void testHessian() {
+        this->testHessianResults(*_dynamicLib, *_model, *_fun, _xRun,  _parRun, !_hessRow.empty(), epsilonR, epsilonA);
     }
 
 };

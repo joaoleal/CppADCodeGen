@@ -81,7 +81,7 @@ public:
         return yOuter;
     }
 
-    virtual void TearDown() {
+    void TearDown() override {
         _dynamicLib.reset(nullptr);
         _dynamicLib2.reset(nullptr);
         _modelLib.reset(nullptr);
@@ -93,7 +93,7 @@ public:
         _fun2 = nullptr;
     }
 
-    virtual ~CppADCGDynamicAtomicNestedTest() {
+    ~CppADCGDynamicAtomicNestedTest() override {
         delete _atomicInnerModel;
         delete _fun;
         delete _fun2;
@@ -235,12 +235,12 @@ private:
                 tx[j * k1 + 1] = 1;
 
                 vector<CGD> y_pOrig = _fun2->Forward(1, x_pOrig);
-                vector<double> y_pOutter = modelLibOuter->ForwardOne(tx, pOuter);
+                vector<double> y_pOuter = modelLibOuter->ForwardOne(tx, pOuter);
 
                 x_pOrig[j] = 0;
                 tx[j * k1 + 1] = 0;
 
-                ASSERT_TRUE(compareValues(y_pOutter, y_pOrig, epsilonR, epsilonA));
+                ASSERT_TRUE(compareValues(y_pOuter, y_pOrig, epsilonR, epsilonA));
             }
         }
 
@@ -266,12 +266,12 @@ private:
                 wOrig[i] = 1;
 
                 vector<CGD> dwOrig = _fun2->Reverse(1, wOrig);
-                vector<double> dwOutter = modelLibOuter->ReverseOne(tx, pOuter, ty, w);
+                vector<double> dwOuter = modelLibOuter->ReverseOne(tx, pOuter, ty, w);
 
                 w[i] = 0;
                 wOrig[i] = 0;
 
-                ASSERT_TRUE(compareValues(dwOutter, dwOrig, epsilonR, epsilonA));
+                ASSERT_TRUE(compareValues(dwOuter, dwOrig, epsilonR, epsilonA));
             }
         }
         /**
@@ -303,7 +303,7 @@ private:
 
                 _fun2->Forward(1, x_pOrig);
                 vector<CGD> dwOrig = _fun2->Reverse(2, pyOrig);
-                vector<double> dwOutter = modelLibOuter->ReverseTwo(tx, pOuter, ty, py);
+                vector<double> dwOuter = modelLibOuter->ReverseTwo(tx, pOuter, ty, py);
 
                 x_pOrig[j] = 0;
                 tx[j * k1 + 1] = 0;
@@ -311,9 +311,9 @@ private:
                 // only compare second order information
                 // (location of the elements is different then if py.size() == m)
                 ASSERT_EQ(dwOrig.size(), n * k1);
-                ASSERT_EQ(dwOrig.size(), dwOutter.size());
+                ASSERT_EQ(dwOrig.size(), dwOuter.size());
                 for (size_t j2 = 0; j2 < n; j2++) {
-                    ASSERT_TRUE(nearEqual(dwOutter[j2 * k1], dwOrig[j2 * k1].getValue()));
+                    ASSERT_TRUE(nearEqual(dwOuter[j2 * k1], dwOrig[j2 * k1].getValue()));
                 }
             }
         }
@@ -328,7 +328,7 @@ private:
         /**
          * Jacobian sparsity
          */
-        const std::vector<bool> jacSparsityOrig = jacobianSparsity < std::vector<bool>, CGD > (*_fun2);
+        const std::vector<bool> jacSparsityOrig = jacobianSparsity<std::vector<bool>, CGD> (*_fun2);
         const std::vector<bool> jacSparsityOuter = modelLibOuter->JacobianSparsityBool();
 
         compareBoolValues(jacSparsityOrig, jacSparsityOuter);
@@ -354,7 +354,7 @@ private:
         /**
          * Hessian sparsity
          */
-        const std::vector<bool> hessSparsityOrig = hessianSparsity < std::vector<bool>, CGD > (*_fun2);
+        const std::vector<bool> hessSparsityOrig = hessianSparsity<std::vector<bool>, CGD> (*_fun2);
         const std::vector<bool> hessSparsityOuter = modelLibOuter->HessianSparsityBool();
 
         compareBoolValues(hessSparsityOrig, hessSparsityOuter);
@@ -563,7 +563,7 @@ private:
         GccCompiler<double> compiler2;
         prepareTestCompilerFlags(compiler2);
 
-        DynamicModelLibraryProcessor<double> p2(compDynHelp2, "outterModel");
+        DynamicModelLibraryProcessor<double> p2(compDynHelp2, "outerModel");
         _dynamicLib2 = p2.createDynamicLibrary(compiler2);
 
         /**

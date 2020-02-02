@@ -378,7 +378,7 @@ public:
     inline VectorBase Hessian(const VectorBase& x,
                               const VectorBase& p,
                               size_t i) {
-        CPPADCG_ASSERT_KNOWN(i < Range(), "Invalid equation index");
+        CPPADCG_ASSERT_KNOWN(i < Range(), "Invalid equation index")
 
         VectorBase w(Range());
         w[i] = 1.0;

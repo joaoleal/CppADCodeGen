@@ -607,8 +607,7 @@ public:
         _sources = sources;
     }
 
-    inline virtual ~LanguageLatex() {
-    }
+    inline virtual ~LanguageLatex() = default;
 
     /***************************************************************************
      *                               STATIC
@@ -747,10 +746,10 @@ protected:
         const std::vector<FuncArgument>& indArg = _nameGen->getIndependent();
         const std::vector<FuncArgument>& depArg = _nameGen->getDependent();
         const std::vector<FuncArgument>& tmpArg = _nameGen->getTemporary();
-        CPPADCG_ASSERT_KNOWN(indArg.size() > 0 && depArg.size() > 0,
-                             "There must be at least one dependent and one independent argument");
+        CPPADCG_ASSERT_KNOWN(!indArg.empty() && depArg.size() > 0,
+                             "There must be at least one dependent and one independent argument")
         CPPADCG_ASSERT_KNOWN(tmpArg.size() == 3,
-                             "There must be three temporary variables");
+                             "There must be three temporary variables")
 
         auxArrayName_ = tmpArg[1].name + "p";
 
@@ -767,7 +766,7 @@ protected:
                 if (type != CGOpCode::Inv && type != CGOpCode::InvPar && type != CGOpCode::LoopEnd) {
                     size_t varID = getVariableID(*node);
                     if (varID > 0) {
-                        std::map<size_t, size_t>::const_iterator it2 = _dependentIDs.find(varID);
+                        auto it2 = _dependentIDs.find(varID);
                         if (it2 == _dependentIDs.end()) {
                             _dependentIDs[getVariableID(*node)] = i;
                         } else {
@@ -857,7 +856,7 @@ protected:
              * Create the master latex file which inputs the other files
              */
             CPPADCG_ASSERT_KNOWN(tmpArg[0].array,
-                                 "The temporary variables must be saved in an array in order to generate multiple functions");
+                                 "The temporary variables must be saved in an array in order to generate multiple functions")
             printAlgorithmFileStart(_code);
             for (size_t i = 0; i < inputLatexFiles.size(); i++) {
                 _code << "\\input{" << inputLatexFiles[i] << "}" << _endline;
@@ -866,7 +865,7 @@ protected:
         }
 
         // dependent duplicates
-        if (dependentDuplicates.size() > 0) {
+        if (!dependentDuplicates.empty()) {
             _code << "% variable duplicates: " << dependentDuplicates.size() << _endline;
 
             checkEquationEnvStart();
@@ -1270,6 +1269,15 @@ protected:
             case CGOpCode::Sqrt:
             case CGOpCode::Tanh:
             case CGOpCode::Tan:
+#if CPPAD_USE_CPLUSPLUS_2011
+            case CGOpCode::Erf:
+            case CGOpCode::Erfc:
+            case CGOpCode::Asinh:
+            case CGOpCode::Acosh:
+            case CGOpCode::Atanh:
+            case CGOpCode::Expm1:
+            case CGOpCode::Log1p:
+#endif
                 printUnaryFunction(node);
                 break;
             case CGOpCode::AtomicForward: // atomicFunction.forward(q, p, vx, vy, tx, ty)
@@ -1433,6 +1441,29 @@ protected:
             case CGOpCode::Tan:
                 _code << "\\tan";
                 break;
+#if CPPAD_USE_CPLUSPLUS_2011
+            case CGOpCode::Erf:
+                _code << "\\operatorname{erf}";
+                break;
+            case CGOpCode::Erfc:
+                _code << "\\operatorname{erfc}";
+                break;
+            case CGOpCode::Asinh:
+                _code << "\\operatorname{arcsinh}";
+                break;
+            case CGOpCode::Acosh:
+                _code << "\\operatorname{arccosh}";
+                break;
+            case CGOpCode::Atanh:
+                _code << "\\operatorname{arctanh}";
+                break;
+            case CGOpCode::Expm1:
+                _code << "\\operatorname{expm1}";
+                break;
+            case CGOpCode::Log1p:
+                _code << "\\operatorname{log1p}";
+                break;
+#endif
             default:
                 throw CGException("Unknown function name for operation code '", op.getOperationType(), "'.");
         }
@@ -1827,7 +1858,7 @@ protected:
     virtual void printLoopStart(Node& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::LoopStart, "Invalid node type")
 
-        LoopStartOperationNode<Base>& lnode = static_cast<LoopStartOperationNode<Base>&> (node);
+        auto& lnode = static_cast<LoopStartOperationNode<Base>&> (node);
         _currentLoops.push_back(&lnode);
 
         const std::string& jj = *lnode.getIndex().getName();
@@ -1895,7 +1926,7 @@ protected:
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::IndexAssign, "Invalid node type")
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() > 0, "Invalid number of arguments for an index assignment operation")
 
-        IndexAssignOperationNode<Base>& inode = static_cast<IndexAssignOperationNode<Base>&> (node);
+        auto& inode = static_cast<IndexAssignOperationNode<Base>&> (node);
 
         checkEquationEnvStart();
 
@@ -1914,7 +1945,7 @@ protected:
 
         const std::vector<size_t>& info = node.getInfo();
 
-        IndexOperationNode<Base>& iterationIndexOp = static_cast<IndexOperationNode<Base>&> (*node.getArguments()[0].getOperation());
+        auto& iterationIndexOp = static_cast<IndexOperationNode<Base>&> (*node.getArguments()[0].getOperation());
         const std::string& index = *iterationIndexOp.getIndex().getName();
 
         checkEquationEnvStart();
@@ -2088,7 +2119,8 @@ protected:
                 return _COMP_OP_NE;
 
             default:
-                CPPAD_ASSERT_UNKNOWN(0);
+                CPPAD_ASSERT_UNKNOWN(0)
+                break;
         }
         throw CGException("Invalid comparison operator code"); // should never get here
     }
@@ -2115,6 +2147,15 @@ protected:
             case CGOpCode::Sign:
             case CGOpCode::Sinh:
             case CGOpCode::Sin:
+#if CPPAD_USE_CPLUSPLUS_2011
+            case CGOpCode::Erf:
+            case CGOpCode::Erfc:
+            case CGOpCode::Asinh:
+            case CGOpCode::Acosh:
+            case CGOpCode::Atanh:
+            case CGOpCode::Expm1:
+            case CGOpCode::Log1p:
+#endif
             case CGOpCode::Sqrt:
             case CGOpCode::Tanh:
             case CGOpCode::Tan:

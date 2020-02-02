@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -240,7 +241,7 @@ public:
         using namespace std;
         using namespace CppAD::cg::loops;
 
-        CPPADCG_ASSERT_UNKNOWN(hessSparsity_); // check that the sparsities have been evaluated
+        CPPADCG_ASSERT_UNKNOWN(hessSparsity_) // check that the sparsities have been evaluated
 
         size_t mo = dependentIndexes_.size();
         size_t m = getTapeDependentCount();
@@ -352,7 +353,7 @@ public:
         using namespace std;
         using namespace CppAD::cg::loops;
 
-        CPPADCG_ASSERT_UNKNOWN(hessSparsity_); // check that the sparsities have been evaluated
+        CPPADCG_ASSERT_UNKNOWN(hessSparsity_) // check that the sparsities have been evaluated
 
         std::vector<CGB> wNoLoop(getTapeDependentCount());
         std::vector<CGB> hessNoLoop;
@@ -363,7 +364,7 @@ public:
         std::vector<size_t> row, col;
         generateSparsityIndexes(noLoopEvalHessSparsity, row, col);
 
-        if (row.size() > 0) {
+        if (!row.empty()) {
             hessNoLoop.resize(row.size());
 
             for (size_t inl = 0; inl < dependentIndexes_.size(); inl++) {

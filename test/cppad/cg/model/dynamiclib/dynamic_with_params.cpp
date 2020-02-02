@@ -23,6 +23,16 @@ public:
     inline CppADCGDynamicTest1(bool verbose = false,
                                bool printValues = false) :
         CppADCGDynamicTest("dynamic_with_params", verbose, printValues) {
+
+        // independent variables
+        _xTape = {1, 1, 1};
+        _parTape = {2, 3};
+        _xRun = {1, 2, 1};
+        _parRun = {3, 4};
+
+        this->_forwardOne = false;
+        this->_reverseOne = false;
+        this->_reverseTwo = false;
     }
 
     std::vector<ADCGD> model(const std::vector<ADCGD>& ax,
@@ -44,33 +54,28 @@ using namespace CppAD;
 using namespace CppAD::cg;
 using namespace std;
 
-TEST_F(CppADCGDynamicTest1, DynamicCustomElements) {
-    // use a special object for source code generation
-    using CGD = CG<double>;
-    using ADCG = AD<CGD>;
+TEST_F(CppADCGDynamicTest1, ForwardZero1Assign) {
+    _maxAssignPerFunc = 1;
+    this->testForwardZero();
+}
 
-    // independent variables
-    std::vector<ADCG> ax(3);
-    ax[0] = 1;
-    ax[1] = 1;
-    ax[2] = 1;
+TEST_F(CppADCGDynamicTest1, ForwardZero) {
+    _maxAssignPerFunc = 1000;
+    this->testForwardZero();
+}
 
-    std::vector<ADCG> ap(2);
-    ap[0] = 2;
-    ap[1] = 3;
+TEST_F(CppADCGDynamicTest1, DenseJacobian) {
+    this->testDenseJacobian();
+}
 
-    std::vector<double> x(ax.size());
-    x[0] = 1;
-    x[1] = 2;
-    x[2] = 1;
+TEST_F(CppADCGDynamicTest1, DenseHessian) {
+    this->testDenseHessian();
+}
 
-    // parameters
-    std::vector<double> p(ap.size());
-    p[0] = 3;
-    p[1] = 4;
+TEST_F(CppADCGDynamicTest1, Jacobian) {
+    this->testJacobian();
+}
 
-    this->_forwardOne = false;
-    this->_reverseOne = false;
-    this->_reverseTwo = false;
-    this->testDynamicFull(ax, ap, x, p);
+TEST_F(CppADCGDynamicTest1, Hessian) {
+    this->testHessian();
 }

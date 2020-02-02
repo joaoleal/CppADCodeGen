@@ -2,8 +2,8 @@
 #define CPPAD_CG_LANGUAGE_DOT_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2016 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -325,10 +325,10 @@ protected:
         const std::vector<FuncArgument>& indArg = _nameGen->getIndependent();
         const std::vector<FuncArgument>& depArg = _nameGen->getDependent();
         const std::vector<FuncArgument>& tmpArg = _nameGen->getTemporary();
-        CPPADCG_ASSERT_KNOWN(indArg.size() > 0 && depArg.size() > 0,
-                             "There must be at least one dependent and one independent argument");
+        CPPADCG_ASSERT_KNOWN(indArg.size() > 0 && !depArg.empty(),
+                             "There must be at least one dependent and one independent argument")
         CPPADCG_ASSERT_KNOWN(tmpArg.size() == 3,
-                             "There must be three temporary variables");
+                             "There must be three temporary variables")
 
         /**
          * Determine the dependent variables that result from the same operations
@@ -394,7 +394,7 @@ protected:
         }
 
         // dependent duplicates
-        if (dependentDuplicates.size() > 0) {
+        if (!dependentDuplicates.empty()) {
             _code << "// variable duplicates: " << dependentDuplicates.size() << _endline;
 
             for (size_t index : dependentDuplicates) {
@@ -562,7 +562,7 @@ protected:
 
             } else if (getVariableID(var) < _minTemporaryVarID) {
                 // dependent variable
-                std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(getVariableID(var));
+                auto it = _dependentIDs.find(getVariableID(var));
                 CPPADCG_ASSERT_UNKNOWN(it != _dependentIDs.end())
 
                 size_t index = it->second;
@@ -782,6 +782,15 @@ protected:
             case CGOpCode::Sqrt:
             case CGOpCode::Tanh:
             case CGOpCode::Tan:
+#if CPPAD_USE_CPLUSPLUS_2011
+            case CGOpCode::Erf:
+            case CGOpCode::Erfc:
+            case CGOpCode::Asinh:
+            case CGOpCode::Acosh:
+            case CGOpCode::Atanh:
+            case CGOpCode::Expm1:
+            case CGOpCode::Log1p:
+#endif
                 return printUnaryFunction(node);
             case CGOpCode::AtomicForward: // atomicFunction.forward(q, p, vx, vy, tx, ty)
                 return printAtomicForwardOp(node);
@@ -1018,7 +1027,7 @@ protected:
 
     virtual std::string printSparseArrayCreationOp(OperationNode<Base>& op);
 
-    inline size_t printArrayCreationUsingLoop(const std::string arrayName,
+    inline size_t printArrayCreationUsingLoop(const std::string& arrayName,
                                               const OperationNode<Base>& array,
                                               size_t startj,
                                               const size_t* indexes);
@@ -1156,7 +1165,7 @@ protected:
     virtual std::string printLoopStart(OperationNode<Base>& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::LoopStart, "Invalid node type")
 
-        LoopStartOperationNode<Base>& lnode = static_cast<LoopStartOperationNode<Base>&> (node);
+        auto& lnode = static_cast<LoopStartOperationNode<Base>&> (node);
         _currentLoops.push_back(&lnode);
 
         /**
@@ -1254,7 +1263,7 @@ protected:
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::IndexAssign, "Invalid node type")
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() > 0, "Invalid number of arguments for an index assignment operation")
 
-        IndexAssignOperationNode<Base>& inode = static_cast<IndexAssignOperationNode<Base>&> (node);
+        auto& inode = static_cast<IndexAssignOperationNode<Base>&> (node);
 
         const IndexPattern& ip = inode.getIndexPattern();
         _ss.str("");
@@ -1283,7 +1292,7 @@ protected:
 
         const std::vector<size_t>& info = node.getInfo();
 
-        IndexOperationNode<Base>& iterationIndexOp = static_cast<IndexOperationNode<Base>&> (*node.getArguments()[0].getOperation());
+        auto& iterationIndexOp = static_cast<IndexOperationNode<Base>&> (*node.getArguments()[0].getOperation());
         const std::string& index = *iterationIndexOp.getIndex().getName();
 
         _ss.str("");
@@ -1407,7 +1416,9 @@ protected:
                 os << "≠";
                 return;
 
-            default: CPPAD_ASSERT_UNKNOWN(0);
+            default:
+                CPPAD_ASSERT_UNKNOWN(0)
+                break;
         }
         throw CGException("Invalid comparison operator code"); // should never get here
     }
@@ -1432,6 +1443,15 @@ protected:
             case CGOpCode::Sqrt:
             case CGOpCode::Tanh:
             case CGOpCode::Tan:
+#if CPPAD_USE_CPLUSPLUS_2011
+            case CGOpCode::Erf:
+            case CGOpCode::Erfc:
+            case CGOpCode::Asinh:
+            case CGOpCode::Acosh:
+            case CGOpCode::Atanh:
+            case CGOpCode::Expm1:
+            case CGOpCode::Log1p:
+#endif
                 return true;
             default:
                 return false;

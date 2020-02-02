@@ -13,7 +13,6 @@
  * Author: Joao Leal
  */
 #include <iosfwd>
-#include <vector>
 #include <cppad/cg.hpp>
 #include <cppad/cg/lang/latex/latex.hpp>
 
@@ -74,6 +73,7 @@ int main(void) {
 #ifdef PDFLATEX_COMPILER
     std::string dir = system::getWorkingDirectory();
 
-    system::callExecutable(PDFLATEX_COMPILER,{"-halt-on-error", "-shell-escape", system::createPath(dir, "latex_template.tex")});
+    system::callExecutable(PDFLATEX_COMPILER, {"-halt-on-error", "-shell-escape",
+                                               system::createPath({dir, "resources"}, "latex_template.tex")});
 #endif
 }

@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2016 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -52,7 +53,7 @@ template<class Base>
 std::string LanguageDot<Base>::printSparseArrayCreationOp(OperationNode<Base>& array) {
 
     const std::vector<size_t>& info = array.getInfo();
-    CPPADCG_ASSERT_KNOWN(info.size() > 0, "Invalid number of information elements for sparse array creation operation")
+    CPPADCG_ASSERT_KNOWN(!info.empty(), "Invalid number of information elements for sparse array creation operation")
 
     const std::vector<Argument<Base> >& args = array.getArguments();
     const size_t argSize = args.size();
@@ -87,7 +88,7 @@ std::string LanguageDot<Base>::printSparseArrayCreationOp(OperationNode<Base>& a
 }
 
 template<class Base>
-inline size_t LanguageDot<Base>::printArrayCreationUsingLoop(const std::string arrayName,
+inline size_t LanguageDot<Base>::printArrayCreationUsingLoop(const std::string& arrayName,
                                                              const OperationNode<Base>& array,
                                                              size_t starti,
                                                              const size_t* indexes) {

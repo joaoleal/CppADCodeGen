@@ -2,8 +2,8 @@
 #define CPPAD_CG_TEST_CPPADCGDYNAMICATOMICTEST_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -24,14 +24,16 @@ namespace cg {
 
 class CppADCGDynamicAtomicTest : public CppADCGTest {
 public:
-    using Base = CppADCGTest::Base;
-    using CGD = CppADCGTest::CGD;
-    using ADCGD = CppADCGTest::ADCGD;
+    using Super = CppADCGTest;
+    using Base = Super::Base;
+    using CGD = Super::CGD;
+    using ADCGD = Super::ADCGD;
 protected:
     const std::string _modelName;
     std::unique_ptr<ADFun<CGD>> _funInner; // inner model tape
     std::unique_ptr<ADFun<CGD>> _funOuter; // outer model tape with no atomics
     std::unique_ptr<ADFun<CGD>> _funOuterAtom; // outer model tape with atomics
+    std::unique_ptr<ADFun<Base>> _funBaseOuterAtom; // outer model tape with atomics
     std::unique_ptr<DynamicLib<Base>> _dynamicLib; // library for the inner model (in may also have the outer model)
     std::unique_ptr<DynamicLib<Base>> _dynamicLibOuter; // library for the outer model
     std::unique_ptr<GenericModel<Base>> _modelLib;
@@ -41,10 +43,8 @@ public:
     explicit CppADCGDynamicAtomicTest(std::string modelName,
                                       bool verbose = false,
                                       bool printValues = false) :
-        CppADCGTest(verbose, printValues),
-        _modelName(std::move(modelName)),
-        _funInner(nullptr),
-        _funOuter(nullptr) {
+            CppADCGTest(verbose, printValues),
+            _modelName(std::move(modelName)) {
         //this->verbose_ = true;
     }
 
@@ -64,25 +64,26 @@ public:
     }
 
     void TearDown() override {
+        // need to clear memory here because CppAD checks if there is any memory still in use
         _dynamicLib.reset();
         _dynamicLibOuter.reset();
         _modelLib.reset();
         _funInner.reset();
         _funOuter.reset();
         _funOuterAtom.reset();
+        _funBaseOuterAtom.reset();
         _atomFun.reset();
     }
 
-    virtual ~CppADCGDynamicAtomicTest() = default;
+    ~CppADCGDynamicAtomicTest() override = default;
 
-    /**
-     * Tests one compiled model used as an atomic function by an ADFun.
-     * The outer model method (modelOuter) is NOT used here!
-     * It uses z = g(x) = f(x).
-     */
-    void testADFunAtomicLibSimple(const CppAD::vector<Base>& x) {
-        CppAD::vector<Base> par;
-        testADFunAtomicLibSimple(x, par);
+    inline static CppAD::vector<Base> makeValues(size_t n) {
+        CppAD::vector<Base> x(n);
+
+        for (size_t j = 0; j < n; j++)
+            x[j] = j + 2;
+
+        return x;
     }
 
     /**
@@ -91,43 +92,25 @@ public:
      * It uses z = g(x) = f(x).
      */
     void testADFunAtomicLibSimple(const CppAD::vector<Base>& x,
-                                  const CppAD::vector<Base>& par) {
-        CppAD::vector<Base> xNorm(x.size());
-        for (size_t i = 0; i < xNorm.size(); i++)
-            xNorm[i] = 1.0;
-        CppAD::vector<Base> eqNorm;
-
-        testADFunAtomicLibSimple(x, par, xNorm, eqNorm);
-    }
-
-    /**
-     * Tests one compiled model used as an atomic function by an ADFun.
-     * The outer model method (modelOuter) is NOT used here!
-     * It uses z = g(x) = f(x).
-     */
-    void testADFunAtomicLibSimple(const CppAD::vector<Base>& x,
-                                  const CppAD::vector<Base>& par,
-                                  const CppAD::vector<Base>& xNorm,
-                                  const CppAD::vector<Base>& eqNorm,
+                                  const CppAD::vector<Base>& par = {},
+                                  const CppAD::vector<Base>& xNorm = {},
+                                  const CppAD::vector<Base>& eqNorm = {},
                                   Base epsilonR = 1e-14, Base epsilonA = 1e-14) {
-        ASSERT_EQ(x.size(), xNorm.size());
+        ASSERT_TRUE(xNorm.size() == 0 || x.size() == xNorm.size());
 
         using namespace CppAD;
         using namespace std;
         using CppAD::vector;
 
-        prepareAtomicLib(x, xNorm, eqNorm);
+        tapeInnerModel(x, par, xNorm, eqNorm);
+
+        unique_ptr<GenericModel<Base> > modelLib = compileInnerModel("");
 
         const size_t n = _funInner->Domain();
         const size_t m = _funInner->Range();
 
-        vector<AD<double> > ax(n);
-        for (size_t j = 0; j < n; j++)
-            ax[j] = x[j];
-
-        vector<AD<double> > ap(_funInner->size_dyn_par());
-        for (size_t j = 0; j < ap.size(); j++)
-            ap[j] = par[j];
+        vector<AD<double> > ax = makeADVector(x);
+        vector<AD<double> > ap = makeADVector(par);
 
         // declare independent variables and start tape recording
         size_t abort_op_index = 0;
@@ -137,7 +120,6 @@ public:
         vector<AD<double> > ay(m);
 
         // call user function and store CGAtomicLibModel(x) in au[0]
-        unique_ptr<GenericModel<Base> > modelLib = _dynamicLib->model(_modelName);
         CGAtomicGenericModel<double>& atomicfun = modelLib->asAtomic();
 
         atomicfun(ax, ay);
@@ -148,9 +130,7 @@ public:
         /**
          * Test zero order
          */
-        vector<CGD> xOrig(n);
-        for (size_t j = 0; j < n; j++)
-            xOrig[j] = x[j];
+        vector<CGD> xOrig = makeCGVector(x);
 
         vector<CGD> yOrig = _funInner->Forward(0, xOrig);
         vector<double> yInner = modelLib->ForwardZero(x, par);
@@ -267,9 +247,9 @@ public:
             ASSERT_EQ(dwOrig.size(), n * k1);
             ASSERT_EQ(dwOrig.size(), dwInner.size());
             ASSERT_EQ(dwOrig.size(), dwOuter.size());
-            for (size_t j = 0; j < n; j++) {
-                ASSERT_TRUE(nearEqual(dwInner[j * k1], dwOrig[j * k1].getValue()));
-                ASSERT_TRUE(nearEqual(dwOuter[j * k1], dwOrig[j * k1].getValue()));
+            for (size_t j2 = 0; j2 < n; j2++) {
+                ASSERT_TRUE(nearEqual(dwInner[j2 * k1], dwOrig[j2 * k1].getValue()));
+                ASSERT_TRUE(nearEqual(dwOuter[j2 * k1], dwOrig[j2 * k1].getValue()));
             }
         }
 
@@ -340,43 +320,28 @@ public:
      * It uses z = g(f(x)).
      */
     void testADFunAtomicLib(const CppAD::vector<Base>& x,
-                            const CppAD::vector<Base>& xNorm,
-                            const CppAD::vector<Base>& eqNorm,
+                            const CppAD::vector<Base>& par,
+                            const CppAD::vector<Base>& xNorm = {},
+                            const CppAD::vector<Base>& eqNorm = {},
                             Base epsilonR = 1e-14,
                             Base epsilonA = 1e-14) {
-        prepareAtomicLibAtomicLib(x, xNorm, eqNorm);
+        prepareAtomicLibAtomicLib(x, par, xNorm, eqNorm);
         ASSERT_TRUE(_modelLib != nullptr);
         ASSERT_TRUE(_funOuter != nullptr);
 
-        tapeOuterModelWithAtomic(x, xNorm, eqNorm);
+        auto atomic = [&](const std::vector<ADCGD>& ax,
+                          std::vector<ADCGD>& ay){
+            assert(_modelLib != nullptr);
+            assert(_modelLib->getName() ==  _modelName);
+            _atomFun.reset(new CGAtomicFun<double> (_modelLib->asAtomic(), x));
+
+            (*_atomFun)(ax, ay); // atomic function
+        };
+
+        tapeOuterModelWithAtomic(atomic, x, par, xNorm, eqNorm);
         ASSERT_TRUE(_funOuterAtom != nullptr);
 
-        testAtomicLibModelInCppAD(*_funOuter, *_funOuterAtom, x, epsilonR, epsilonA);
-    }
-
-    void testADFunAtomicLib(const CppAD::vector<Base>& x,
-                            Base epsilonR = 1e-14,
-                            Base epsilonA = 1e-14) {
-        CppAD::vector<Base> xNorm(x.size());
-        for (size_t i = 0; i < xNorm.size(); i++)
-            xNorm[i] = 1.0;
-        CppAD::vector<Base> eqNorm;
-
-        testADFunAtomicLib(x, xNorm, eqNorm, epsilonR, epsilonA);
-    }
-
-    /**
-     * Test 2 models in 2 dynamic libraries
-     */
-    void testAtomicLibAtomicLib(const CppAD::vector<Base>& x,
-                                Base epsilonR = 1e-14, Base epsilonA = 1e-14) {
-        CppAD::vector<Base> xNorm(x.size());
-        for (size_t i = 0; i < xNorm.size(); i++)
-            xNorm[i] = 1.0;
-        CppAD::vector<Base> eqNorm;
-        CppAD::vector<Base> par;
-
-        testAtomicLibAtomicLib(x, par, xNorm, eqNorm, epsilonR, epsilonA);
+        testAtomicLibModelInCppAD(*_funOuter, *_funOuterAtom, x, par, epsilonR, epsilonA);
     }
 
     /**
@@ -384,16 +349,16 @@ public:
      */
     void testAtomicLibAtomicLib(const CppAD::vector<Base>& x,
                                 const CppAD::vector<Base>& par,
-                                const CppAD::vector<Base>& xNorm,
-                                const CppAD::vector<Base>& eqNorm,
+                                const CppAD::vector<Base>& xNorm = {},
+                                const CppAD::vector<Base>& eqNorm = {},
                                 Base epsilonR = 1e-14, Base epsilonA = 1e-14) {
         using namespace std;
 
-        prepareAtomicLibAtomicLib(x, xNorm, eqNorm);
+        prepareAtomicLibAtomicLib(x, par, xNorm, eqNorm);
         ASSERT_TRUE(_modelLib != nullptr);
 
         unique_ptr<GenericModel<Base> > modelLibOuter = _dynamicLibOuter->model(_modelName + "_outer");
-        ASSERT_TRUE(modelLibOuter.get() != nullptr);
+        ASSERT_TRUE(modelLibOuter != nullptr);
 
         test2LevelAtomicLibModel(_modelLib.get(), modelLibOuter.get(),
                                  x, par, xNorm, eqNorm, epsilonR, epsilonA);
@@ -451,33 +416,26 @@ public:
      * Test the Jacobian and Hessian sparsity patterns computed directly with
      * the methods of the CGAbstractAtomicFun.
      */
-    void testAtomicSparsities(const CppAD::vector<Base>& x) {
+    void testAtomicSparsities(const CppAD::vector<Base>& x,
+                              const CppAD::vector<Base>& par) {
         CGAtomicFunBridge<double> atomicfun("innerModel", *_funInner, true);
 
         //const size_t n = _funInner->Domain();
         const size_t m = _funInner->Range();
 
-        CppAD::vector<CGD> xx(x.size());
-        for (size_t i = 0; i < x.size(); ++i) {
-            xx[i] = x[i];
-        }
+        CppAD::vector<CGD> xx = makeCGVector(x);
+        //CppAD::vector<CGD> p2 = makeCGVector(par);
 
-        CppAD::vector<std::set<size_t>> jacOrig;
-        CppAD::vector<std::set<size_t>> jacAtom;
-
-        jacOrig = jacobianForwardSparsitySet<CppAD::vector<std::set<size_t>>, CGD> (*_funInner);
-        jacAtom = atomicfun.jacobianForwardSparsitySet(m, xx);
+        auto jacOrig = jacobianForwardSparsitySet<CppAD::vector<std::set<size_t>>, CGD> (*_funInner);
+        auto jacAtom = atomicfun.jacobianForwardSparsitySet(m, xx);
         compareVectorSetValues(jacOrig, jacAtom);
 
         jacOrig = jacobianReverseSparsitySet<CppAD::vector<std::set<size_t>>, CGD> (*_funInner);
         jacAtom = atomicfun.jacobianReverseSparsitySet(m, xx);
         compareVectorSetValues(jacOrig, jacAtom);
 
-        CppAD::vector<std::set<size_t>> hessOrig;
-        CppAD::vector<std::set<size_t>> hessAtom;
-
-        hessOrig = hessianSparsitySet<CppAD::vector<std::set<size_t>>, CGD> (*_funInner);
-        hessAtom = atomicfun.hessianSparsitySet(m, xx);
+        auto hessOrig = hessianSparsitySet<CppAD::vector<std::set<size_t>>, CGD> (*_funInner);
+        auto hessAtom = atomicfun.hessianSparsitySet(m, xx);
         compareVectorSetValues(hessOrig, hessAtom);
     }
 
@@ -490,7 +448,7 @@ private:
                                   const CppAD::vector<Base>& xNorm,
                                   const CppAD::vector<Base>& eqNorm,
                                   Base epsilonR = 1e-14, Base epsilonA = 1e-14) {
-        ASSERT_EQ(x.size(), xNorm.size());
+        ASSERT_TRUE(xNorm.size() == 0 || x.size() == xNorm.size());
 
         using namespace CppAD;
         using namespace std;
@@ -502,8 +460,6 @@ private:
         const size_t m = _funOuter->Range();
 
         modelLibOuter->addAtomicFunction(modelLib->asAtomic());
-        //modelLibOuter->addExternalModel(*modelLib);
-
 
         /**
          * Test zero order
@@ -614,8 +570,8 @@ private:
             // (location of the elements is different then if py.size() == m)
             ASSERT_EQ(dwOrig.size(), n * k1);
             ASSERT_EQ(dwOrig.size(), dwOuter.size());
-            for (size_t j = 0; j < n; j++) {
-                ASSERT_TRUE(nearEqual(dwOuter[j * k1], dwOrig[j * k1].getValue()));
+            for (size_t j2 = 0; j2 < n; j2++) {
+                ASSERT_TRUE(nearEqual(dwOuter[j2 * k1], dwOrig[j2 * k1].getValue()));
             }
         }
 
@@ -671,6 +627,7 @@ private:
     void testAtomicLibModelInCppAD(ADFun<CGD>& funOuter,
                                    ADFun<CGD>& funOuterAtom, // with an atomic function
                                    const CppAD::vector<Base>& xx,
+                                   const CppAD::vector<Base>& par,
                                    Base epsilonR = 1e-14, Base epsilonA = 1e-14) {
         using namespace CppAD;
         using namespace std;
@@ -752,8 +709,8 @@ private:
             // only compare second order information
             ASSERT_EQ(dw.size(), n * k1);
             ASSERT_EQ(dw.size(), dwAtom.size());
-            for (size_t j = 0; j < n; j++) {
-                ASSERT_TRUE(nearEqual(dw[j * k1 + 1].getValue(), dwAtom[j * k1 + 1].getValue()));
+            for (size_t j2 = 0; j2 < n; j2++) {
+                ASSERT_TRUE(nearEqual(dw[j2 * k1 + 1].getValue(), dwAtom[j2 * k1 + 1].getValue()));
             }
         }
 
@@ -825,7 +782,7 @@ private:
                                            const std::vector<std::set<size_t> >& jacOuterSpar,
                                            const std::vector<std::set<size_t> >& hessOuterSpar,
                                            Base epsilonR = 1e-14, Base epsilonA = 1e-14) {
-        ASSERT_EQ(x.size(), xNorm.size());
+        ASSERT_TRUE(xNorm.size() == 0 || x.size() == xNorm.size());
 
         using namespace CppAD;
         using namespace std;
@@ -904,109 +861,20 @@ private:
         ASSERT_TRUE(compareValues<double>(hessOuter, hessOrig, epsilonR, epsilonA));
     }
 
-    void prepareAtomicLib(const CppAD::vector<Base>& x,
-                          const CppAD::vector<Base>& xNorm,
-                          const CppAD::vector<Base>& eqNorm) {
-        const size_t n = x.size();
-
-        // independent variables
-        std::vector<ADCGD> ax(n);
-        for (size_t j = 0; j < n; j++)
-            ax[j] = x[j];
-
-        // parameters
-        std::vector<ADCGD> ap;
-
-        size_t abort_op_index = 0;
-        bool record_compare = true;
-        CppAD::Independent(ax, abort_op_index, record_compare, ap);
-
-        for (size_t j = 0; j < n; j++)
-            ax[j] *= xNorm[j];
-
-        /**
-         * create the CppAD tape as usual
-         */
-        std::vector<ADCGD> ay = model(ax, ap);
-
-        if (eqNorm.size() > 0) {
-            ASSERT_EQ(ay.size(), eqNorm.size());
-            for (size_t i = 0; i < ay.size(); i++)
-                ay[i] /= eqNorm[i];
-        }
-
-        // create f: U -> Z and vectors used for derivative calculations
-        _funInner.reset(new ADFun<CGD>());
-        _funInner->Dependent(ay);
-
-        /**
-         * Create the dynamic library
-         * (generate and compile source code)
-         */
-        ModelCSourceGen<double> compHelp(*_funInner, _modelName);
-
-        compHelp.setCreateForwardZero(true);
-        compHelp.setCreateForwardOne(true);
-        compHelp.setCreateReverseOne(true);
-        compHelp.setCreateReverseTwo(true);
-
-        ModelLibraryCSourceGen<double> compDynHelp(compHelp);
-        compDynHelp.setVerbose(this->verbose_);
-
-        DynamicModelLibraryProcessor<double> p(compDynHelp);
-
-        GccCompiler<double> compiler;
-        prepareTestCompilerFlags(compiler);
-        compiler.setSourcesFolder("sources_atomiclib_" + _modelName);
-        compiler.setSaveToDiskFirst(true);
-        _dynamicLib = p.createDynamicLibrary(compiler);
-    }
-
     virtual void prepareAtomicLibAtomicLib(const CppAD::vector<Base>& x,
+                                           const CppAD::vector<Base>& par,
                                            const CppAD::vector<Base>& xNorm,
                                            const CppAD::vector<Base>& eqNorm) {
         using CppAD::vector;
 
-        const size_t n = x.size();
+        tapeInnerModel(x, par, xNorm, eqNorm);
 
-        // independent variables
-        std::vector<ADCGD> ax(n);
-        for (size_t j = 0; j < n; j++)
-            ax[j] = x[j];
-
-        // parameters
-        std::vector<ADCGD> ap;
-
-        size_t abort_op_index = 0;
-        bool record_compare = true;
-        CppAD::Independent(ax, abort_op_index, record_compare, ap);
-
-        for (size_t j = 0; j < n; j++)
-            ax[j] *= xNorm[j];
-
-        /**
-         * create the CppAD tape as usual
-         */
-        std::vector<ADCGD> ay = model(ax, ap);
-
-        if (eqNorm.size() > 0) {
-            ASSERT_EQ(ay.size(), eqNorm.size());
-            for (size_t i = 0; i < ay.size(); i++)
-                ay[i] /= eqNorm[i];
-        }
-
-        // create f: U -> Z and vectors used for derivative calculations
-        _funInner.reset(new ADFun<CGD>());
-        _funInner->Dependent(ay);
+        const size_t m = _funInner->Range();
 
         /**
          * Create the dynamic library model
          */
-        ModelCSourceGen<double> cSourceInner(*_funInner, _modelName);
-        cSourceInner.setCreateForwardZero(true);
-        cSourceInner.setCreateForwardOne(true);
-        cSourceInner.setCreateReverseOne(true);
-        cSourceInner.setCreateReverseTwo(true);
+        auto cSourceInner = prepareInnerModelCompilation();
 
         /**
          * Create the dynamic library
@@ -1017,7 +885,7 @@ private:
         compiler1.setSourcesFolder("sources_atomiclibatomiclib_" + _modelName);
         compiler1.setSaveToDiskFirst(true);
 
-        ModelLibraryCSourceGen<double> compDynHelp(cSourceInner);
+        ModelLibraryCSourceGen<double> compDynHelp(*cSourceInner);
         compDynHelp.setVerbose(this->verbose_);
 
         DynamicModelLibraryProcessor<double> p(compDynHelp, "innerModel");
@@ -1028,19 +896,19 @@ private:
          * Second compiled model
          */
         // independent variables
-        std::vector<ADCGD> ax2(n);
-        for (size_t j = 0; j < n; j++)
-            ax2[j] = x[j];
+        std::vector<ADCGD> ax2 = makeADCGVector(x);
 
         // parameters
-        std::vector<ADCGD> ap2;
+        std::vector<ADCGD> ap2 = makeADCGVector(par);
 
+        size_t abort_op_index = 0;
+        bool record_compare = true;
         CppAD::Independent(ax2, abort_op_index, record_compare, ap2);
 
         CGAtomicGenericModel<Base>& innerAtomicFun = _modelLib->asAtomic();
         CGAtomicFun<Base> cgInnerAtomicFun(innerAtomicFun, std::vector<double>(_modelLib->Domain()), true); // required for taping
 
-        std::vector<ADCGD> ZZ(ay.size());
+        std::vector<ADCGD> ZZ(m);
         cgInnerAtomicFun(ax2, ZZ);
         std::vector<ADCGD> Z2 = modelOuter(ZZ, ap2);
 
@@ -1076,86 +944,44 @@ private:
         /**
          * tape the model without atomics
          */
-        tapeOuterModel(x, xNorm, eqNorm);
-    }
-
-    virtual void prepareAtomicLibModelBridge(const CppAD::vector<Base>& x,
-                                             const CppAD::vector<Base>& par,
-                                             const CppAD::vector<Base>& xNorm,
-                                             const CppAD::vector<Base>& eqNorm) {
-        std::vector<std::set<size_t> > jacInner, hessInner;
-        std::vector<std::set<size_t> > jacOuter, hessOuter;
-        prepareAtomicLibModelBridge(x, par, xNorm, eqNorm,
-                                    jacInner, hessInner,
-                                    jacOuter, hessOuter,
-                                    true);
+        tapeOuterModel(x, par, xNorm, eqNorm);
     }
 
     virtual void prepareAtomicLibModelBridge(const CppAD::vector<Base>& x,
                                              const CppAD::vector<Base>& par,
                                              const CppAD::vector<Base>& xNorm,
                                              const CppAD::vector<Base>& eqNorm,
-                                             const std::vector<std::set<size_t> >& jacInner,
-                                             const std::vector<std::set<size_t> >& hessInner,
-                                             const std::vector<std::set<size_t> >& jacOuter,
-                                             const std::vector<std::set<size_t> >& hessOuter,
-                                             bool createOuterReverse2) {
-        const size_t n = x.size();
+                                             const std::vector<std::set<size_t> >& jacInner = {},
+                                             const std::vector<std::set<size_t> >& hessInner = {},
+                                             const std::vector<std::set<size_t> >& jacOuter = {},
+                                             const std::vector<std::set<size_t> >& hessOuter = {},
+                                             bool createOuterReverse2 = true) {
 
-        // independent variables
-        std::vector<ADCGD> ax(n);
-        for (size_t j = 0; j < n; j++)
-            ax[j] = x[j];
+        tapeInnerModel(x, par, xNorm, eqNorm);
 
-        std::vector<ADCGD> ap(par.size());
-        for (size_t j = 0; j < ap.size(); j++)
-            ap[j] = par[j];
-
-        size_t abort_op_index = 0;
-        bool record_compare = true;
-        CppAD::Independent(ax, abort_op_index, record_compare, ap);
-
-        for (size_t j = 0; j < n; j++)
-            ax[j] *= xNorm[j];
-
-        /**
-         * create the CppAD tape as usual
-         */
-        std::vector<ADCGD> ay = model(ax, ap);
-
-        if (eqNorm.size() > 0) {
-            ASSERT_EQ(ay.size(), eqNorm.size());
-            for (size_t i = 0; i < ay.size(); i++)
-                ay[i] /= eqNorm[i];
-        }
-
-        // create f: U -> Z and vectors used for derivative calculations
-        _funInner.reset(new ADFun<CGD>());
-        _funInner->Dependent(ay);
+        const size_t m = _funInner->Range();
+        const size_t n = _funInner->Domain();
 
         /**
          * Create the dynamic library model
          */
-        ModelCSourceGen<double> cSourceInner(*_funInner, _modelName);
-        if (!jacInner.empty()) {
-            cSourceInner.setCustomSparseJacobianElements(jacInner);
-        }
-        if (!hessInner.empty()) {
-            cSourceInner.setCustomSparseHessianElements(hessInner);
-        }
+
+        auto cSourceInner = prepareInnerModelCompilation(jacInner, hessInner);
 
         /**
          * Second compiled model
          */
         // independent variables
-        std::vector<ADCGD> u2(n);
+        std::vector<ADCGD> ax(n);
         for (size_t j = 0; j < n; j++)
-            u2[j] = x[j];
+            ax[j] = x[j];
 
         // parameters
         std::vector<ADCGD> ap2;
 
-        CppAD::Independent(u2, abort_op_index, record_compare, ap2);
+        size_t abort_op_index = 0;
+        bool record_compare = true;
+        CppAD::Independent(ax, abort_op_index, record_compare, ap2);
 
         CGAtomicFunBridge<double> atomicfun(_modelName, *_funInner, true);
         if (!jacInner.empty()) {
@@ -1165,21 +991,15 @@ private:
             atomicfun.setCustomSparseHessianElements(hessInner);
         }
 
-        std::vector<ADCGD> ZZ(ay.size());
-        atomicfun(u2, ZZ);
-        std::vector<ADCGD> Z2 = modelOuter(ZZ, ap2);
+        std::vector<ADCGD> ay(m);
+        atomicfun(ax, ay);
+        std::vector<ADCGD> az = modelOuter(ay, ap2);
 
-        // create f: U2 -> Z2
+        // create f: ax -> az
         ADFun<CGD> fun2;
-        fun2.Dependent(Z2);
+        fun2.Dependent(az);
 
         ModelCSourceGen<double> cSourceOuter(fun2, _modelName + "_outer");
-
-        cSourceInner.setCreateForwardZero(true);
-        cSourceInner.setCreateForwardOne(true);
-        cSourceInner.setCreateReverseOne(true);
-        cSourceInner.setCreateReverseTwo(true);
-        //cSourceInner.setCreateSparseHessian(true); //not really required
 
         cSourceOuter.setCreateForwardZero(true);
         cSourceOuter.setCreateForwardOne(true);
@@ -1200,7 +1020,7 @@ private:
          * Create the dynamic library
          * (generate and compile source code)
          */
-        ModelLibraryCSourceGen<double> compDynHelp(cSourceInner, cSourceOuter);
+        ModelLibraryCSourceGen<double> compDynHelp(*cSourceInner, cSourceOuter);
         compDynHelp.setVerbose(this->verbose_);
 
         std::string folder = std::string("sources_atomiclibmodelbridge_") + (createOuterReverse2 ? "rev2_" : "dir_") + _modelName;
@@ -1216,10 +1036,50 @@ private:
         /**
          * tape the model without atomics
          */
-        tapeOuterModel(x, xNorm, eqNorm);
+        tapeOuterModel(x, par, xNorm, eqNorm);
+    }
+
+protected:
+    void tapeInnerModel(const CppAD::vector<Base>& x,
+                        const CppAD::vector<Base>& par,
+                        const CppAD::vector<Base>& xNorm,
+                        const CppAD::vector<Base>& eqNorm) {
+        const size_t n = x.size();
+
+        // independent variables
+        std::vector<ADCGD> ax(n);
+        for (size_t j = 0; j < n; j++)
+            ax[j] = x[j];
+
+        std::vector<ADCGD> ap;
+
+        size_t abort_op_index = 0;
+        bool record_compare = true;
+        CppAD::Independent(ax, abort_op_index, record_compare, ap);
+
+        if (xNorm.size() > 0) {
+            for (size_t j = 0; j < n; j++)
+                ax[j] *= xNorm[j];
+        }
+
+        /**
+         * create the CppAD tape as usual
+         */
+        std::vector<ADCGD> ay = model(ax, ap);
+
+        if (eqNorm.size() > 0) {
+            ASSERT_EQ(ay.size(), eqNorm.size());
+            for (size_t i = 0; i < ay.size(); i++)
+                ay[i] /= eqNorm[i];
+        }
+
+        // create f: U -> ay and vectors used for derivative calculations
+        _funInner.reset(new ADFun<CGD>());
+        _funInner->Dependent(ay);
     }
 
     void tapeOuterModel(const CppAD::vector<Base>& x,
+                        const CppAD::vector<Base>& par,
                         const CppAD::vector<Base>& xNorm,
                         const CppAD::vector<Base>& eqNorm) {
         const size_t n = x.size();
@@ -1236,71 +1096,122 @@ private:
         bool record_compare = true;
         CppAD::Independent(ax, abort_op_index, record_compare, ap);
 
-        for (size_t j = 0; j < n; j++)
-            ax[j] *= xNorm[j];
+        if (xNorm.size() > 0) {
+            for (size_t j = 0; j < n; j++)
+                ax[j] *= xNorm[j];
+        }
 
         /**
          * create the CppAD tape as usual
          */
-        std::vector<ADCGD> yInner = model(ax, ap);
+        std::vector<ADCGD> ay = model(ax, ap);
         if (eqNorm.size() > 0) {
-            ASSERT_EQ(yInner.size(), eqNorm.size());
-            for (size_t i = 0; i < yInner.size(); i++)
-                yInner[i] /= eqNorm[i];
+            ASSERT_EQ(ay.size(), eqNorm.size());
+
+            if (eqNorm.size() > 0) {
+                for (size_t i = 0; i < ay.size(); i++)
+                    ay[i] /= eqNorm[i];
+            }
         }
 
-        std::vector<ADCGD> yOuter = modelOuter(yInner, ap);
+        std::vector<ADCGD> az = modelOuter(ay, ap);
 
-        // create f: U -> Z2
+        // create f: ax -> az
         _funOuter.reset(new ADFun<CGD>());
-        _funOuter->Dependent(yOuter);
+        _funOuter->Dependent(az);
     }
 
-    void tapeOuterModelWithAtomic(const CppAD::vector<Base>& x,
+    template<class Atomic>
+    void tapeOuterModelWithAtomic(Atomic atomic,
+                                  const CppAD::vector<Base>& x,
+                                  const CppAD::vector<Base>& par,
                                   const CppAD::vector<Base>& xNorm,
                                   const CppAD::vector<Base>& eqNorm) {
         const size_t n = _modelLib->Domain();
         const size_t m = _modelLib->Range();
 
         // independent variables
-        std::vector<ADCGD> ax(n);
-        for (size_t j = 0; j < n; j++)
-            ax[j] = x[j];
+        std::vector<ADCGD> ax = makeADCGVector(x);
 
         // parameters
-        std::vector<ADCGD> ap;
+        std::vector<ADCGD> ap = makeADCGVector(par);
 
         size_t abort_op_index = 0;
         bool record_compare = true;
         CppAD::Independent(ax, abort_op_index, record_compare, ap);
 
-        for (size_t j = 0; j < n; j++)
-            ax[j] *= xNorm[j];
-
+        if (xNorm.size() > 0) {
+            for (size_t j = 0; j < n; j++) {
+                ax[j] *= xNorm[j];
+            }
+        }
         /**
          * create the CppAD tape as usual
          */
-        std::vector<ADCGD> yInner(m);
+        std::vector<ADCGD> ay(m);
 
-        // call user function and store CGAtomicLibModel(x) in au[0]
-        assert(_modelLib != nullptr);
-        assert(_modelLib->getName() ==  _modelName);
-        _atomFun.reset(new CGAtomicFun<double> (_modelLib->asAtomic(), x));
-        //CGAtomicGenericModel<double>& atomicfun = _modelLib->asAtomic();
-
-        (*_atomFun)(ax, yInner); // atomic function
+        atomic(ax, ay); // atomic function
 
         if (eqNorm.size() > 0) {
-            ASSERT_EQ(yInner.size(), eqNorm.size());
-            for (size_t i = 0; i < yInner.size(); i++)
-                yInner[i] /= eqNorm[i];
+            ASSERT_EQ(ay.size(), eqNorm.size());
+            for (size_t i = 0; i < ay.size(); i++)
+                ay[i] /= eqNorm[i];
         }
 
-        std::vector<ADCGD> yOuter = modelOuter(yInner, ap);
+        std::vector<ADCGD> az = modelOuter(ay, ap);
 
-        // create f: ax -> yOuter
+        // create f: ax -> az
         _funOuterAtom.reset(new ADFun<CGD>());
-        _funOuterAtom->Dependent(yOuter);
+        _funOuterAtom->Dependent(az);
+    }
+
+    std::unique_ptr<ModelCSourceGen<double>>
+    prepareInnerModelCompilation(const std::vector<std::set<size_t> >& jacInner = {},
+                                 const std::vector<std::set<size_t> >& hessInner = {}) {
+        /**
+         * Create the dynamic library model for the inner model
+         */
+        std::unique_ptr<ModelCSourceGen<double>> cSourceInner(new ModelCSourceGen<double>(*_funInner, _modelName));
+        cSourceInner->setCreateForwardZero(true);
+        cSourceInner->setCreateForwardOne(true);
+        cSourceInner->setCreateReverseOne(true);
+        cSourceInner->setCreateReverseTwo(true);
+        cSourceInner->setCreateSparseJacobian(true);
+        cSourceInner->setCreateSparseHessian(true);
+
+        if (!jacInner.empty()) {
+            cSourceInner->setCustomSparseJacobianElements(jacInner);
+        }
+        if (!hessInner.empty()) {
+            cSourceInner->setCustomSparseHessianElements(hessInner);
+        }
+
+        return cSourceInner;
+    }
+
+    std::unique_ptr<GenericModel<double>> compileInnerModel(const std::string& folderNamePrefix,
+                                                            const std::vector<std::set<size_t> >& jacInner = {},
+                                                            const std::vector<std::set<size_t> >& hessInner = {}) {
+
+        auto cSourceInner = prepareInnerModelCompilation(jacInner, hessInner);
+        /**
+         * Create the dynamic library
+         * (generate and compile source code)
+         */
+        ModelLibraryCSourceGen<double> libSrcGen(*cSourceInner);
+        libSrcGen.setVerbose(this->verbose_);
+
+        std::string folder = std::string("sources_inner_model") + folderNamePrefix + _modelName;
+
+        DynamicModelLibraryProcessor<double> p(libSrcGen);
+
+        GccCompiler<double> compiler;
+        prepareTestCompilerFlags(compiler);
+        compiler.setSourcesFolder(folder);
+        compiler.setSaveToDiskFirst(true);
+        _dynamicLib = p.createDynamicLibrary(compiler);
+
+        return _dynamicLib->model(_modelName);
     }
 
 };

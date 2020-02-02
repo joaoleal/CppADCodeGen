@@ -2,8 +2,8 @@
 #define CPPAD_CG_EVALUATOR_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -299,7 +299,7 @@ protected:
 
     inline std::vector<ActiveOut>& evalArrayCreationOperation(const OperationNode<ScalarIn>& node) {
 
-        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::ArrayCreation, "Invalid array creation operation")
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::ArrayCreation, "Invalid array creation operation");
         CPPADCG_ASSERT_KNOWN(node.getHandlerPosition() < handler_.getManagedNodesCount(), "this node is not managed by the code handler")
 
         // check if this node was previously determined
@@ -324,7 +324,7 @@ protected:
 
     inline std::vector<ActiveOut>& evalSparseArrayCreationOperation(const OperationNode<ScalarIn>& node) {
 
-        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::SparseArrayCreation, "Invalid array creation operation")
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::SparseArrayCreation, "Invalid array creation operation");
         CPPADCG_ASSERT_KNOWN(node.getHandlerPosition() < handler_.getManagedNodesCount(), "this node is not managed by the code handler")
 
         // check if this node was previously determined
@@ -534,8 +534,8 @@ protected:
         const std::vector<ArgIn>& args = node.getArguments();
         const std::vector<size_t>& info = node.getInfo();
         CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for array element")
-        CPPADCG_ASSERT_KNOWN(args[0].getOperation() != nullptr, "Invalid argument for array element")
-        CPPADCG_ASSERT_KNOWN(args[1].getOperation() != nullptr, "Invalid argument for array element")
+        CPPADCG_ASSERT_KNOWN(args[0].getOperation() != nullptr, "Invalid argument for array element");
+        CPPADCG_ASSERT_KNOWN(args[1].getOperation() != nullptr, "Invalid argument for array element");
         CPPADCG_ASSERT_KNOWN(info.size() == 1, "Invalid number of information data for array element")
         size_t index = info[0];
         std::vector<ActiveOut>& array = this->evalArrayCreationOperation(*args[0].getOperation()); // array creation

@@ -23,7 +23,11 @@ public:
 
     explicit CppADCGDynamicTest1(bool verbose = false,
                                  bool printValues = false) :
-        CppADCGDynamicTest("dynamic_cond_exp", verbose, printValues) {
+            CppADCGDynamicTest("dynamic_cond_exp", verbose, printValues) {
+        // independent variables
+        _xTape = {1, 1, 1, 1, 1, 1, 1};
+        _xRun = {1, 2, 1, 1, 1, 1, 1};
+        _maxAssignPerFunc = 10000;
     }
 
     std::vector<ADCGD> model(const std::vector<ADCGD>& x,
@@ -133,30 +137,22 @@ TEST_F(CppADCGDynamicTest1, DynamicCondExpCustom) {
 }
 #endif
 
+TEST_F(CppADCGDynamicTest1, ForwardZero) {
+    this->testForwardZero();
+}
 
-TEST_F(CppADCGDynamicTest1, DynamicCondExpFull) {
-    // use a special object for source code generation
-    using CGD = CG<double>;
-    using ADCG = AD<CGD>;
+TEST_F(CppADCGDynamicTest1, DenseJacobian) {
+    this->testDenseJacobian();
+}
 
-    // independent variables
-    std::vector<ADCG> u(7);
-    u[0] = 1;
-    u[1] = 1;
-    u[2] = 1;
-    u[3] = 1;
-    u[4] = 1;
-    u[5] = 1;
-    u[6] = 1;
+TEST_F(CppADCGDynamicTest1, DenseHessian) {
+    this->testDenseHessian();
+}
 
-    std::vector<double> x(u.size());
-    x[0] = 1;
-    x[1] = 2;
-    x[2] = 1;
-    x[3] = 1;
-    x[4] = 1;
-    x[5] = 1;
-    x[6] = 1;
+TEST_F(CppADCGDynamicTest1, Jacobian) {
+    this->testJacobian();
+}
 
-    this->testDynamicFull(u, x, 10000);
+TEST_F(CppADCGDynamicTest1, Hessian) {
+    this->testHessian();
 }

@@ -4,6 +4,7 @@
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2014 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -21,7 +22,7 @@ namespace cg {
 
 template<class Base>
 void LanguageLatex<Base>::printArrayCreationOp(OperationNode<Base>& array) {
-    //CPPADCG_ASSERT_KNOWN(array.getArguments().size() > 0, "Invalid number of arguments for array creation operation"); // parameter array can be empty
+    //CPPADCG_ASSERT_KNOWN(array.getArguments().size() > 0, "Invalid number of arguments for array creation operation") // parameter array can be empty
     const size_t id = getVariableID(array);
     const std::vector<Argument<Base> >& args = array.getArguments();
     const size_t argSize = args.size();
@@ -212,7 +213,7 @@ inline size_t LanguageLatex<Base>::printArrayCreationUsingLoop(size_t startPos,
                 return starti; // cannot determine consecutive elements
             }
 
-            auto* refLIp = dynamic_cast<LinearIndexPattern*> (refIp);
+            auto* refLIp = static_cast<LinearIndexPattern*> (refIp);
 
             for (; i < argSize; i++) {
                 if (isSameArgument(args[i], tmpArrayValues[startPos + i]))
@@ -232,7 +233,7 @@ inline size_t LanguageLatex<Base>::printArrayCreationUsingLoop(size_t startPos,
                 if (ip->getType() != IndexPatternType::Linear) {
                     break; // different pattern type
                 }
-                const auto* lIp = dynamic_cast<const LinearIndexPattern*> (ip);
+                const auto* lIp = static_cast<const LinearIndexPattern*> (ip);
                 if (refLIp->getLinearSlopeDx() != lIp->getLinearSlopeDx() ||
                     refLIp->getLinearSlopeDy() != lIp->getLinearSlopeDy() ||
                     refLIp->getXOffset() != lIp->getXOffset() ||

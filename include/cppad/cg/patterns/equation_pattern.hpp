@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -230,8 +231,7 @@ public:
 
     }
 
-    virtual ~EquationPattern() {
-    }
+    virtual ~EquationPattern() = default;
 
 private:
 

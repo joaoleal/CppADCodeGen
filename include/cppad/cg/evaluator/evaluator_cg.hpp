@@ -2,8 +2,8 @@
 #define CPPAD_CG_EVALUATOR_CG_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2016 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -133,7 +133,7 @@ protected:
      */
     inline ActiveOut evalPrint(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for print()");
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for print()")
         ActiveOut out(this->evalArg(args, 0));
 
         if (printOutPriOperations_) {
@@ -159,7 +159,7 @@ protected:
     void evalAtomicOperation(const NodeIn& node) {
         CGOpCode op = node.getOperationType();
         CPPADCG_ASSERT_KNOWN(op == CGOpCode::AtomicForward || op == CGOpCode::AtomicReverse,
-                             "Invalid operation type");
+                             "Invalid operation type")
 
         // check if this node was previously determined
         if (evals_[node] != nullptr) {
@@ -169,11 +169,11 @@ protected:
         const std::vector<size_t>& info = node.getInfo();
         const std::vector<Argument<ScalarIn> >& inArgs = node.getArguments();
 
-        CPPADCG_ASSERT_KNOWN(info.size() == 3, "Invalid number of information data for atomic operation");
+        CPPADCG_ASSERT_KNOWN(info.size() == 3, "Invalid number of information data for atomic operation")
         size_t p = info[2];
         size_t p1 = p + 1;
 
-        CPPADCG_ASSERT_KNOWN(inArgs.size() == 2 * p1 + 1, "Invalid number of information data for atomic operation");
+        CPPADCG_ASSERT_KNOWN(inArgs.size() == 2 * p1 + 1, "Invalid number of information data for atomic operation")
 
         if (outHandler_ == nullptr) {
             throw CGException("Evaluator is unable to determine the new CodeHandler for an atomic operation");
@@ -187,7 +187,7 @@ protected:
 
         for (size_t i = 0; i < inArgs.size(); i++) {
             auto* a = inArgs[i].getOperation();
-            CPPADCG_ASSERT_KNOWN(a != nullptr, "Invalid argument for atomic operation");
+            CPPADCG_ASSERT_KNOWN(a != nullptr, "Invalid argument for atomic operation")
 
             outArgs[i] = asArgument(makeArray(*a, outVals[i], valuesDefined, allParameters));
         }
@@ -247,10 +247,10 @@ protected:
 
         const std::vector<ArgIn>& args = node.getArguments();
         const std::vector<size_t>& info = node.getInfo();
-        CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for array element");
-        CPPADCG_ASSERT_KNOWN(args[0].getOperation() != nullptr, "Invalid argument for array element");
-        CPPADCG_ASSERT_KNOWN(args[1].getOperation() != nullptr, "Invalid argument for array element");
-        CPPADCG_ASSERT_KNOWN(info.size() == 1, "Invalid number of information data for array element");
+        CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for array element")
+        CPPADCG_ASSERT_KNOWN(args[0].getOperation() != nullptr, "Invalid argument for array element")
+        CPPADCG_ASSERT_KNOWN(args[1].getOperation() != nullptr, "Invalid argument for array element")
+        CPPADCG_ASSERT_KNOWN(info.size() == 1, "Invalid number of information data for array element")
         size_t index = info[0];
 
         ArgOut arrayArg = asArgument(makeArray(*args[0].getOperation()));
@@ -301,8 +301,8 @@ protected:
     }
 
     inline ActiveOut makeDenseArray(const NodeIn& node) {
-        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::ArrayCreation, "Invalid array creation operation");
-        CPPADCG_ASSERT_KNOWN(node.getHandlerPosition() < this->handler_.getManagedNodesCount(), "this node is not managed by the code handler");
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::ArrayCreation, "Invalid array creation operation")
+        CPPADCG_ASSERT_KNOWN(node.getHandlerPosition() < this->handler_.getManagedNodesCount(), "this node is not managed by the code handler")
 
         // check if this node was previously determined
         if (evals_[node] != nullptr) {
@@ -321,8 +321,8 @@ protected:
     }
 
     inline ActiveOut makeSparseArray(const NodeIn& node) {
-        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::SparseArrayCreation, "Invalid sparse array creation operation");
-        CPPADCG_ASSERT_KNOWN(node.getHandlerPosition() < this->handler_.getManagedNodesCount(), "this node is not managed by the code handler");
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::SparseArrayCreation, "Invalid sparse array creation operation")
+        CPPADCG_ASSERT_KNOWN(node.getHandlerPosition() < this->handler_.getManagedNodesCount(), "this node is not managed by the code handler")
 
         // check if this node was previously determined
         if (evals_[node] != nullptr) {

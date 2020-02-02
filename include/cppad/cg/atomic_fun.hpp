@@ -50,7 +50,7 @@ public:
     CGAtomicFun(atomic_base<Base>& atomicFun,
                 const CppAD::vector<Base>& xSparsity,
                 bool standAlone = false) :
-        CGAbstractAtomicFun<Base>(atomicFun.afun_name(), standAlone),
+        CGAbstractAtomicFun<Base>(atomicFun.atomic_name(), standAlone),
         atomicFun_(atomicFun),
         xSparsity_(xSparsity) {
     }
@@ -186,7 +186,9 @@ protected:
         }
         vector<std::set<size_t> > st(n);
 
-        rev_sparse_jac(m, rt, st, x);
+        bool ok = rev_sparse_jac(m, rt, st, x);
+        if (!ok)
+            throw CGException("False returned from rev_sparse_jac() in the atomic function \"", this->atomic_name(), "\".");
 
         for (size_t j = 0; j < n; j++) {
             for (size_t i : st[j]) {

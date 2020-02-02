@@ -2,8 +2,8 @@
 #define CPPAD_CG_FUNCTOR_GENERIC_MODEL_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2018 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -111,7 +111,7 @@ public:
 
     bool addAtomicFunction(atomic_base<Base>& atomic) override {
         return addExternalFunction<atomic_base<Base>, AtomicExternalFunctionWrapper<Base> >
-                (atomic, atomic.afun_name());
+                (atomic, atomic.atomic_name());
     }
 
     bool addExternalModel(GenericModel<Base>& atomic) override {
@@ -833,7 +833,7 @@ protected:
      *
      * @param name The model name
      */
-    FunctorGenericModel(std::string name) :
+    explicit FunctorGenericModel(std::string name) :
         _isLibraryReady(false),
         _name(std::move(name)),
         _m(0),
@@ -857,7 +857,8 @@ protected:
         _reverseTwoSparsity(nullptr),
         _jacobianSparsity(nullptr),
         _hessianSparsity(nullptr),
-        _hessianSparsity2(nullptr) {
+        _hessianSparsity2(nullptr),
+        _atomicFunctions(nullptr) {
 
     }
 

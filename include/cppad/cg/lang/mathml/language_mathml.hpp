@@ -1239,6 +1239,15 @@ protected:
             case CGOpCode::Sqrt:
             case CGOpCode::Tanh:
             case CGOpCode::Tan:
+#if CPPAD_USE_CPLUSPLUS_2011
+            case CGOpCode::Erf:
+            case CGOpCode::Erfc:
+            case CGOpCode::Asinh:
+            case CGOpCode::Acosh:
+            case CGOpCode::Atanh:
+            case CGOpCode::Expm1:
+            case CGOpCode::Log1p:
+#endif
                 printUnaryFunction(node);
                 break;
             case CGOpCode::AtomicForward: // atomicFunction.forward(q, p, vx, vy, tx, ty)
@@ -1400,6 +1409,29 @@ protected:
             case CGOpCode::Tan:
                 _code << "<mi>tan</mi>";
                 break;
+#if CPPAD_USE_CPLUSPLUS_2011
+            case CGOpCode::Erf:
+                _code << "<mi>erf</mi>";
+                break;
+            case CGOpCode::Erfc:
+                _code << "<mi>erfc</mi>";
+                break;
+            case CGOpCode::Asinh:
+                _code << "<mi>asinh</mi>";
+                break;
+            case CGOpCode::Acosh:
+                _code << "<mi>acosh</mi>";
+                break;
+            case CGOpCode::Atanh:
+                _code << "<mi>atanh</mi>";
+                break;
+            case CGOpCode::Expm1:
+                _code << "<mi>expm1</mi>";
+                break;
+            case CGOpCode::Log1p:
+                _code << "<mi>log1p</mi>";
+                break;
+#endif
             default:
                 throw CGException("Unknown function name for operation code '", op.getOperationType(), "'.");
         }
@@ -2084,6 +2116,7 @@ protected:
 
             default:
                 CPPAD_ASSERT_UNKNOWN(0)
+                break;
         }
         throw CGException("Invalid comparison operator code"); // should never get here
     }
@@ -2108,6 +2141,15 @@ protected:
             case CGOpCode::Sqrt:
             case CGOpCode::Tanh:
             case CGOpCode::Tan:
+#if CPPAD_USE_CPLUSPLUS_2011
+            case CGOpCode::Erf:
+            case CGOpCode::Erfc:
+            case CGOpCode::Asinh:
+            case CGOpCode::Acosh:
+            case CGOpCode::Atanh:
+            case CGOpCode::Expm1:
+            case CGOpCode::Log1p:
+#endif
                 return true;
             default:
                 return false;

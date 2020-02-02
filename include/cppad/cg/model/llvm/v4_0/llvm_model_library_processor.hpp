@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2017 Ciengis
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -28,6 +29,7 @@ namespace cg {
 template<class Base>
 class LlvmModelLibraryProcessor : public LlvmBaseModelLibraryProcessor<Base> {
 protected:
+    const std::string _version;
     std::vector<std::string> _includePaths;
     std::shared_ptr<llvm::LLVMContext> _context; // must be deleted after _linker and _module (it must come first)
     std::unique_ptr<llvm::Linker> _linker;
@@ -40,11 +42,19 @@ public:
      * @param librarySourceGen
      */
     LlvmModelLibraryProcessor(ModelLibraryCSourceGen<Base>& librarySourceGen) :
-            LlvmBaseModelLibraryProcessor<Base>(librarySourceGen) {
+            LlvmBaseModelLibraryProcessor<Base>(librarySourceGen),
+            _version("4.0") {
     }
 
-    virtual ~LlvmModelLibraryProcessor() {
+    virtual ~LlvmModelLibraryProcessor() = default;
+
+    /**
+     * @return The version of LLVM (and Clang).
+     */
+    inline const std::string& getVersion() const {
+        return _version;
     }
+
 
     /**
      * Define additional header paths.
@@ -156,7 +166,7 @@ public:
                 }
 
                 // link modules together
-                if (_linker.get() == nullptr) {
+                if (_linker == nullptr) {
                     linkerModule = std::move(moduleOrError.get());
                     _linker.reset(new llvm::Linker(*linkerModule)); // module not destroyed
                 } else {
@@ -204,13 +214,13 @@ protected:
         llvm::sys::findProgramByName("clang", paths);
 
         IntrusiveRefCntPtr<DiagnosticOptions> diagOpts = new DiagnosticOptions();
-        TextDiagnosticPrinter* diagClient = new TextDiagnosticPrinter(llvm::errs(), &*diagOpts); // will be owned by diags
+        auto* diagClient = new TextDiagnosticPrinter(llvm::errs(), &*diagOpts); // will be owned by diags
         IntrusiveRefCntPtr<DiagnosticIDs> diagID(new DiagnosticIDs());
         IntrusiveRefCntPtr<DiagnosticsEngine> diags(new DiagnosticsEngine(diagID, &*diagOpts, diagClient));
 
         ArrayRef<const char*> args {"-Wall", "-x", "c", "string-input"}; // -Wall or -v flag is required to avoid an error inside createInvocationFromCommandLine()
         std::shared_ptr<CompilerInvocation> invocation(createInvocationFromCommandLine(args, diags));
-        if (invocation.get() == nullptr)
+        if (invocation == nullptr)
             throw CGException("Failed to create compiler invocation");
 
         //invocation->TargetOpts->Triple = llvm::sys::getDefaultTargetTriple();
@@ -233,7 +243,7 @@ protected:
 
         // Create memory buffer with source text
         std::unique_ptr<llvm::MemoryBuffer> buffer = llvm::MemoryBuffer::getMemBufferCopy(source, "SIMPLE_BUFFER");
-        if (buffer.get() == nullptr)
+        if (buffer == nullptr)
             throw CGException("Failed to create memory buffer");
 
         // Remap auxiliary name "string-input" to memory buffer
@@ -255,12 +265,12 @@ protected:
             throw CGException("Failed to emit LLVM bitcode");
 
         std::unique_ptr<llvm::Module> module = action.takeModule();
-        if (module.get() == nullptr)
+        if (module == nullptr)
             throw CGException("No module");
 
-        if (_linker.get() == nullptr) {
+        if (_linker == nullptr) {
             _module.reset(module.release());
-            _linker.reset(new llvm::Linker(*_module.get()));
+            _linker.reset(new llvm::Linker(*_module));
         } else {
             if (_linker->linkInModule(std::move(module))) {
                 throw CGException("LLVM failed to link module");

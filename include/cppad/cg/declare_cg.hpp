@@ -25,7 +25,7 @@ class vector;
 template<class Base>
 class AD;
 
-template<class Base, typename RecBase>
+template<class Base, class RecBase>
 class ADFun;
 
 namespace cg {
@@ -449,6 +449,10 @@ inline cg::CG<Base> tanh(const cg::CG<Base>& x);
 // error function
 template<class Base>
 inline cg::CG<Base> erf(const cg::CG<Base>& x);
+
+// complementary error function
+template<class Base>
+inline cg::CG<Base> erfc(const cg::CG<Base>& var);
 
 // inverse hyperbolic sin
 template<class Base>

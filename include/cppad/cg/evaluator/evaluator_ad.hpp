@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2016 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -53,8 +54,7 @@ public:
         printOutPriOperations_(true) {
     }
 
-    inline virtual ~EvaluatorAD() {
-    }
+    inline virtual ~EvaluatorAD() = default;
 
     /**
      * Defines whether or not to print out the nodes with an operation type
@@ -140,8 +140,8 @@ protected:
 
         const std::vector<size_t>& info = node.getInfo();
         const std::vector<Argument<ScalarIn> >& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 3, "Invalid number of arguments for atomic forward mode");
-        CPPADCG_ASSERT_KNOWN(info.size() == 3, "Invalid number of information data for atomic forward mode");
+        CPPADCG_ASSERT_KNOWN(args.size() == 3, "Invalid number of arguments for atomic forward mode")
+        CPPADCG_ASSERT_KNOWN(info.size() == 3, "Invalid number of information data for atomic forward mode")
 
         // find the atomic function
         size_t id = info[0];
@@ -154,9 +154,9 @@ protected:
         if (atomicFunction == nullptr) {
             std::stringstream ss;
             ss << "No atomic function defined in the evaluator for ";
-            std::unique_ptr<std::string> atomName = handler_.getAtomicFunctionName(id);
-            if (atomName != nullptr) {
-                ss << "'" << *atomName << "'";
+            std::string atomName = handler_.getAtomicFunctionName(id);
+            if (!atomName.empty()) {
+                ss << "'" << atomName << "'";
             } else
                 ss << "id '" << id << "'";
             throw CGException(ss.str());
@@ -185,7 +185,7 @@ protected:
      */
     inline ActiveOut evalPrint(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for print()");
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for print()")
         ActiveOut out(this->evalArg(args, 0));
 
         const auto& nodePri = static_cast<const PrintOperationNode<ScalarIn>&>(node);

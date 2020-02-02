@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -23,8 +24,8 @@ void zeroOrderDependency(ADFun<Base>& fun,
                          const VectorBool& vx,
                          VectorBool& vy) {
     size_t m = fun.Range();
-    CPPADCG_ASSERT_KNOWN(vx.size() >= fun.Domain(), "Invalid vx size");
-    CPPADCG_ASSERT_KNOWN(vy.size() >= m, "Invalid vy size");
+    CPPADCG_ASSERT_KNOWN(vx.size() >= fun.Domain(), "Invalid vx size")
+    CPPADCG_ASSERT_KNOWN(vy.size() >= m, "Invalid vy size")
 
     using VectorSet = std::vector<std::set<size_t> >;
 
@@ -266,7 +267,7 @@ inline void multMatrixTransMatrixSparsity(const VectorSet& a,
         if (colB.size() > 0) {
             for (size_t i = 0; i < n; i++) {
                 const std::set<size_t>& rowAt = at[i];
-                if (rowAt.size() > 0) {
+                if (!rowAt.empty()) {
                     for (size_t rowb : colB) {
                         if (rowAt.find(rowb) != rowAt.end()) {
                             result[i].insert(jj);
@@ -434,6 +435,29 @@ inline bool intersects(const std::set<size_t>& a,
     }
 
     return false;
+}
+
+template<class VectorSizet, class VectorSet>
+inline CppAD::sparse_rc<VectorSizet> toSparsityPattern(const VectorSet& inPattern,
+                                                       size_t m, size_t n) {
+
+    CppAD::sparse_rc<VectorSizet> pattern;
+
+    size_t nnz = 0;
+    for (const auto& p: inPattern) {
+        nnz += p.size();
+    }
+
+    pattern.resize(m, n, nnz);
+
+    size_t e = 0;
+    for (size_t i = 0; i < inPattern.size(); ++i) {
+        for (size_t j : inPattern[i]) {
+            pattern.set(e++, i, j);
+        }
+    }
+
+    return pattern;
 }
 
 /**
@@ -667,6 +691,19 @@ inline void print(const std::vector<Base>& v) {
     }
     std::cout << "]";
     std::cout.flush();
+}
+
+template<class VectorSize, class VectorBase>
+inline void printTripletMatrix(const VectorSize &rows,
+                               const VectorSize &cols,
+                               const VectorBase &values) {
+    size_t n = values.size();
+    assert(rows.size() == n);
+    assert(cols.size() == n);
+
+    for (size_t i = 0; i < n; ++i) {
+        std::cout << "[ " << rows[i] << ", " << cols[i] << "] -> " << values[i] << std::endl;
+    }
 }
 
 /***************************************************************************

@@ -2,6 +2,7 @@
 #define CPPAD_CG_SAVE_FILES_MODEL_LIBRARY_PROCESSOR_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -28,12 +29,11 @@ template<class Base>
 class SaveFilesModelLibraryProcessor : public ModelLibraryProcessor<Base> {
 public:
 
-    inline SaveFilesModelLibraryProcessor(ModelLibraryCSourceGen<Base>& modelLibraryHelper) :
+    inline explicit SaveFilesModelLibraryProcessor(ModelLibraryCSourceGen<Base>& modelLibraryHelper) :
         ModelLibraryProcessor<Base>(modelLibraryHelper) {
     }
 
-    inline virtual ~SaveFilesModelLibraryProcessor() {
-    }
+    inline virtual ~SaveFilesModelLibraryProcessor() = default;
 
     inline void saveSources() {
         saveSourcesTo("cppadcg_sources");
@@ -41,7 +41,7 @@ public:
 
     inline void saveSourcesTo(const std::string& sourcesFolder) {
 
-        auto saveFile = [&](const std::string filename, const std::string& source){
+        auto saveFile = [&](const std::string& filename, const std::string& source){
             std::ofstream sourceFile;
             std::string file = system::createPath(sourcesFolder, filename);
             sourceFile.open(file.c_str());

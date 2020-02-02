@@ -19,7 +19,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(cppadcg CXX C)
 
-SET(cppadcg_version      "2.3.0" )
+SET(cppadcg_version      "2.4.0" )
 SET(cppadcg_url          "https://github.com/joaoleal/CppADCodeGen" )
 SET(cppadcg_description  "A C++ Algorithmic Differentiation Package with Source Code Generation" )
 
@@ -141,12 +141,27 @@ IF(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     ENDIF()
 
 
-    SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g -ggdb -D_FORTIFY_SOURCE=2")
+    SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g -ggdb")
 
     # NDEBUG required in order to make CppAD significantly faster
     SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -DNDEBUG")
 
     SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -ggdb -DNDEBUG -D_FORTIFY_SOURCE=2")
+ENDIF()
+
+
+# ----------------------------------------------------------------------------
+# Check if it is possible to use LLVM/Clang for JIT
+# ----------------------------------------------------------------------------
+SET(CPPADCG_LLVM_LINK_LIB "3.2|3.6|3.8|4.0|5.0|6.0|7.0|8.0")
+
+IF((("${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}" MATCHES "^(${CPPADCG_LLVM_LINK_LIB})$") AND CLANG_FOUND)
+        OR
+    ("${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}" MATCHES "^(3.3|3.4)$")
+  )
+    SET(CPPADCG_USE_LLVM ON)
+ELSE()
+    SET(CPPADCG_USE_LLVM OFF)
 ENDIF()
 
 # ----------------------------------------------------------------------------

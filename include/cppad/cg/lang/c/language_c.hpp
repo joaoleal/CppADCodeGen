@@ -546,6 +546,7 @@ public:
 
 #if CPPAD_USE_CPLUSPLUS_2011
     CPPAD_CG_C_LANG_FUNCNAME(erf)
+    CPPAD_CG_C_LANG_FUNCNAME(erfc)
     CPPAD_CG_C_LANG_FUNCNAME(asinh)
     CPPAD_CG_C_LANG_FUNCNAME(acosh)
     CPPAD_CG_C_LANG_FUNCNAME(atanh)
@@ -1365,6 +1366,7 @@ protected:
             case CGOpCode::Tan:
 #if CPPAD_USE_CPLUSPLUS_2011
             case CGOpCode::Erf:
+            case CGOpCode::Erfc:
             case CGOpCode::Asinh:
             case CGOpCode::Acosh:
             case CGOpCode::Atanh:
@@ -1533,6 +1535,9 @@ protected:
 #if CPPAD_USE_CPLUSPLUS_2011
             case CGOpCode::Erf:
                 _streamStack << erfFuncName();
+                break;
+            case CGOpCode::Erfc:
+                _streamStack << erfcFuncName();
                 break;
             case CGOpCode::Asinh:
                 _streamStack << asinhFuncName();
@@ -2188,6 +2193,7 @@ protected:
 
             default:
                 CPPAD_ASSERT_UNKNOWN(0)
+                break;
         }
         throw CGException("Invalid comparison operator code"); // should never get here
     }
@@ -2218,6 +2224,7 @@ protected:
             case CGOpCode::Tan:
 #if CPPAD_USE_CPLUSPLUS_2011
             case CGOpCode::Erf:
+            case CGOpCode::Erfc:
             case CGOpCode::Asinh:
             case CGOpCode::Acosh:
             case CGOpCode::Atanh:

@@ -2,7 +2,7 @@
 #define CPPAD_CG_BASE_ABSTRACT_ATOMIC_FUN_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2018 Joao Leal
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -21,7 +21,7 @@ namespace cg {
 
 /**
  * Contains some utility methods for atomic functions for the type CG
- *
+ * 
  * @author Joao Leal
  */
 template <class Base>
@@ -34,12 +34,12 @@ protected:
     /**
      * Creates a new atomic function that is responsible for defining the
      * dependencies to calls of a user atomic function.
-     *
+     * 
      * @param name The atomic function name.
      */
-    BaseAbstractAtomicFun(const std::string& name) :
-        atomic_base<CGB>(name) {
-        CPPADCG_ASSERT_KNOWN(!name.empty(), "The atomic function name cannot be empty");
+    explicit BaseAbstractAtomicFun(const std::string& name) :
+            atomic_base<CGB>(name) {
+        CPPADCG_ASSERT_KNOWN(!name.empty(), "The atomic function name cannot be empty")
     }
 
 public:

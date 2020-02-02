@@ -22,7 +22,7 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Useful class for generating a JIT evaluated model library (LLVM 5.0 and 6.0).
+ * Useful class for generating a JIT evaluated model library (LLVM 5.0, 6.0, 7.0, 8.0).
  *
  * @author Joao Leal
  */
@@ -42,12 +42,19 @@ public:
      * @param librarySourceGen
      */
     LlvmBaseModelLibraryProcessorImpl(ModelLibraryCSourceGen<Base>& librarySourceGen,
-                                      const std::string& version) :
+                                      std::string version) :
         LlvmBaseModelLibraryProcessor<Base>(librarySourceGen),
-            _version(version) {
+            _version(std::move(version)) {
     }
 
     virtual ~LlvmBaseModelLibraryProcessorImpl() = default;
+
+    /**
+     * @return The version of LLVM (and Clang).
+     */
+    inline const std::string& getVersion() const {
+        return _version;
+    }
 
     /**
      * Define additional header paths.
@@ -202,13 +209,13 @@ protected:
         llvm::sys::findProgramByName("clang", paths);
 
         IntrusiveRefCntPtr<DiagnosticOptions> diagOpts = new DiagnosticOptions();
-        TextDiagnosticPrinter* diagClient = new TextDiagnosticPrinter(llvm::errs(), &*diagOpts); // will be owned by diags
+        auto* diagClient = new TextDiagnosticPrinter(llvm::errs(), &*diagOpts); // will be owned by diags
         IntrusiveRefCntPtr<DiagnosticIDs> diagID(new DiagnosticIDs());
         IntrusiveRefCntPtr<DiagnosticsEngine> diags(new DiagnosticsEngine(diagID, &*diagOpts, diagClient));
 
         ArrayRef<const char*> args {"-Wall", "-x", "c", "string-input"}; // -Wall or -v flag is required to avoid an error inside createInvocationFromCommandLine()
         std::shared_ptr<CompilerInvocation> invocation(createInvocationFromCommandLine(args, diags));
-        if (invocation.get() == nullptr)
+        if (invocation == nullptr)
             throw CGException("Failed to create compiler invocation");
 
         //invocation->TargetOpts->Triple = llvm::sys::getDefaultTargetTriple();
@@ -231,7 +238,7 @@ protected:
 
         // Create memory buffer with source text
         std::unique_ptr<llvm::MemoryBuffer> buffer = llvm::MemoryBuffer::getMemBufferCopy(source, "SIMPLE_BUFFER");
-        if (buffer.get() == nullptr)
+        if (buffer == nullptr)
             throw CGException("Failed to create memory buffer");
 
         // Remap auxiliary name "string-input" to memory buffer
@@ -253,7 +260,7 @@ protected:
             throw CGException("Failed to emit LLVM bitcode");
 
         std::unique_ptr<llvm::Module> module = action.takeModule();
-        if (module.get() == nullptr)
+        if (module == nullptr)
             throw CGException("No module");
 
         if (_linker.get() == nullptr) {

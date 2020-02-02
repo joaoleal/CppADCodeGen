@@ -145,6 +145,7 @@ ENDFUNCTION()
 ################################################################################
 # add test function
 ################################################################################
+ADD_CUSTOM_TARGET(build_tests)
 FUNCTION(add_cppadcg_test source_file)
 
     GET_FILENAME_COMPONENT(test_target_name "${source_file}" NAME_WE)
@@ -198,6 +199,8 @@ FUNCTION(add_cppadcg_test source_file)
         depends_on_precompile_header(${test_target_name} "CppADCGTest.hpp")
     ENDIF()
 
+    ADD_DEPENDENCIES(build_tests ${test_target_name})
+
 ENDFUNCTION()
 ################################################################################
 # use valgrind if possible
@@ -230,9 +233,6 @@ ENDIF()
 ################################################################################
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
-
-# enable c++11 functions in cppad
-ADD_DEFINITIONS(-DCPPAD_USE_CPLUSPLUS_2011=1)
 
 ################################################################################
 

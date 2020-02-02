@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -41,8 +42,7 @@ public:
         return dynamic_cast<LoopStartOperationNode<Base>&> (*aNode);
     }
 
-    inline virtual ~LoopEndOperationNode() {
-    }
+    inline virtual ~LoopEndOperationNode() = default;
 
 protected:
 

@@ -13,7 +13,6 @@
  * Author: Joao Leal
  */
 #include <iosfwd>
-#include <vector>
 #include <cppad/cg.hpp>
 #include <cppad/cg/lang/dot/dot.hpp>
 

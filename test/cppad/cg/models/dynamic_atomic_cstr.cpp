@@ -143,7 +143,7 @@ const size_t CppADCGDynamicAtomicCstrTest::m = 4;
 TEST_F(CppADCGDynamicAtomicCstrTest, ADFunAtomicLib) {
     this->testADFunAtomicLibSimple(x, par, xNorm, eqNorm, 1e-14, 1e-13);
 
-    this->testAtomicSparsities(x);
+    this->testAtomicSparsities(x, par);
 }
 
 TEST_F(CppADCGDynamicAtomicCstrTest, AtomicLibAtomicLib) {

@@ -43,13 +43,13 @@ IF(PDFLATEX_COMPILER)
     ADD_DEFINITIONS(-DPDFLATEX_COMPILER="${PDFLATEX_COMPILER}")
 ENDIF()
 
-link_file("${CMAKE_CURRENT_SOURCE_DIR}/latex_template.tex"
-          "${CMAKE_CURRENT_BINARY_DIR}/latex_template.tex")
+link_file("${CMAKE_CURRENT_SOURCE_DIR}/resources"
+          "${CMAKE_CURRENT_BINARY_DIR}/resources")
 
 # copy template (if required)
-ADD_CUSTOM_TARGET(link_or_copy_latex_template
-                  DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/latex_template.tex")
-ADD_DEPENDENCIES(source_generation_latex link_or_copy_latex_template)
+ADD_CUSTOM_TARGET(link_or_copy_resources
+                  DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/resources")
+ADD_DEPENDENCIES(source_generation_latex link_or_copy_resources)
 
 ################################################################################
 #                             source_generation_dot
@@ -74,6 +74,38 @@ IF(UNIX)
                       COMMAND dynamic_linux)
 
     ############################################################################
+    #                                  atomic
+    ############################################################################
+    ADD_EXECUTABLE(atomic atomic.cpp)
+    SET(EXAMPLES_COMMAND "${EXAMPLES_COMMAND} COMMAND atomic")
+    TARGET_LINK_LIBRARIES(atomic ${DL_LIBRARIES})
+    ADD_CUSTOM_TARGET(example_atomic
+                      COMMAND atomic)
+
+    ############################################################################
+    #                                  LLVM
+    ############################################################################
+    IF(CPPADCG_USE_LLVM)
+
+        INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR} ${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS} ${DL_INCLUDE_DIRS})
+        LINK_DIRECTORIES(${LLVM_LIBRARY_DIRS})
+        ADD_DEFINITIONS(${LLVM_CFLAGS_NO_NDEBUG} -DLLVM_WITH_NDEBUG=${LLVM_WITH_NDEBUG})
+
+        ADD_EXECUTABLE(jit_linux jit_linux.cpp)
+        SET(EXAMPLES_COMMAND "${EXAMPLES_COMMAND} COMMAND dynamic_linux")
+
+        TARGET_LINK_LIBRARIES(jit_linux ${DL_LIBRARIES})
+        ADD_CUSTOM_TARGET(example_jit_linux COMMAND jit_linux)
+
+        TARGET_LINK_LIBRARIES(jit_linux ${LLVM_MODULE_LIBS} ${LLVM_LDFLAGS})
+
+        IF("${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}" MATCHES "^(${CPPADCG_LLVM_LINK_LIB})$")
+            TARGET_LINK_LIBRARIES(jit_linux ${CLANG_LIBS})
+        ENDIF()
+
+    ENDIF()
+
+    ############################################################################
     #                                  lagrangian
     ############################################################################
     ADD_EXECUTABLE(lagrangian lagrangian.cpp)
@@ -94,12 +126,13 @@ ENDIF(UNIX)
 
 
 ADD_CUSTOM_TARGET(examples)
-                  
+
 ADD_DEPENDENCIES(examples example_source_generation_c)
 ADD_DEPENDENCIES(examples example_source_generation_latex)
 ADD_DEPENDENCIES(examples example_source_generation_mathml)
 ADD_DEPENDENCIES(examples example_source_generation_dot)
 IF(UNIX)
+    ADD_DEPENDENCIES(examples example_atomic)
     ADD_DEPENDENCIES(examples example_dynamic_linux)
     ADD_DEPENDENCIES(examples example_lagrangian)
 ENDIF()

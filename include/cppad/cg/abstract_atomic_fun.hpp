@@ -27,6 +27,7 @@ namespace cg {
 template <class Base>
 class CGAbstractAtomicFun : public BaseAbstractAtomicFun<Base> {
 public:
+    using Super = BaseAbstractAtomicFun<Base>;
     using CGB = CppAD::cg::CG<Base>;
     using Arg = Argument<Base>;
 protected:
@@ -53,12 +54,12 @@ protected:
      *                   dependent variables (ty) and any previous
      *                   evaluation of other forward/reverse modes.
      */
-    CGAbstractAtomicFun(const std::string& name,
-                        bool standAlone = false) :
-        BaseAbstractAtomicFun<Base>(name),
-        id_(createNewAtomicFunctionID()),
-        standAlone_(standAlone) {
-        CPPADCG_ASSERT_KNOWN(!name.empty(), "The atomic function name cannot be empty");
+    explicit CGAbstractAtomicFun(const std::string& name,
+                                 bool standAlone = false) :
+            Super(name),
+            id_(createNewAtomicFunctionID()),
+            standAlone_(standAlone) {
+        CPPADCG_ASSERT_KNOWN(!name.empty(), "The atomic function name cannot be empty")
         this->option(CppAD::atomic_base<CGB>::set_sparsity_enum);
     }
 
@@ -156,18 +157,18 @@ public:
                 return false;
 
             vyLocal.resize(ty.size());
-            for (size_t i = 0; i < vyLocal.size(); i++) {
-                vyLocal[i] = true;
+            for (bool& i : vyLocal) {
+                i = true;
             }
 
             for (size_t i = 0; i < m; i++) {
-                vyLocal[i * (p + 1) + 1] = s[i].size() > 0;
+                vyLocal[i * (p + 1) + 1] = !s[i].empty();
             }
 
             if (p == 1) {
                 bool allZero = true;
-                for (size_t i = 0; i < vyLocal.size(); i++) {
-                    if (vyLocal[i]) {
+                for (bool i : vyLocal) {
+                    if (i) {
                         allZero = false;
                         break;
                     }
@@ -222,7 +223,7 @@ public:
                         ty[pos].setValue(tyb[pos]);
                     }
                 } else {
-                    CPPADCG_ASSERT_KNOWN(tyb.size() == 0 || IdenticalZero(tyb[pos]), "Invalid value");
+                    CPPADCG_ASSERT_KNOWN(tyb.size() == 0 || IdenticalZero(tyb[pos]), "Invalid value")
                     ty[pos] = 0; // not a variable (zero)
                 }
             }
@@ -265,8 +266,8 @@ public:
          * will always be zero
          */
         vector<bool> vxLocal(px.size());
-        for (size_t j = 0; j < vxLocal.size(); j++) {
-            vxLocal[j] = true;
+        for (bool& j : vxLocal) {
+            j = true;
         }
 
         size_t p1 = p + 1;
@@ -293,7 +294,7 @@ public:
         }
 
         for (size_t j = 0; j < n; j++) {
-            vxLocal[j * p1 + p] = st[j].size() > 0;
+            vxLocal[j * p1 + p] = !st[j].empty();
         }
 
         if (p >= 1) {
@@ -321,13 +322,13 @@ public:
             this->rev_sparse_hes(vx, s, t, 1, r, u, v, x);
 
             for (size_t j = 0; j < n; j++) {
-                vxLocal[j * p1 + p - 1] = v[j].size() > 0;
+                vxLocal[j * p1 + p - 1] = !v[j].empty();
             }
         }
 
         bool allZero = true;
-        for (size_t j = 0; j < vxLocal.size(); j++) {
-            if (vxLocal[j]) {
+        for (bool j : vxLocal) {
+            if (j) {
                 allZero = false;
                 break;
             }
@@ -431,7 +432,7 @@ public:
         CppAD::vector<std::set<size_t> > s(m);
         bool good = this->for_sparse_jac(n, r, s, x);
         if (!good)
-            throw CGException("Failed to compute jacobian sparsity pattern for atomic function '", this->afun_name(), "'");
+            throw CGException("Failed to compute jacobian sparsity pattern for atomic function '", this->atomic_name(), "'");
 
         return s;
     }
@@ -447,7 +448,7 @@ public:
         CppAD::vector<std::set<size_t> > st(n);
         bool good = this->rev_sparse_jac(m, rt, st, x);
         if (!good)
-            throw CGException("Failed to compute jacobian sparsity pattern for atomic function '", this->afun_name(), "'");
+            throw CGException("Failed to compute jacobian sparsity pattern for atomic function '", this->atomic_name(), "'");
 
         CppAD::vector<std::set<size_t>> s = transposePattern(st, n, m);
 
@@ -488,7 +489,7 @@ public:
 
         bool good = this->rev_sparse_hes(vx, s, t, n, r, u, v, x);
         if (!good)
-            throw CGException("Failed to compute Hessian sparsity pattern for atomic function '", this->afun_name(), "'");
+            throw CGException("Failed to compute Hessian sparsity pattern for atomic function '", this->atomic_name(), "'");
 
         return v;
     }
@@ -497,7 +498,7 @@ public:
      * Uses an internal counter to produce IDs for atomic functions.
      */
     static size_t createNewAtomicFunctionID() {
-        CPPAD_ASSERT_FIRST_CALL_NOT_PARALLEL;
+        CPPAD_ASSERT_FIRST_CALL_NOT_PARALLEL
         static size_t count = 0;
         count++;
         return count;
