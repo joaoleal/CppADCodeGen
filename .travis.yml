@@ -71,8 +71,6 @@ matrix:
             - kubuntu-backports
           packages:
             - cmake
-    - libgtest-dev
-    - gdb
             - texlive-extra-utils
             - texlive-fonts-extra
             - texlive-latex-recommended
@@ -89,11 +87,12 @@ install:
   - mkdir cppadcg_deps
   - cd cppadcg_deps
   # get CppAD:
-#  - git clone https://github.com/coin-or/CppAD.git cppad
-#  - cd cppad
-  - wget http://github.com/coin-or/CppAD/archive/20170000.8.tar.gz  
-  - tar -xzf 20170000.8.tar.gz
-  - cd CppAD-20170000.8
+  # - git clone https://github.com/coin-or/CppAD.git cppad
+  # - cd cppad
+  - CPPAD_VERSION_NAME=20200000.2
+  - wget https://github.com/coin-or/CppAD/archive/${CPPAD_VERSION_NAME}.tar.gz
+  - tar -xzf ${CPPAD_VERSION_NAME}.tar.gz
+  - cd CppAD-${CPPAD_VERSION_NAME}
   - mkdir build
   - mkdir install
   - CPPAD_HOME=`pwd`/install/include
