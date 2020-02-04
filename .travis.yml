@@ -1,4 +1,5 @@
 language: cpp
+sudo: required
 
 matrix:
   include:
@@ -120,5 +121,5 @@ script:
   - make -j2 build_tests
   - CTEST_OUTPUT_ON_FAILURE=TRUE make test
   - cd ..
-  - make install
-  - make uninstall
+  - sudo make install
+  - sudo make uninstall
