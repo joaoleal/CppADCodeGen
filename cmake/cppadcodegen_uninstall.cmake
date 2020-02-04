@@ -23,7 +23,8 @@ set(MANIFEST "${CMAKE_CURRENT_BINARY_DIR}/install_manifest.txt")
 
 if(EXISTS ${MANIFEST})
   file(STRINGS ${MANIFEST} files)
-  foreach(file ${files})
+  foreach(_file ${files})
+    SET(file "$ENV{DESTDIR}/${_file}")
     if(IS_SYMLINK ${file} OR EXISTS ${file})
       message(STATUS "Removing file: '${file}'")
 
