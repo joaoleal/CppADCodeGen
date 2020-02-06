@@ -6,18 +6,13 @@
 # Contributor
 # https://jcarpent.github.io/
 #
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+#  CppADCodeGen is distributed under multiple licenses:
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+#   - Eclipse Public License Version 1.0 (EPL1), and
+#   - GNU General Public License Version 3 (GPL3).
 #
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# EPL1 terms and conditions can be found in the file "epl-v10.txt", while
+# terms and conditions for the GPL3 can be found in the file "gpl3.txt".
 #
 set(MANIFEST "${CMAKE_CURRENT_BINARY_DIR}/install_manifest.txt")
 
