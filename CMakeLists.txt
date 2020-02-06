@@ -38,7 +38,7 @@ SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 # ----------------------------------------------------------------------------
 FIND_PACKAGE(Threads REQUIRED)
 
-FIND_PACKAGE(CppAD REQUIRED)
+FIND_PACKAGE(CppAD 20200000.1 REQUIRED)
 
 FIND_PACKAGE(ADOLC)
 
