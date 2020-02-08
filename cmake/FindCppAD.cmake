@@ -44,7 +44,7 @@ ELSE ()
     FIND_PACKAGE(PkgConfig)
 
     IF (PKG_CONFIG_FOUND)
-        pkg_check_modules(CPPAD QUIET cppad>=${CppAD_FIND_VERSION})
+        pkg_check_modules(CPPAD QUIET cppad)
     ENDIF ()
 
 
@@ -88,10 +88,18 @@ IF (CPPAD_FOUND)
             STRING(REGEX MATCH "[0-9]+\\.[0-9]+" CPPAD_VERSION "${CPPAD_VERSION_LINE}")
         ENDIF ()
 
-        IF ("${CPPAD_VERSION}" VERSION_LESS "${CppAD_FIND_VERSION}")
-            SET(CPPAD_FOUND FALSE)
-            message(FATAL_ERROR "Found CppAD version '${CPPAD_VERSION}' but at least version '${CppAD_FIND_VERSION}' is required")
+        IF (CppAD_FIND_VERSION_EXACT)
+            IF (NOT "${CPPAD_VERSION}" VERSION_EQUAL "${CppAD_FIND_VERSION}")
+                SET(CPPAD_FOUND FALSE)
+                MESSAGE(FATAL_ERROR "Found CppAD version '${CPPAD_VERSION}' but version '${CppAD_FIND_VERSION}' is required")
+            ENDIF ()
+        ELSE ()
+            IF ("${CPPAD_VERSION}" VERSION_LESS "${CppAD_FIND_VERSION}")
+                SET(CPPAD_FOUND FALSE)
+                MESSAGE(FATAL_ERROR "Found CppAD version '${CPPAD_VERSION}' but at least version '${CppAD_FIND_VERSION}' is required")
+            ENDIF ()
         ENDIF ()
+
     ENDIF ()
 
     IF (CPPAD_FOUND AND NOT CPPAD_FIND_QUIETLY)
