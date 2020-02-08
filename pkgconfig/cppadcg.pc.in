@@ -2,6 +2,7 @@
 # CppADCodeGen: C++ Algorithmic Differentiation with source code generation
 #
 # Copyright (C) 2012 Ciengis
+# Copyright (C) 2020 Joao Leal
 #
 # CppAD is distributed under multiple licenses. This distribution is under
 # the terms of the 
@@ -16,4 +17,4 @@ Description:  @cppadcg_description@
 Version:      @cppadcg_version@
 URL:          @cppadcg_url@
 Cflags:       -I@install_cppadcg_include_pkg_location@ -I@install_cppad_include_pkg_location@
-Requires:     cppad >= 20150302
+Requires:     cppad >= @cppad_version_min@
