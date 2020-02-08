@@ -19,7 +19,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(cppadcg CXX C)
 
-SET(cppadcg_version      "2.3.0" )
+SET(cppadcg_version      "2.4.0" )
 SET(cppadcg_url          "https://github.com/joaoleal/CppADCodeGen" )
 SET(cppadcg_description  "A C++ Algorithmic Differentiation Package with Source Code Generation" )
 
@@ -38,7 +38,7 @@ SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 # ----------------------------------------------------------------------------
 FIND_PACKAGE(Threads REQUIRED)
 
-FIND_PACKAGE(CppAD REQUIRED)
+FIND_PACKAGE(CppAD 20200000.1 REQUIRED)
 
 FIND_PACKAGE(ADOLC)
 

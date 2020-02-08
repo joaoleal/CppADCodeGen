@@ -28,7 +28,7 @@ template<class Base>
 class LlvmBaseModelLibraryProcessor : public ModelLibraryProcessor<Base> {
 public:
 
-    inline LlvmBaseModelLibraryProcessor(ModelLibraryCSourceGen<Base>& modelLibraryHelper) :
+    inline explicit LlvmBaseModelLibraryProcessor(ModelLibraryCSourceGen<Base>& modelLibraryHelper) :
             ModelLibraryProcessor<Base>(modelLibraryHelper) {
     }
 
@@ -39,7 +39,7 @@ protected:
     static std::string findInternalClangCHeaders(const std::string& version,
                                                  const std::string& resourceDir) {
         // check existing paths
-        for (std::string path : explode(resourceDir, " ")) {
+        for (const std::string& path : explode(resourceDir, " ")) {
             if (system::isFile(system::createPath(path, system::createPath("include", "stddef.h")))) {
                 return ""; // no need to add anything
             }

@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -79,7 +80,7 @@ public:
     inline ModelLibraryCSourceGen(ModelCSourceGen<Base>& model):
         _multiThreading(MultiThreadingType::NONE) {
         CPPADCG_ASSERT_KNOWN(_models.find(model.getName()) == _models.end(),
-                             "Another model with the same name was already registered");
+                             "Another model with the same name was already registered")
 
         _models[model.getName()] = &model; // must not use initializer_list constructor of map!
     }
@@ -88,7 +89,7 @@ public:
     inline ModelLibraryCSourceGen(ModelCSourceGen<Base>& headModel, Ms&... rest) :
         ModelLibraryCSourceGen(rest...) {
         CPPADCG_ASSERT_KNOWN(_models.find(headModel.getName()) == _models.end(),
-                             "Another model with the same name was already registered");
+                             "Another model with the same name was already registered")
 
         _models[headModel.getName()] = &headModel;
     }
@@ -96,8 +97,7 @@ public:
     ModelLibraryCSourceGen(const ModelLibraryCSourceGen&) = delete;
     ModelLibraryCSourceGen& operator=(const ModelLibraryCSourceGen&) = delete;
 
-    virtual ~ModelLibraryCSourceGen() {
-    }
+    virtual ~ModelLibraryCSourceGen() = default;
 
     /**
      * Adds additional models to be compiled into the created library.
@@ -107,7 +107,7 @@ public:
      */
     inline void addModel(ModelCSourceGen<Base>& model) {
         CPPADCG_ASSERT_KNOWN(_models.find(model.getName()) == _models.end(),
-                             "Another model with the same name was already registered");
+                             "Another model with the same name was already registered")
 
         _models[model.getName()] = &model;
 
@@ -119,7 +119,7 @@ public:
     }
 
     void addCustomFunctionSource(const std::string& filename, const std::string& source) {
-        CPPADCG_ASSERT_KNOWN(!filename.empty(), "The filename name cannot be empty");
+        CPPADCG_ASSERT_KNOWN(!filename.empty(), "The filename name cannot be empty")
 
         _customSource[filename] = source;
     }

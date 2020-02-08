@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -20,7 +21,7 @@ namespace cg {
 
 /**
  * Useful class for generating source code for the creation of a dynamic
- * library.
+ * or a static library.
  * 
  * @author Joao Leal
  */
@@ -28,13 +29,13 @@ template<class Base>
 class DynamicModelLibraryProcessor : public ModelLibraryProcessor<Base> {
 protected:
     /**
-     * the path of the dynamic library to be created
+     * the path of the dynamic or static library to be created
      */
     std::string _libraryName;
     /**
-     * a custom extension for the dynamic library (e.g. ".so.1")
+     * a custom extension for the dynamic or static library (e.g. ".so.1")
      */
-    const std::string* _customLibExtension;
+    std::unique_ptr<const std::string> _customLibExtension;
     /**
      * System dependent custom options
      */
@@ -42,26 +43,34 @@ protected:
 public:
 
     /**
-     * Creates a new helper class for the generation of dynamic libraries
+     * Creates a new helper class for the generation of dynamic or static libraries
      * using the C language.
      *
      * @param modelLibGen
-     * @param libraryName The path of the dynamic library to be created 
+     * @param libraryName The path of the dynamic or static library to be created
      *                    (without the extension)
      */
-    inline DynamicModelLibraryProcessor(ModelLibraryCSourceGen<Base>& modelLibGen,
-                                        const std::string& libraryName = "cppad_cg_model") :
-        ModelLibraryProcessor<Base>(modelLibGen),
-        _libraryName(libraryName),
-        _customLibExtension(nullptr) {
+    inline explicit DynamicModelLibraryProcessor(ModelLibraryCSourceGen <Base>& modelLibGen,
+                                                 std::string libraryName = "cppad_cg_model") :
+            ModelLibraryProcessor<Base>(modelLibGen),
+            _libraryName(std::move(libraryName)) {
     }
 
+    virtual ~DynamicModelLibraryProcessor() = default;
+
+    /**
+     * @return the path of the dynamic or static library (without the extension)
+     */
     inline const std::string& getLibraryName() const {
         return _libraryName;
     }
 
+    /**
+     *
+     * @param libraryName the path of the dynamic or static library (without the extension)
+     */
     inline void setLibraryName(const std::string& libraryName) {
-        CPPADCG_ASSERT_KNOWN(!libraryName.empty(), "Library name cannot be empty");
+        CPPADCG_ASSERT_KNOWN(!libraryName.empty(), "Library name cannot be empty")
 
         _libraryName = libraryName;
     }
@@ -81,16 +90,14 @@ public:
      * @param libraryExtension the custom extension name
      */
     inline void setCustomLibraryExtension(const std::string& libraryExtension) {
-        delete _customLibExtension;
-        _customLibExtension = new std::string(libraryExtension);
+        _customLibExtension.reset(new std::string(libraryExtension));
     }
 
     /**
      * Resets the library extension to the default
      */
     inline void removeCustomLibraryExtension() {
-        delete _customLibExtension;
-        _customLibExtension = nullptr;
+        _customLibExtension.reset();
     }
 
     /**
@@ -122,7 +129,7 @@ public:
 
         this->modelLibraryHelper_->startingJob("", JobTimer::DYNAMIC_MODEL_LIBRARY);
 
-        const std::map<std::string, ModelCSourceGen<Base>*>& models = this->modelLibraryHelper_->getModels();
+        const std::map<std::string, ModelCSourceGen < Base>*>&models = this->modelLibraryHelper_->getModels();
         try {
             for (const auto& p : models) {
                 const std::map<std::string, std::string>& modelSources = this->getSources(*p.second);
@@ -157,7 +164,7 @@ public:
         if (loadLib)
             return loadDynamicLibrary();
         else
-            return std::unique_ptr<DynamicLib<Base>>(nullptr);
+            return std::unique_ptr<DynamicLib<Base>> (nullptr);
     }
 
     /**
@@ -171,7 +178,7 @@ public:
      *                     typically do not use this feature)
      */
 
-    void createStaticLibrary(CCompiler<Base>& compiler,
+    void createStaticLibrary(CCompiler <Base>& compiler,
                              Archiver& ar,
                              bool posIndepCode) {
         // backup output format so that it can be restored
@@ -211,9 +218,6 @@ public:
         this->modelLibraryHelper_->finishedJob();
     }
 
-    virtual ~DynamicModelLibraryProcessor() {
-        delete _customLibExtension;
-    }
 
 protected:
 

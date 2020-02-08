@@ -30,7 +30,7 @@ protected:
     ModelLibraryCSourceGen<Base>* modelLibraryHelper_;
 public:
 
-    inline ModelLibraryProcessor(ModelLibraryCSourceGen<Base>& modelLibraryHelper) :
+    inline explicit ModelLibraryProcessor(ModelLibraryCSourceGen<Base>& modelLibraryHelper) :
         modelLibraryHelper_(&modelLibraryHelper) {
     }
 

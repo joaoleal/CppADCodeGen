@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -117,7 +118,7 @@ void ModelCSourceGen<Base>::analyseSparseHessianWithLoops(const std::vector<size
         if (_funNoLoops != nullptr) {
             // considers only the pattern for the original equations and leaves out the temporaries
             const std::vector<std::set<size_t> >& dydxx = _funNoLoops->getHessianOrigEqsSparsity();
-            if (dydxx.size() > 0) {
+            if (!dydxx.empty()) {
                 if (dydxx[j1].find(j2) != dydxx[j1].end()) {
                     /**
                      * Present in the equations outside the loops
@@ -237,7 +238,7 @@ void ModelCSourceGen<Base>::analyseSparseHessianWithLoops(const std::vector<size
                             HessianWithLoopsEquationGroupInfo<Base>& groupInfo = loopInfo.equationGroups[g];
                             const std::vector<set<size_t> >& groupHess = group.getHessianSparsity();
 
-                            set<size_t>::const_iterator itz = groupHess[tapeJ1].lower_bound(nIndexed + nNonIndexed);
+                            auto itz = groupHess[tapeJ1].lower_bound(nIndexed + nNonIndexed);
 
                             pairss pos(tapeJ1, j2);
                             bool used = false;
@@ -346,7 +347,7 @@ void ModelCSourceGen<Base>::analyseSparseHessianWithLoops(const std::vector<size
                     const IterEquationGroup<Base>& group = eqGroups[g];
 
                     const set<size_t>& hessRow = group.getHessianSparsity()[posJ1->tape];
-                    set<size_t>::const_iterator itz = hessRow.lower_bound(nIndexed + nNonIndexed);
+                    auto itz = hessRow.lower_bound(nIndexed + nNonIndexed);
 
                     // loop temporary variables
                     for (; itz != hessRow.end(); ++itz) {
@@ -361,7 +362,7 @@ void ModelCSourceGen<Base>::analyseSparseHessianWithLoops(const std::vector<size
                             if (!jInNonIndexed) {
                                 jInNonIndexed = true;
                                 CPPADCG_ASSERT_KNOWN(loopInfo.nonIndexedNonIndexedPosition.find(orig) == loopInfo.nonIndexedNonIndexedPosition.end(),
-                                                     "Repeated hessian elements requested");
+                                                     "Repeated hessian elements requested")
                                 loopInfo.nonIndexedNonIndexedPosition[orig] = e;
                             }
 
@@ -463,7 +464,7 @@ void ModelCSourceGen<Base>::analyseSparseHessianWithLoops(const std::vector<size
                                 if (!jInNonIndexed) {
                                     jInNonIndexed = true;
                                     CPPADCG_ASSERT_KNOWN(loopInfo.nonIndexedNonIndexedPosition.find(orig) == loopInfo.nonIndexedNonIndexedPosition.end(),
-                                                         "Repeated hessian elements requested");
+                                                         "Repeated hessian elements requested")
                                     loopInfo.nonIndexedNonIndexedPosition[orig] = e;
                                 }
 
@@ -480,7 +481,7 @@ void ModelCSourceGen<Base>::analyseSparseHessianWithLoops(const std::vector<size
                          */
                         // loop Hessian row
                         const set<size_t>& hessRow = group.getHessianSparsity()[posK1->tape];
-                        set<size_t>::const_iterator itTapeJ2 = hessRow.lower_bound(nIndexed + nNonIndexed);
+                        auto itTapeJ2 = hessRow.lower_bound(nIndexed + nNonIndexed);
                         for (; itTapeJ2 != hessRow.end(); ++itTapeJ2) {
                             size_t tapeK2 = *itTapeJ2;
                             size_t k2 = loop->getTemporaryIndependents()[tapeK2 - nIndexed - nNonIndexed].original;
@@ -491,7 +492,7 @@ void ModelCSourceGen<Base>::analyseSparseHessianWithLoops(const std::vector<size
                                 if (!jInNonIndexed) {
                                     jInNonIndexed = true;
                                     CPPADCG_ASSERT_KNOWN(loopInfo.nonIndexedNonIndexedPosition.find(orig) == loopInfo.nonIndexedNonIndexedPosition.end(),
-                                                         "Repeated hessian elements requested");
+                                                         "Repeated hessian elements requested")
                                     loopInfo.nonIndexedNonIndexedPosition[orig] = e;
                                 }
 
@@ -519,7 +520,7 @@ void ModelCSourceGen<Base>::analyseSparseHessianWithLoops(const std::vector<size
                             if (fJacRow.find(posK1->tape) != fJacRow.end()) {
                                 if (!jInNonIndexed) {
                                     CPPADCG_ASSERT_KNOWN(loopInfo.nonIndexedNonIndexedPosition.find(orig) == loopInfo.nonIndexedNonIndexedPosition.end(),
-                                                         "Repeated hessian elements requested");
+                                                         "Repeated hessian elements requested")
 
                                     loopInfo.nonIndexedNonIndexedPosition[orig] = e;
                                     jInNonIndexed = true;
@@ -1072,7 +1073,7 @@ CG<Base> createHessianContribution(CodeHandler<Base>& handler,
         return ddfdxdx;
     }
 
-    CPPADCG_ASSERT_UNKNOWN(pattern.getLinearSlopeDy() == 0); // must be a constant index
+    CPPADCG_ASSERT_UNKNOWN(pattern.getLinearSlopeDy() == 0) // must be a constant index
 
     if (iterations.size() == nIterations) {
         // same expression present in all iterations
@@ -1194,7 +1195,7 @@ inline void generateLoopForJacHes(ADFun<CG<Base> >& fun,
 
             tx1v[j1] = Base(1);
             std::vector<CGB> dy = fun.Forward(1, tx1v);
-            CPPADCG_ASSERT_UNKNOWN(dy.size() == m);
+            CPPADCG_ASSERT_UNKNOWN(dy.size() == m)
             tx1v[j1] = Base(0);
 
             // save Jacobian
@@ -1210,7 +1211,7 @@ inline void generateLoopForJacHes(ADFun<CG<Base> >& fun,
                 for (size_t l = 0; l < vw.size(); l++) {
 
                     std::vector<CGB> px = fun.Reverse(2, vw[l]);
-                    CPPADCG_ASSERT_UNKNOWN(px.size() == 2 * n);
+                    CPPADCG_ASSERT_UNKNOWN(px.size() == 2 * n)
 
                     // save Hessian
                     map<size_t, CGB>& hessRow = vhess[l][j1];

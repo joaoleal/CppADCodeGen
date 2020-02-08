@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -42,7 +43,7 @@ public:
         filterDefined_(true),
         elFilter_(m, std::vector<bool>(n, false)),
         fullDefined_(false) {
-        CPPADCG_ASSERT_KNOWN(rows.size() == cols.size(), "The number of row indexes must be the same as the number of column indexes.");
+        CPPADCG_ASSERT_KNOWN(rows.size() == cols.size(), "The number of row indexes must be the same as the number of column indexes.")
         for (size_t i = 0; i < rows.size(); i++) {
             elFilter_[rows[i]][cols[i]] = true;
         }
@@ -54,7 +55,7 @@ public:
         filterDefined_(true),
         elFilter_(m, std::vector<bool>(n, false)),
         fullDefined_(false) {
-        CPPADCG_ASSERT_KNOWN(elements.size() <= m, "Invalid number of rows.");
+        CPPADCG_ASSERT_KNOWN(elements.size() <= m, "Invalid number of rows.")
 
         for (size_t i = 0; i < elements.size(); i++) {
             for (size_t it : elements[i]) {

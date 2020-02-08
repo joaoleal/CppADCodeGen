@@ -1,6 +1,7 @@
 # --------------------------------------------------------------------------
 #  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
 #    Copyright (C) 2012 Ciengis
+#    Copyright (C) 2020 Joao Leal
 #
 #  CppADCodeGen is distributed under multiple licenses:
 #
@@ -13,9 +14,18 @@
 #
 # Author: Joao Leal
 #
+
+CONFIGURE_FILE(
+		${CMAKE_CURRENT_SOURCE_DIR}/cppad/cg/configure.hpp.in
+		${CMAKE_CURRENT_BINARY_DIR}/cppad/cg/configure.hpp
+)
+INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/cppad/cg/configure.hpp
+         DESTINATION "${install_cppadcg_include_location}/cg")
+
 # ----------------------------------------------------------------------------
 # files to be installed
 # ----------------------------------------------------------------------------
+
 INSTALL( DIRECTORY "cppad/cg/"
          DESTINATION "${install_cppadcg_include_location}/cg"
          FILES_MATCHING PATTERN "*.hpp")

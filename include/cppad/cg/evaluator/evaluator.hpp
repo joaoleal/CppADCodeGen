@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -142,7 +143,7 @@ public:
             throw CGException("Invalid independent variable size. Expected ", handler_.getIndependentVariableSize(), " but got ", indepSize, ".");
         }
 
-        CPPADCG_ASSERT_KNOWN(handler_.getIndependentVariableSize() == indepSize, "Invalid size the array of independent variables");
+        CPPADCG_ASSERT_KNOWN(handler_.getIndependentVariableSize() == indepSize, "Invalid size the array of independent variables")
 
         if (underEval_) {
             throw CGException("The same evaluator cannot be used for simultaneous evaluations. "
@@ -239,7 +240,7 @@ protected:
     }
 
     inline const ActiveOut& evalOperations(OperationNode<ScalarIn>& node) {
-        CPPADCG_ASSERT_KNOWN(node.getHandlerPosition() < handler_.getManagedNodesCount(), "this node is not managed by the code handler");
+        CPPADCG_ASSERT_KNOWN(node.getHandlerPosition() < handler_.getManagedNodesCount(), "this node is not managed by the code handler")
 
         // check if this node was previously determined
         if (evals_[node] != nullptr) {
@@ -280,7 +281,7 @@ protected:
     inline std::vector<ActiveOut>& evalArrayCreationOperation(const OperationNode<ScalarIn>& node) {
 
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::ArrayCreation, "Invalid array creation operation");
-        CPPADCG_ASSERT_KNOWN(node.getHandlerPosition() < handler_.getManagedNodesCount(), "this node is not managed by the code handler");
+        CPPADCG_ASSERT_KNOWN(node.getHandlerPosition() < handler_.getManagedNodesCount(), "this node is not managed by the code handler")
 
         // check if this node was previously determined
         auto it = evalsArrays_.find(node.getHandlerPosition());
@@ -305,7 +306,7 @@ protected:
     inline std::vector<ActiveOut>& evalSparseArrayCreationOperation(const OperationNode<ScalarIn>& node) {
 
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::SparseArrayCreation, "Invalid array creation operation");
-        CPPADCG_ASSERT_KNOWN(node.getHandlerPosition() < handler_.getManagedNodesCount(), "this node is not managed by the code handler");
+        CPPADCG_ASSERT_KNOWN(node.getHandlerPosition() < handler_.getManagedNodesCount(), "this node is not managed by the code handler")
 
         // check if this node was previously determined
         auto it = evalsSparseArrays_.find(node.getHandlerPosition());
@@ -479,41 +480,41 @@ protected:
 
     inline ActiveOut evalAssign(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for assign()");
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for assign()")
         return evalArg(args, 0);
     }
 
     inline ActiveOut evalAbs(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for abs()");
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for abs()")
         return abs(evalArg(args, 0));
     }
 
     inline ActiveOut evalAcos(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for acos()");
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for acos()")
         return acos(evalArg(args, 0));
     }
 
     inline ActiveOut evalAdd(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for addition");
+        CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for addition")
         return evalArg(args, 0) + evalArg(args, 1);
     }
 
     inline ActiveOut evalAlias(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for alias");
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for alias")
         return evalArg(args, 0);
     }
 
     inline ActiveOut evalArrayElement(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
         const std::vector<size_t>& info = node.getInfo();
-        CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for array element");
+        CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for array element")
         CPPADCG_ASSERT_KNOWN(args[0].getOperation() != nullptr, "Invalid argument for array element");
         CPPADCG_ASSERT_KNOWN(args[1].getOperation() != nullptr, "Invalid argument for array element");
-        CPPADCG_ASSERT_KNOWN(info.size() == 1, "Invalid number of information data for array element");
+        CPPADCG_ASSERT_KNOWN(info.size() == 1, "Invalid number of information data for array element")
         size_t index = info[0];
         std::vector<ActiveOut>& array = this->evalArrayCreationOperation(*args[0].getOperation()); // array creation
 
@@ -525,73 +526,73 @@ protected:
 
     inline ActiveOut evalAsin(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for asin()");
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for asin()")
         return asin(evalArg(args, 0));
     }
 
     inline ActiveOut evalAtan(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for atan()");
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for atan()")
         return atan(evalArg(args, 0));
     }
 
     inline ActiveOut evalCompareLt(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareLt, )");
+        CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareLt, )")
         return CondExpOp(CompareLt, evalArg(args, 0), evalArg(args, 1), evalArg(args, 2), evalArg(args, 3));
     }
 
     inline ActiveOut evalCompareLe(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareLe, )");
+        CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareLe, )")
         return CondExpOp(CompareLe, evalArg(args, 0), evalArg(args, 1), evalArg(args, 2), evalArg(args, 3));
     }
 
     inline ActiveOut evalCompareEq(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareEq, )");
+        CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareEq, )")
         return CondExpOp(CompareEq, evalArg(args, 0), evalArg(args, 1), evalArg(args, 2), evalArg(args, 3));
     }
 
     inline ActiveOut evalCompareGe(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareGe, )");
+        CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareGe, )")
         return CondExpOp(CompareGe, evalArg(args, 0), evalArg(args, 1), evalArg(args, 2), evalArg(args, 3));
     }
 
     inline ActiveOut evalCompareGt(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareGt, )");
+        CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareGt, )")
         return CondExpOp(CompareGt, evalArg(args, 0), evalArg(args, 1), evalArg(args, 2), evalArg(args, 3));
     }
 
     inline ActiveOut evalCompareNe(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareNe, )");
+        CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareNe, )")
         return CondExpOp(CompareNe, evalArg(args, 0), evalArg(args, 1), evalArg(args, 2), evalArg(args, 3));
     }
 
     inline ActiveOut evalCosh(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for cosh()");
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for cosh()")
         return cosh(evalArg(args, 0));
     }
 
     inline ActiveOut evalCos(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for cos()");
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for cos()")
         return cos(evalArg(args, 0));
     }
 
     inline ActiveOut evalDiv(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for division");
+        CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for division")
         return evalArg(args, 0) / evalArg(args, 1);
     }
 
     inline ActiveOut evalExp(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for exp()");
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for exp()")
         return exp(evalArg(args, 0));
     }
 
@@ -602,19 +603,19 @@ protected:
 
     inline ActiveOut evalLog(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for log()");
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for log()")
         return log(evalArg(args, 0));
     }
 
     inline ActiveOut evalMul(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for multiplication");
+        CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for multiplication")
         return evalArg(args, 0) * evalArg(args, 1);
     }
 
     inline ActiveOut evalPow(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for pow()");
+        CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for pow()")
         return pow(evalArg(args, 0), evalArg(args, 1));
     }
 
@@ -626,49 +627,49 @@ protected:
     //case PriOp: //  PrintFor(text, parameter or variable, parameter or variable)
     inline ActiveOut evalSign(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for sign()");
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for sign()")
         return sign(evalArg(args, 0));
     }
 
     inline ActiveOut evalSinh(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for sinh()");
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for sinh()")
         return sinh(evalArg(args, 0));
     }
 
     inline ActiveOut evalSin(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for sin()");
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for sin()")
         return sin(evalArg(args, 0));
     }
 
     inline ActiveOut evalSqrt(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for sqrt()");
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for sqrt()")
         return sqrt(evalArg(args, 0));
     }
 
     inline ActiveOut evalSub(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for subtraction");
+        CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for subtraction")
         return evalArg(args, 0) - evalArg(args, 1);
     }
 
     inline ActiveOut evalTanh(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for tanh()");
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for tanh()")
         return tanh(evalArg(args, 0));
     }
 
     inline ActiveOut evalTan(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for tan()");
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for tan()")
         return tan(evalArg(args, 0));
     }
 
     inline ActiveOut evalMinus(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for unary minus");
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for unary minus")
         return -evalArg(args, 0);
     }
 

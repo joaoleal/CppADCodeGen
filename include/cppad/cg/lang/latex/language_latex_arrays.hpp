@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2014 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -20,7 +21,7 @@ namespace cg {
 
 template<class Base>
 void LanguageLatex<Base>::printArrayCreationOp(OperationNode<Base>& array) {
-    CPPADCG_ASSERT_KNOWN(array.getArguments().size() > 0, "Invalid number of arguments for array creation operation");
+    CPPADCG_ASSERT_KNOWN(array.getArguments().size() > 0, "Invalid number of arguments for array creation operation")
     const size_t id = getVariableID(array);
     const std::vector<Argument<Base> >& args = array.getArguments();
     const size_t argSize = args.size();
@@ -63,12 +64,12 @@ void LanguageLatex<Base>::printArrayCreationOp(OperationNode<Base>& array) {
 template<class Base>
 void LanguageLatex<Base>::printSparseArrayCreationOp(OperationNode<Base>& array) {
     const std::vector<size_t>& info = array.getInfo();
-    CPPADCG_ASSERT_KNOWN(info.size() > 0, "Invalid number of information elements for sparse array creation operation");
+    CPPADCG_ASSERT_KNOWN(!info.empty(), "Invalid number of information elements for sparse array creation operation")
 
     const std::vector<Argument<Base> >& args = array.getArguments();
     const size_t argSize = args.size();
 
-    CPPADCG_ASSERT_KNOWN(info.size() == argSize + 1, "Invalid number of arguments for sparse array creation operation");
+    CPPADCG_ASSERT_KNOWN(info.size() == argSize + 1, "Invalid number of arguments for sparse array creation operation")
 
     if (argSize == 0)
         return; // empty array
@@ -188,7 +189,7 @@ inline size_t LanguageLatex<Base>::printArrayCreationUsingLoop(size_t startPos,
                 return starti; // cannot determine consecutive elements
             }
 
-            LinearIndexPattern* refLIp = static_cast<LinearIndexPattern*> (refIp);
+            auto* refLIp = static_cast<LinearIndexPattern*> (refIp);
 
             for (; i < argSize; i++) {
                 if (isSameArgument(args[i], tmpArrayValues[startPos + i]))
@@ -208,7 +209,7 @@ inline size_t LanguageLatex<Base>::printArrayCreationUsingLoop(size_t startPos,
                 if (ip->getType() != IndexPatternType::Linear) {
                     break; // different pattern type
                 }
-                const LinearIndexPattern* lIp = static_cast<const LinearIndexPattern*> (ip);
+                const auto* lIp = static_cast<const LinearIndexPattern*> (ip);
                 if (refLIp->getLinearSlopeDx() != lIp->getLinearSlopeDx() ||
                         refLIp->getLinearSlopeDy() != lIp->getLinearSlopeDy() ||
                         refLIp->getXOffset() != lIp->getXOffset() ||
@@ -220,7 +221,7 @@ inline size_t LanguageLatex<Base>::printArrayCreationUsingLoop(size_t startPos,
             if (i - starti < 3)
                 return starti;
 
-            LinearIndexPattern* lip2 = new LinearIndexPattern(*refLIp);
+            auto* lip2 = new LinearIndexPattern(*refLIp);
             lip2->setLinearConstantTerm(lip2->getLinearConstantTerm() - starti);
             Plane2DIndexPattern p2dip(lip2,
                                       new LinearIndexPattern(0, 1, 1, 0));
@@ -288,9 +289,9 @@ inline std::string LanguageLatex<Base>::getTempArrayName(const OperationNode<Bas
 
 template<class Base>
 void LanguageLatex<Base>::printArrayElementOp(OperationNode<Base>& op) {
-    CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for array element operation");
-    CPPADCG_ASSERT_KNOWN(op.getArguments()[0].getOperation() != nullptr, "Invalid argument for array element operation");
-    CPPADCG_ASSERT_KNOWN(op.getInfo().size() == 1, "Invalid number of information indexes for array element operation");
+    CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for array element operation")
+    CPPADCG_ASSERT_KNOWN(op.getArguments()[0].getOperation() != nullptr, "Invalid argument for array element operation")
+    CPPADCG_ASSERT_KNOWN(op.getInfo().size() == 1, "Invalid number of information indexes for array element operation")
 
     OperationNode<Base>& arrayOp = *op.getArguments()[0].getOperation();
     std::string arrayName;
@@ -331,7 +332,7 @@ inline void LanguageLatex<Base>::printArrayStructInit(const std::string& dataArr
                 << dataArrayName << ".sparse = " << false << ";";
     } else {
         // sparse array
-        CPPADCG_ASSERT_KNOWN(array.getOperationType() == CGOpCode::SparseArrayCreation, "Invalid node type");
+        CPPADCG_ASSERT_KNOWN(array.getOperationType() == CGOpCode::SparseArrayCreation, "Invalid node type")
         size_t nnz = array.getArguments().size();
         if (nnz > 0)
             _code << dataArrayName << ".data = " << aName << "; ";
