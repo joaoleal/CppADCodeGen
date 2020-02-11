@@ -1,5 +1,4 @@
 language: cpp
-sudo: required
 
 matrix:
   include:
@@ -121,5 +120,5 @@ script:
   - make -j2 build_tests
   - CTEST_OUTPUT_ON_FAILURE=TRUE make test
   - cd ..
-  - sudo make install
-  - sudo make uninstall
+  - make DESTDIR=cppadcg-install-dir install
+  - make DESTDIR=cppadcg-install-dir uninstall
