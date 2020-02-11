@@ -178,3 +178,8 @@ ADD_SUBDIRECTORY(doc)
 # enable testing must be called here in order for the target test to be created
 ENABLE_TESTING()
 ADD_SUBDIRECTORY(test EXCLUDE_FROM_ALL)
+
+# =============================================================================
+# uninstall procedure
+# =============================================================================
+ADD_CUSTOM_TARGET(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cppadcodegen_uninstall.cmake)
