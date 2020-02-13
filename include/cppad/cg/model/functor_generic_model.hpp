@@ -26,12 +26,15 @@ namespace cg {
  * This class is not thread-safe and it should not be used simultaneously in
  * different threads.
  * Multiple instances of this class for the same model from the same model
- * library object can be used simulataneously in different threads.
+ * library object can be used simultaneously in different threads.
  *
  * @author Joao Leal
  */
 template<class Base>
 class FunctorGenericModel : public GenericModel<Base> {
+protected:
+    static constexpr const char* ERROR_LIBRARY_NOT_READY = "The model library is not ready. The model library that"
+                                                           " provided this model might have been closed or deleted.";
 protected:
     bool _isLibraryReady;
     /// the model name
@@ -124,7 +127,7 @@ public:
     }
 
     std::vector<bool> JacobianSparsityBool() override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Dynamic library closed")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_jacobianSparsity != nullptr, "No Jacobian sparsity function defined in the dynamic library")
 
         unsigned long const* row, *col;
@@ -140,7 +143,7 @@ public:
     }
 
     std::vector<std::set<size_t> > JacobianSparsitySet() override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_jacobianSparsity != nullptr, "No Jacobian sparsity function defined in the dynamic library")
 
         unsigned long const* row, *col;
@@ -157,7 +160,7 @@ public:
 
     void JacobianSparsity(std::vector<size_t>& equations,
                           std::vector<size_t>& variables) override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_jacobianSparsity != nullptr, "No Jacobian sparsity function defined in the dynamic library")
 
         unsigned long const* row, *col;
@@ -177,7 +180,7 @@ public:
     }
 
     std::vector<bool> HessianSparsityBool() override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_hessianSparsity != nullptr, "No Hessian sparsity function defined in the dynamic library")
 
         unsigned long const* row, *col;
@@ -193,7 +196,7 @@ public:
     }
 
     std::vector<std::set<size_t> > HessianSparsitySet() override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_hessianSparsity != nullptr, "No Hessian sparsity function defined in the dynamic library")
 
         unsigned long const* row, *col;
@@ -210,7 +213,7 @@ public:
 
     void HessianSparsity(std::vector<size_t>& rows,
                          std::vector<size_t>& cols) override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_hessianSparsity != nullptr, "No Hessian sparsity function defined in the dynamic library")
 
         unsigned long const* row, *col;
@@ -229,7 +232,7 @@ public:
     }
 
     std::vector<bool> HessianSparsityBool(size_t i) override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_hessianSparsity2 != nullptr, "No Hessian sparsity function defined in the dynamic library")
 
         unsigned long const* row, *col;
@@ -245,7 +248,7 @@ public:
     }
 
     std::vector<std::set<size_t> > HessianSparsitySet(size_t i) override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_hessianSparsity2 != nullptr, "No Hessian sparsity function defined in the dynamic library")
 
         unsigned long const* row, *col;
@@ -262,7 +265,7 @@ public:
 
     void HessianSparsity(size_t i, std::vector<size_t>& rows,
                          std::vector<size_t>& cols) override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_hessianSparsity2 != nullptr, "No Hessian sparsity function defined in the dynamic library")
 
         unsigned long const* row, *col;
@@ -295,7 +298,7 @@ public:
     /// calculate the dependent values (zero order)
     void ForwardZero(ArrayView<const Base> x,
                      ArrayView<Base> dep) override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_zero != nullptr, "No zero order forward function defined in the dynamic library")
         CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                              " please use the variable size methods")
@@ -311,7 +314,7 @@ public:
 
     void ForwardZero(const std::vector<const Base*> &x,
                      ArrayView<Base> dep) override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_zero != nullptr, "No zero order forward function defined in the dynamic library")
         CPPADCG_ASSERT_KNOWN(_in.size() == x.size(), "The number of independent variable arrays is invalid")
         CPPADCG_ASSERT_KNOWN(dep.size() == _m, "Invalid dependent array size")
@@ -326,7 +329,7 @@ public:
                      CppAD::vector<bool>& vy,
                      ArrayView<const Base> tx,
                      ArrayView<Base> ty) override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_zero != nullptr, "No zero order forward function defined in the dynamic library")
         CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                              " please use the variable size methods")
@@ -361,7 +364,7 @@ public:
     /// calculate entire Jacobian
     void Jacobian(ArrayView<const Base> x,
                   ArrayView<Base> jac) override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_jacobian != nullptr, "No Jacobian function defined in the dynamic library")
         CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                              " please use the variable size methods")
@@ -384,7 +387,7 @@ public:
     void Hessian(ArrayView<const Base> x,
                  ArrayView<const Base> w,
                  ArrayView<Base> hess) override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_hessian != nullptr, "No Hessian function defined in the dynamic library")
         CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                              " please use the variable size methods")
@@ -408,7 +411,7 @@ public:
                     ArrayView<Base> ty) override {
         const size_t k = 1;
 
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_forwardOne != nullptr, "No forward one function defined in the dynamic library")
         CPPADCG_ASSERT_KNOWN(tx.size() >= (k + 1) * _n, "Invalid tx size")
         CPPADCG_ASSERT_KNOWN(ty.size() >= (k + 1) * _m, "Invalid ty size")
@@ -426,7 +429,7 @@ public:
     void ForwardOne(ArrayView<const Base> x,
                     size_t tx1Nnz, const size_t idx[], const Base tx1[],
                     ArrayView<Base> ty1) override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_sparseForwardOne != nullptr, "No sparse forward one function defined in the dynamic library")
         CPPADCG_ASSERT_KNOWN(_forwardOneSparsity != nullptr, "No forward one sparsity function defined in the dynamic library")
         CPPADCG_ASSERT_KNOWN(x.size() >= _n, "Invalid x size")
@@ -472,7 +475,7 @@ public:
         const size_t k = 0;
         const size_t k1 = k + 1;
 
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_reverseOne != nullptr, "No reverse one function defined in the dynamic library")
         CPPADCG_ASSERT_KNOWN(tx.size() >= k1 * _n, "Invalid tx size")
         CPPADCG_ASSERT_KNOWN(ty.size() >= k1 * _m, "Invalid ty size")
@@ -492,7 +495,7 @@ public:
     void ReverseOne(ArrayView<const Base> x,
                     ArrayView<Base> px,
                     size_t pyNnz, const size_t idx[], const Base py[]) override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_sparseReverseOne != nullptr, "No sparse reverse one function defined in the dynamic library")
         CPPADCG_ASSERT_KNOWN(_reverseOneSparsity != nullptr, "No reverse one sparsity function defined in the dynamic library")
         CPPADCG_ASSERT_KNOWN(x.size() >= _n, "Invalid x size")
@@ -538,7 +541,7 @@ public:
         const size_t k = 1;
         const size_t k1 = k + 1;
 
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_reverseTwo != nullptr, "No sparse reverse two function defined in the dynamic library")
         CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1")
         CPPADCG_ASSERT_KNOWN(tx.size() >= k1 * _n, "Invalid tx size")
@@ -561,7 +564,7 @@ public:
                     size_t tx1Nnz, const size_t idx[], const Base tx1[],
                     ArrayView<Base> px2,
                     ArrayView<const Base> py2) override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_sparseReverseTwo != nullptr, "No sparse reverse two function defined in the dynamic library")
         CPPADCG_ASSERT_KNOWN(_reverseTwoSparsity != nullptr, "No reverse two sparsity function defined in the dynamic library")
         CPPADCG_ASSERT_KNOWN(x.size() >= _n, "Invalid x size")
@@ -607,7 +610,7 @@ public:
 
     void SparseJacobian(ArrayView<const Base> x,
                         ArrayView<Base> jac) override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_sparseJacobian != nullptr, "No sparse jacobian function defined in the dynamic library")
         CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                              " please use the variable size methods")
@@ -640,7 +643,7 @@ public:
                         std::vector<Base>& jac,
                         std::vector<size_t>& row,
                         std::vector<size_t>& col) override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_sparseJacobian != nullptr, "No sparse Jacobian function defined in the dynamic library")
         CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                              " please use the variable size methods")
@@ -669,7 +672,7 @@ public:
                         ArrayView<Base> jac,
                         size_t const** row,
                         size_t const** col) override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_sparseJacobian != nullptr, "No sparse Jacobian function defined in the dynamic library")
         CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                              " please use the variable size methods")
@@ -696,7 +699,7 @@ public:
                         ArrayView<Base> jac,
                         size_t const** row,
                         size_t const** col) override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_sparseJacobian != nullptr, "No sparse Jacobian function defined in the dynamic library")
         CPPADCG_ASSERT_KNOWN(_in.size() == x.size(), "The number of independent variable arrays is invalid")
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet")
@@ -725,7 +728,7 @@ public:
     void SparseHessian(ArrayView<const Base> x,
                        ArrayView<const Base> w,
                        ArrayView<Base> hess) override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_sparseHessian != nullptr, "No sparse Hessian function defined in the dynamic library")
         CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent array size")
         CPPADCG_ASSERT_KNOWN(w.size() == _m, "Invalid multiplier array size")
@@ -759,7 +762,7 @@ public:
                        std::vector<Base>& hess,
                        std::vector<size_t>& row,
                        std::vector<size_t>& col) override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_sparseHessian != nullptr, "No sparse Hessian function defined in the dynamic library")
         CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent array size")
         CPPADCG_ASSERT_KNOWN(w.size() == _m, "Invalid multiplier array size")
@@ -792,7 +795,7 @@ public:
                        ArrayView<Base> hess,
                        size_t const** row,
                        size_t const** col) override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_sparseHessian != nullptr, "No sparse Hessian function defined in the dynamic library")
         CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                              " please use the variable size methods")
@@ -821,7 +824,7 @@ public:
                        ArrayView<Base> hess,
                        size_t const** row,
                        size_t const** col) override {
-        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_sparseHessian != nullptr, "No sparse Hessian function defined in the dynamic library")
         CPPADCG_ASSERT_KNOWN(_in.size() == x.size(), "The number of independent variable arrays is invalid")
         CPPADCG_ASSERT_KNOWN(w.size() == _m, "Invalid multiplier array size")

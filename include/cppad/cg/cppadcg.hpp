@@ -17,13 +17,22 @@
  */
 
 // --------------------------------------------------------------------------
+
+// Make sure CppADCodeGen is included before CppAD
+# ifdef CPPAD_CPPAD_HPP
+static_assert(false,
+"\ncppad/cppad.hpp was included before cppad/cg/cppadcg.hpp\n"
+"cppadcg.hpp includes cppad.hpp with the proper environment for CppADCodeGen"
+);
+# endif
+
 // System routines that can be used by rest of CppAD with out including
 
 #include <algorithm>
 #include <array>
-#include <assert.h>
+#include <cassert>
 #include <cstddef>
-#include <errno.h>
+#include <cerrno>
 #include <fstream>
 #include <iomanip>
 #include <iosfwd>
@@ -37,13 +46,13 @@
 #include <deque>
 #include <forward_list>
 #include <set>
-#include <stddef.h>
+#include <cstddef>
 #include <stdexcept>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <sstream>
 #include <string>
-#include <string.h>
+#include <cstring>
 #include <chrono>
 #include <thread>
 #include <functional>
