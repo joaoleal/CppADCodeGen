@@ -82,7 +82,10 @@ public:
         std::vector<ADCGD> xTape(_xTape.size());
         for (size_t i = 0; i < xTape.size(); ++i) xTape[i] = _xTape[i];
 
-        CppAD::Independent(xTape);
+        size_t abort_op_index = 0;
+        bool record_compare = false;
+        CppAD::Independent(xTape, abort_op_index, record_compare);
+
 
         if (!_xNorm.empty()) {
             for (size_t i = 0; i < xTape.size(); i++)
@@ -169,7 +172,7 @@ public:
     }
 
     void testForwardZero() {
-        this->testForwardZeroResults(*_model, *_fun, _xRun, epsilonR, epsilonA);
+        this->testForwardZeroResults(*_model, *_fun, nullptr, _xRun, epsilonR, epsilonA);
     }
 
     // Jacobian
@@ -183,12 +186,20 @@ public:
 
     // sparse Jacobian
     void testJacobian() {
-        this->testJacobianResults(*_dynamicLib, *_model, *_fun, _xRun, !_jacRow.empty(),epsilonR, epsilonA);
+        // sparse Jacobian again (make sure the second run is also OK)
+        size_t n_tests = _dynamicLib->getThreadNumber() > 1 ? 2 : 1;
+
+        this->testSparseJacobianResults(n_tests, *_model, *_fun, nullptr, _xRun, !_jacRow.empty(), epsilonR,
+                                        epsilonA);
     }
 
     // sparse Hessian
     void testHessian() {
-        this->testHessianResults(*_dynamicLib, *_model, *_fun, _xRun, !_hessRow.empty(), epsilonR, epsilonA);
+        // sparse Hessian again (make sure the second run is also OK)
+        size_t n_tests = _dynamicLib->getThreadNumber() > 1 ? 2 : 1;
+
+        this->testSparseHessianResults(n_tests, *_model, *_fun, nullptr, _xRun, !_hessRow.empty(), epsilonR,
+                                       epsilonA);
     }
 
 };
