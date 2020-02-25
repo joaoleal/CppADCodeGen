@@ -68,16 +68,7 @@ TEST(CppADCGLatexTest, latex) {
     langMathML.setSaveVariableRelations(true);
 
     // add some additional code to select variables
-    langMathML.setStyle(langMathML.getStyle() + R"(
-.selectedProp{background-color: #ccc;}
-.faded{
-    opacity: 0.2;
-    filter: alpha(opacity=20); /* For IE8 and earlier */
-}
-.faded2{
-    opacity: 0.5;
-    filter: alpha(opacity=50); /* For IE8 and earlier */
-})");
+    langMathML.setStyle(langMathML.getStyle() + readStringFromFile("mathml.css"));
 
     // use block display
     langMathML.setEquationMarkup(R"(<math display="block" class="equation">)", "</math>");
@@ -86,22 +77,9 @@ TEST(CppADCGLatexTest, latex) {
     //langMathML.setEquationMarkup("<math>", "</math><br/>");
 
     // use MathJax (and align to the left)
-    langMathML.setHeadExtraMarkup("<script type=\"text/x-mathjax-config\">\n"
-                                  //"MathJax.Hub.Config({    MMLorHTML: { prefer: { Firefox: \"MML\" } }  });\n" // use this to define a preferred browser renderer
-                                  "MathJax.Hub.Config({\n"
-                                  "    jax: [\"input/TeX\",\"output/HTML-CSS\"],\n"
-                                  "    displayAlign: \"left\"\n"
-                                  "});\n"
-                                  "</script>\n"
-                                  "<script type=\"text/javascript\" src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML\"></script>");
+    langMathML.setHeadExtraMarkup(readStringFromFile("head_extra.html"));
 
-    std::ifstream jsFile;
-    jsFile.open("variableSelection.js");
-
-    std::stringstream strStream;
-    strStream << jsFile.rdbuf();
-
-    langMathML.setJavascript(strStream.str());
+    langMathML.setJavascript(readStringFromFile("variableSelection.js"));
 
     // create the HMTL file
     std::ofstream htmlFile;

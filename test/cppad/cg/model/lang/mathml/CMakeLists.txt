@@ -23,6 +23,15 @@ add_cppadcg_test(mathml.cpp)
 
 link_file("${CMAKE_CURRENT_SOURCE_DIR}/variableSelection.js"
           "${CMAKE_CURRENT_BINARY_DIR}/variableSelection.js")
+link_file("${CMAKE_CURRENT_SOURCE_DIR}/mathml.css"
+          "${CMAKE_CURRENT_BINARY_DIR}/mathml.css")
+link_file("${CMAKE_CURRENT_SOURCE_DIR}/head_extra.html"
+          "${CMAKE_CURRENT_BINARY_DIR}/head_extra.html")
+
+
 ADD_CUSTOM_TARGET(link_or_copy_variableSelectionJS
-                  DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/variableSelection.js")
+                  DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/variableSelection.js"
+                          "${CMAKE_CURRENT_BINARY_DIR}/mathml.css"
+                          "${CMAKE_CURRENT_BINARY_DIR}/head_extra.html")
+
 ADD_DEPENDENCIES("mathml" link_or_copy_variableSelectionJS)
