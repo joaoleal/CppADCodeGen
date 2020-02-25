@@ -139,7 +139,7 @@ inline void addMatrixSparsity(const VectorSet& a,
 template<class VectorSet, class VectorSet2>
 inline void addMatrixSparsity(const VectorSet& a,
                               VectorSet2& result) {
-    CPPADCG_ASSERT_UNKNOWN(result.size() == a.size());
+    CPPADCG_ASSERT_UNKNOWN(result.size() == a.size())
 
     addMatrixSparsity<VectorSet, VectorSet2>(a, a.size(), result);
 }
@@ -197,7 +197,7 @@ inline void multMatrixMatrixSparsity(const VectorSet& a,
 
     for (size_t jj = 0; jj < q; jj++) { //loop columns of b
         const std::set<size_t>& colB = bt[jj];
-        if (colB.size() > 0) {
+        if (!colB.empty()) {
             for (size_t i = 0; i < m; i++) {
                 const std::set<size_t>& rowA = a[i];
                 for (size_t rowb : colB) {
@@ -264,7 +264,7 @@ inline void multMatrixTransMatrixSparsity(const VectorSet& a,
 
     for (size_t jj = 0; jj < q; jj++) { //loop columns of b
         const std::set<size_t>& colB = bt[jj];
-        if (colB.size() > 0) {
+        if (!colB.empty()) {
             for (size_t i = 0; i < n; i++) {
                 const std::set<size_t>& rowAt = at[i];
                 if (!rowAt.empty()) {
@@ -803,6 +803,16 @@ inline std::string implode(const std::vector<std::string>& text,
         }
         return out;
     }
+}
+
+std::string readStringFromFile(const std::string& path) {
+    std::ifstream iStream;
+    iStream.open(path);
+
+    std::stringstream strStream;
+    strStream << iStream.rdbuf();
+
+    return strStream.str();
 }
 
 } // END cg namespace

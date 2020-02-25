@@ -53,6 +53,19 @@ public:
 
 protected:
 
+    static inline ::testing::AssertionResult compareValues(const std::vector<Base>& depCGen,
+                                                           const std::vector<CppAD::cg::CG<Base> >& dep,
+                                                           double epsilonR = 1e-14, double epsilonA = 1e-14) {
+
+        std::vector<double> depd(dep.size());
+
+        for (size_t i = 0; i < depd.size(); i++) {
+            depd[i] = dep[i].getValue();
+        }
+
+        return compareValues<Base>(depCGen, depd, epsilonR, epsilonA);
+    }
+
     template<class T>
     static inline ::testing::AssertionResult compareValues(const std::vector<std::vector<T> >& depCGen,
                                                            const std::vector<std::vector<T> >& dep,

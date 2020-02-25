@@ -153,7 +153,7 @@ ENDIF()
 # ----------------------------------------------------------------------------
 # Check if it is possible to use LLVM/Clang for JIT
 # ----------------------------------------------------------------------------
-SET(CPPADCG_LLVM_LINK_LIB "3.2|3.6|3.8|4.0|5.0|6.0|7.0|8.0")
+SET(CPPADCG_LLVM_LINK_LIB "3.2|3.6|3.8|4.0|5.0|6.0|7.0|8.0|9.0")
 
 IF((("${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}" MATCHES "^(${CPPADCG_LLVM_LINK_LIB})$") AND CLANG_FOUND)
         OR

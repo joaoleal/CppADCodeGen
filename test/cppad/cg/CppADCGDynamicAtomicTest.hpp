@@ -16,13 +16,13 @@
  * Author: Joao Leal
  */
 
-#include "CppADCGTest.hpp"
+#include "CppADCGModelTest.hpp"
 #include "gccCompilerFlags.hpp"
 
 namespace CppAD {
 namespace cg {
 
-class CppADCGDynamicAtomicTest : public CppADCGTest {
+class CppADCGDynamicAtomicTest : public CppADCGModelTest {
 public:
     using Super = CppADCGTest;
     using Base = Super::Base;
@@ -43,7 +43,7 @@ public:
     explicit CppADCGDynamicAtomicTest(std::string modelName,
                                       bool verbose = false,
                                       bool printValues = false) :
-            CppADCGTest(verbose, printValues),
+            CppADCGModelTest(verbose, printValues),
             _modelName(std::move(modelName)) {
         //this->verbose_ = true;
     }
@@ -51,14 +51,14 @@ public:
     virtual std::vector<ADCGD> model(const std::vector<ADCGD>& x) = 0;
 
     virtual std::vector<ADCGD> modelOuter(const std::vector<ADCGD>& y) {
-        std::vector<ADCGD> Z(y.size() - 1);
+        std::vector<ADCGD> z(y.size() - 1);
 
         for (size_t i = 0; i < y.size() - 1; i++) {
-            Z[i] = 2 * y[i];
+            z[i] = 2 * y[i];
         }
-        Z[Z.size() - 1] += y[y.size() - 1];
+        z[z.size() - 1] += y[y.size() - 1];
 
-        return Z;
+        return z;
     }
 
     void TearDown() override {
@@ -120,196 +120,56 @@ public:
 
         atomicfun(ax, ay);
 
-        // create f2: x -> y and stop tape recording
-        ADFun<double> f2(ax, ay);
+        // create fWrapAtom: x -> y and stop tape recording
+        ADFun<double> fWrapAtom(ax, ay);
 
         /**
          * Test zero order
          */
-        vector<CGD> xOrig(n);
-        for (size_t j = 0; j < n; j++)
-            xOrig[j] = x[j];
+        std::vector<Base> xOrig(x.data(), x.data() + x.size());
 
-        vector<CGD> yOrig = _funInner->Forward(0, xOrig);
-        vector<double> yInner = modelLib->ForwardZero(x);
-        vector<double> yOuter = f2.Forward(0, x);
-
-        ASSERT_TRUE(compareValues<double>(yInner, yOrig, epsilonR, epsilonA));
-        ASSERT_TRUE(compareValues<double>(yOuter, yOrig, epsilonR, epsilonA));
+        testForwardZeroResults(*modelLib, *_funInner, &fWrapAtom, xOrig, epsilonR, epsilonA);
 
         /**
          * Test first order forward mode
          */
-        size_t k = 1;
-        size_t k1 = k + 1;
-
-        vector<double> x_p(n);
-        for (size_t j = 0; j < n; j++)
-            x_p[j] = 0;
-
-        vector<CGD> x_pOrig(n);
-        vector<double> tx(k1 * n);
-        for (size_t j = 0; j < n; j++)
-            tx[j * k1] = x[j]; // zero order
-        for (size_t j = 0; j < n; j++)
-            tx[j * k1 + 1] = 0; // first order
-
-        for (size_t j = 0; j < n; j++) {
-            x_p[j] = 1;
-            x_pOrig[j] = 1;
-            tx[j * k1 + 1] = 1;
-
-            vector<CGD> y_pOrig = _funInner->Forward(1, x_pOrig);
-            vector<double> y_pInner = modelLib->ForwardOne(tx);
-            vector<double> y_pOuter = f2.Forward(1, x_p);
-
-            x_p[j] = 0;
-            x_pOrig[j] = 0;
-            tx[j * k1 + 1] = 0;
-
-            ASSERT_TRUE(compareValues<double>(y_pInner, y_pOrig, epsilonR, epsilonA));
-            ASSERT_TRUE(compareValues<double>(y_pOuter, y_pOrig, epsilonR, epsilonA));
-        }
+        testForwardOneResults(*modelLib, *_funInner, &fWrapAtom, xOrig, epsilonR, epsilonA);
 
         /**
          * Test first order reverse mode
          */
-        k = 0;
-        k1 = k + 1;
-
-        vector<double> w(m);
-        for (size_t i = 0; i < m; i++)
-            w[i] = 0;
-        vector<CGD> wOrig(m);
-        tx.resize(k1 * n);
-        for (size_t j = 0; j < n; j++)
-            tx[j * k1] = x[j]; // zero order
-        vector<double> ty(k1 * m);
-        for (size_t i = 0; i < m; i++)
-            ty[i * k1] = yInner[i]; // zero order
-
-        for (size_t i = 0; i < m; i++) {
-            w[i] = 1;
-            wOrig[i] = 1;
-
-            vector<CGD> dwOrig = _funInner->Reverse(1, wOrig);
-            vector<double> dwInner = modelLib->ReverseOne(tx, ty, w);
-            vector<double> dwOuter = f2.Reverse(1, w);
-
-            w[i] = 0;
-            wOrig[i] = 0;
-
-            ASSERT_TRUE(compareValues<double>(dwInner, dwOrig, epsilonR, epsilonA));
-            ASSERT_TRUE(compareValues<double>(dwOuter, dwOrig, epsilonR, epsilonA));
-        }
+        testReverseOneResults(*modelLib, *_funInner, &fWrapAtom, xOrig, epsilonR, epsilonA);
 
         /**
          * Test second order reverse mode
          */
-        k = 1;
-        k1 = k + 1;
-        tx.resize(k1 * n);
-        ty.resize(k1 * m);
-        vector<double> py(k1 * m);
-        vector<CGD> pyOrig(k1 * m);
-        //wOrig.resize(k1 * m);
-        for (size_t j = 0; j < n; j++) {
-            tx[j * k1] = x[j]; // zero order
-            tx[j * k1 + 1] = 0; // first order
-        }
-        for (size_t i = 0; i < m; i++) {
-            ty[i * k1] = yInner[i]; // zero order
-            py[i * k1] = 0.0;
-            py[i * k1 + 1] = 1.0; // first order
-            pyOrig[i * k1] = 0.0;
-            pyOrig[i * k1 + 1] = 1.0; // first order
-        }
-
-        for (size_t j = 0; j < n; j++) {
-            x_p[j] = 1;
-            x_pOrig[j] = 1;
-            tx[j * k1 + 1] = 1;
-
-            _funInner->Forward(1, x_pOrig);
-            vector<CGD> dwOrig = _funInner->Reverse(2, pyOrig);
-            vector<double> dwInner = modelLib->ReverseTwo(tx, ty, py);
-            f2.Forward(1, x_p);
-            vector<double> dwOuter = f2.Reverse(2, py);
-
-            x_p[j] = 0;
-            x_pOrig[j] = 0;
-            tx[j * k1 + 1] = 0;
-
-            // only compare second order information
-            // (location of the elements is different then if py.size() == m)
-            ASSERT_EQ(dwOrig.size(), n * k1);
-            ASSERT_EQ(dwOrig.size(), dwInner.size());
-            ASSERT_EQ(dwOrig.size(), dwOuter.size());
-            for (size_t j2 = 0; j2 < n; j2++) {
-                ASSERT_TRUE(nearEqual(dwInner[j2 * k1], dwOrig[j2 * k1].getValue()));
-                ASSERT_TRUE(nearEqual(dwOuter[j2 * k1], dwOrig[j2 * k1].getValue()));
-            }
-        }
+        testReverseTwoResults(*modelLib, *_funInner, &fWrapAtom, xOrig, epsilonR, epsilonA);
 
         /**
-         * Jacobian
+         * Dense Jacobian
          */
-        vector<CGD> jacOrig = _funInner->Jacobian(xOrig);
-        vector<double> jacOuter = f2.Jacobian(x);
-        ASSERT_TRUE(compareValues<double>(jacOuter, jacOrig, epsilonR, epsilonA));
+        testDenseJacResults(*modelLib, *_funInner, xOrig, epsilonR, epsilonA);
 
         /**
          * Jacobian sparsity
          */
-        const std::vector<bool> jacSparsityOrig = jacobianForwardSparsity<std::vector<bool>, CGD>(*_funInner);
-        const std::vector<bool> jacSparsityOuter = jacobianForwardSparsity<std::vector<bool>, double>(f2);
-
-        compareBoolValues(jacSparsityOrig, jacSparsityOuter);
-
-        const std::vector<bool> jacSparsityOrigRev = jacobianReverseSparsity<std::vector<bool>, CGD>(*_funInner);
-        const std::vector<bool> jacSparsityOuterRev = jacobianReverseSparsity<std::vector<bool>, double>(f2);
-
-        compareBoolValues(jacSparsityOrigRev, jacSparsityOrig);
-        compareBoolValues(jacSparsityOrigRev, jacSparsityOuterRev);
+        testJacobianSparsity(*_funInner, fWrapAtom);
 
         /**
-         * Sparse jacobian
+         * Sparse Jacobian
          */
-        jacOrig = _funInner->SparseJacobian(xOrig);
-        jacOuter = f2.SparseJacobian(x);
-        ASSERT_TRUE(compareValues<double>(jacOuter, jacOrig, epsilonR, epsilonA));
-
-        // sparse reverse
-        std::vector<size_t> row, col;
-        generateSparsityIndexes(jacSparsityOuter, m, n, row, col);
-
-        sparse_jacobian_work workOrig;
-        jacOrig.resize(row.size());
-        _funInner->SparseJacobianReverse(xOrig, jacSparsityOrig, row, col, jacOrig, workOrig);
-
-        sparse_jacobian_work work2;
-        jacOuter.resize(row.size());
-        f2.SparseJacobianReverse(x, jacSparsityOuter, row, col, jacOuter, work2);
-
-        ASSERT_TRUE(compareValues<double>(jacOuter, jacOrig, epsilonR, epsilonA));
+        size_t n_tests = _dynamicLib->getThreadNumber() > 1 ? 2 : 1;
+        testSparseJacobianResults(n_tests, *modelLib, *_funInner, &fWrapAtom, xOrig, false, epsilonR, epsilonA);
 
         /**
-         * Hessian
+         * Dense Hessian
          */
-        for (size_t i = 0; i < m; i++) {
-            w[i] = 1;
-            wOrig[i] = 1;
-        }
-        vector<CGD> hessOrig = _funInner->Hessian(xOrig, wOrig);
-        vector<double> hessOuter = f2.Hessian(x, w);
-        ASSERT_TRUE(compareValues<double>(hessOuter, hessOrig, epsilonR, epsilonA));
+        testDenseHessianResults(*modelLib, *_funInner, xOrig, epsilonR, epsilonA);
 
         /**
          * Sparse Hessian
          */
-        hessOrig = _funInner->SparseHessian(xOrig, wOrig);
-        hessOuter = f2.SparseHessian(x, w);
-        ASSERT_TRUE(compareValues<double>(hessOuter, hessOrig, epsilonR, epsilonA));
+        testSparseHessianResults(n_tests, *modelLib, *_funInner, &fWrapAtom, xOrig, false, epsilonR, epsilonA);
     }
 
     /**
@@ -345,8 +205,8 @@ public:
                             Base epsilonR = 1e-14,
                             Base epsilonA = 1e-14) {
         CppAD::vector<Base> xNorm(x.size());
-        for (size_t i = 0; i < xNorm.size(); i++)
-            xNorm[i] = 1.0;
+        for (double & i : xNorm)
+            i = 1.0;
         CppAD::vector<Base> eqNorm;
 
         testADFunAtomicLib(x, xNorm, eqNorm, epsilonR, epsilonA);
@@ -359,8 +219,8 @@ public:
                                 Base epsilonR = 1e-14,
                                 Base epsilonA = 1e-14) {
         CppAD::vector<Base> xNorm(x.size());
-        for (size_t i = 0; i < xNorm.size(); i++)
-            xNorm[i] = 1.0;
+        for (double & i : xNorm)
+            i = 1.0;
         CppAD::vector<Base> eqNorm;
 
         testAtomicLibAtomicLib(x, xNorm, eqNorm, epsilonR, epsilonA);
@@ -651,10 +511,10 @@ private:
         ASSERT_TRUE(compareValues<double>(hessOuter, hessOrig, epsilonR, epsilonA));
     }
 
-    void testAtomicLibModelInCppAD(ADFun<CGD>& funOuter,
-                                   ADFun<CGD>& funOuterAtom, // with an atomic function
-                                   const CppAD::vector<Base>& xx,
-                                   Base epsilonR = 1e-14, Base epsilonA = 1e-14) {
+    static void testAtomicLibModelInCppAD(ADFun<CGD>& funOuter,
+                                          ADFun<CGD>& funOuterAtom, // with an atomic function
+                                          const CppAD::vector<Base>& xx,
+                                          Base epsilonR = 1e-14, Base epsilonA = 1e-14) {
         using namespace CppAD;
         using namespace std;
         using CppAD::vector;
@@ -679,8 +539,6 @@ private:
         /**
          * Test first order forward mode
          */
-        size_t k = 1;
-        size_t k1 = k + 1;
 
         vector<CGD> x_p(n);
 
@@ -713,8 +571,8 @@ private:
         /**
          * Test second order reverse mode
          */
-        k = 1;
-        k1 = k + 1;
+        size_t k = 1;
+        size_t k1 = k + 1;
         vector<CGD> py(m); // not (k1 * m)
         for (size_t i = 0; i < m; i++) {
             //py[i * k1] = 0.0;
@@ -843,7 +701,7 @@ private:
         generateSparsityIndexes(jacOuterSpar, jacOuterRows, jacOuterCols);
         vector<CGD> jacOrig(jacOuterCols.size());
         _funOuter->SparseJacobianReverse(xOrig, jacSparsityOrig,
-                                     jacOuterRows, jacOuterCols, jacOrig, work);
+                                         jacOuterRows, jacOuterCols, jacOrig, work);
 
         std::vector<double> jacOuter(jacOuterRows.size());
         size_t const* rows, *cols;
@@ -1180,6 +1038,8 @@ protected:
         cSourceInner->setCreateForwardOne(true);
         cSourceInner->setCreateReverseOne(true);
         cSourceInner->setCreateReverseTwo(true);
+        cSourceInner->setCreateJacobian(true);
+        cSourceInner->setCreateHessian(true);
         cSourceInner->setCreateSparseJacobian(true);
         cSourceInner->setCreateSparseHessian(true);
 
