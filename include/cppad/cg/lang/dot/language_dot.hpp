@@ -241,6 +241,7 @@ protected:
         _code.str("");
         _ss.str("");
         _currentLoops.clear();
+        _dependentIDs.clear();
         parIdx_ = 0;
 
         // save some info
@@ -520,7 +521,7 @@ protected:
                op == CGOpCode::IndexDeclaration;
     }
 
-    virtual bool requiresVariableArgument(enum CGOpCode op, size_t argIndex) const override {
+    bool requiresVariableArgument(enum CGOpCode op, size_t argIndex) const override {
         return op == CGOpCode::CondResult;
     }
 
@@ -579,7 +580,7 @@ protected:
         return *var.getName();
     }
 
-    virtual bool requiresVariableDependencies() const override {
+    bool requiresVariableDependencies() const override {
         return false;
     }
 
@@ -1469,10 +1470,10 @@ protected:
 };
 
 template<class Base>
-const std::string LanguageDot<Base>::_C_STATIC_INDEX_ARRAY = "index";
+const std::string LanguageDot<Base>::_C_STATIC_INDEX_ARRAY = "index"; // NOLINT(cert-err58-cpp)
 
 template<class Base>
-const std::string LanguageDot<Base>::_C_SPARSE_INDEX_ARRAY = "idx";
+const std::string LanguageDot<Base>::_C_SPARSE_INDEX_ARRAY = "idx"; // NOLINT(cert-err58-cpp)
 
 } // END cg namespace
 } // END CppAD namespace

@@ -1,6 +1,7 @@
 # --------------------------------------------------------------------------
 #  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
-#    Copyright (C) 2019 Ciengis
+#    Copyright (C) 2013 Ciengis
+#    Copyright (C) 2019 Joao Leal
 #
 #  CppADCodeGen is distributed under multiple licenses:
 #
@@ -20,3 +21,4 @@ SET(CMAKE_BUILD_TYPE DEBUG)
 # tests
 ################################################################################
 add_cppadcg_test(lang_c.cpp)
+add_cppadcg_test(lang_c_reset.cpp)
