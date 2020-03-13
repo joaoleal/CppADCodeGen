@@ -805,7 +805,7 @@ inline std::string implode(const std::vector<std::string>& text,
     }
 }
 
-std::string readStringFromFile(const std::string& path) {
+inline std::string readStringFromFile(const std::string& path) {
     std::ifstream iStream;
     iStream.open(path);
 

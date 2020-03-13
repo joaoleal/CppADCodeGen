@@ -678,6 +678,7 @@ protected:
         _currentLoops.clear();
         _atomicFuncArrays.clear();
         _streamStack.clear();
+        _dependentIDs.clear();
 
         // save some info
         _info = std::move(info);

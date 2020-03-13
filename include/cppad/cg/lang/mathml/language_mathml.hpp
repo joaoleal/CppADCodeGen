@@ -545,6 +545,7 @@ protected:
         _currentLoops.clear();
         depConstIds_.clear();
         depIsIndepIds_.clear();
+        _dependentIDs.clear();
 
 
         // save some info
@@ -2163,22 +2164,22 @@ protected:
 };
 
 template<class Base>
-const std::string LanguageMathML<Base>::_C_STATIC_INDEX_ARRAY = "index";
+const std::string LanguageMathML<Base>::_C_STATIC_INDEX_ARRAY = "index"; // NOLINT(cert-err58-cpp)
 
 template<class Base>
-const std::string LanguageMathML<Base>::_C_SPARSE_INDEX_ARRAY = "idx";
+const std::string LanguageMathML<Base>::_C_SPARSE_INDEX_ARRAY = "idx"; // NOLINT(cert-err58-cpp)
 
 template<class Base>
-const std::string LanguageMathML<Base>::_ATOMIC_TX = "atx";
+const std::string LanguageMathML<Base>::_ATOMIC_TX = "atx"; // NOLINT(cert-err58-cpp)
 
 template<class Base>
-const std::string LanguageMathML<Base>::_ATOMIC_TY = "aty";
+const std::string LanguageMathML<Base>::_ATOMIC_TY = "aty"; // NOLINT(cert-err58-cpp)
 
 template<class Base>
-const std::string LanguageMathML<Base>::_ATOMIC_PX = "apx";
+const std::string LanguageMathML<Base>::_ATOMIC_PX = "apx"; // NOLINT(cert-err58-cpp)
 
 template<class Base>
-const std::string LanguageMathML<Base>::_ATOMIC_PY = "apy";
+const std::string LanguageMathML<Base>::_ATOMIC_PY = "apy"; // NOLINT(cert-err58-cpp)
 
 } // END cg namespace
 } // END CppAD namespace
