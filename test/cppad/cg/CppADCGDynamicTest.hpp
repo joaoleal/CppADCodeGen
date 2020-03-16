@@ -137,6 +137,23 @@ public:
         SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(libSourceGen, "sources_" + _name + "_1");
 
         DynamicModelLibraryProcessor<double> p(libSourceGen);
+
+        // some additional tests
+        ASSERT_EQ(p.getLibraryName(), "cppad_cg_model");
+        p.setLibraryName("cppad_cg_lib");
+        ASSERT_EQ(p.getLibraryName(), "cppad_cg_lib");
+
+        ASSERT_EQ(p.getCustomLibraryExtension(), nullptr);
+        p.setCustomLibraryExtension(".so.123");
+        ASSERT_NE(p.getCustomLibraryExtension(), nullptr);
+        ASSERT_EQ(*p.getCustomLibraryExtension(), ".so.123");
+
+        p.removeCustomLibraryExtension();
+        ASSERT_EQ(p.getCustomLibraryExtension(), nullptr);
+
+        const auto& cp = p;
+        ASSERT_TRUE(cp.getOptions().empty());
+
         GccCompiler<double> compiler;
         //compiler.setSaveToDiskFirst(true); // useful to detect problem
         prepareTestCompilerFlags(compiler);
@@ -148,6 +165,7 @@ public:
 #ifdef CPPAD_CG_SYSTEM_LINUX
             // this is required because the OpenMP implementation in GCC causes a segmentation fault on dlclose
             p.getOptions()["dlOpenMode"] = std::to_string(RTLD_NOW | RTLD_NODELETE);
+            ASSERT_TRUE(!p.getOptions().empty());
 #endif
         } else if(libSourceGen.getMultiThreading() == MultiThreadingType::PTHREADS) {
             compiler.addCompileFlag("-pthread");
