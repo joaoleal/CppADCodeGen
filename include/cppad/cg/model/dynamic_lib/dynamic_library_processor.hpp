@@ -81,7 +81,7 @@ public:
      * @return a custom library extension
      */
     inline const std::string* getCustomLibraryExtension() const {
-        return _customLibExtension;
+        return (std::string*)_customLibExtension;
     }
 
     /**
