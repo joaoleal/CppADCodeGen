@@ -51,7 +51,6 @@ public:
     /**
      * Creates a new FunctorGenericModel object that can be used to evaluate
      * the model.
-     * This object must be released by the user!
      *
      * @param modelName The model name.
      * @return The model object or nullptr if no model exists with the provided
@@ -94,7 +93,7 @@ public:
         }
     }
 
-    virtual bool isThreadPoolDisabled() const override {
+    bool isThreadPoolDisabled() const override {
         if(_isThreadPoolDisabled != nullptr) {
             return bool((*_isThreadPoolDisabled)());
         }
