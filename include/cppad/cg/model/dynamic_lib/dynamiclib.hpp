@@ -27,8 +27,13 @@ template<class Base>
 class DynamicLib : public FunctorModelLibrary<Base> {
 public:
 
-    inline virtual ~DynamicLib() {
+    inline DynamicLib() = default;
+
+    inline DynamicLib(DynamicLib&& other) noexcept:
+            FunctorModelLibrary<Base>(std::move(other)) {
     }
+
+    inline virtual ~DynamicLib() = default;
 
 };
 

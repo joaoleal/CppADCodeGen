@@ -44,6 +44,25 @@ protected:
     unsigned int (*_getThreadPoolNumberOfTimeMeas)();
 public:
 
+    inline FunctorModelLibrary(FunctorModelLibrary&& other) noexcept:
+            _modelNames(std::move(other._modelNames)),
+            _version(other._version),
+            _onClose(other._onClose),
+            _setThreadPoolDisabled(other._setThreadPoolDisabled),
+            _isThreadPoolDisabled(other._isThreadPoolDisabled),
+            _setThreads(other._setThreads),
+            _getThreads(other._getThreads),
+            _setSchedulerStrategy(other._setSchedulerStrategy),
+            _getSchedulerStrategy(other._getSchedulerStrategy),
+            _setThreadPoolVerbose(other._setThreadPoolVerbose),
+            _isThreadPoolVerbose(other._isThreadPoolVerbose),
+            _setThreadPoolGuidedMaxWork(other._setThreadPoolGuidedMaxWork),
+            _getThreadPoolGuidedMaxWork(other._getThreadPoolGuidedMaxWork),
+            _setThreadPoolNumberOfTimeMeas(other._setThreadPoolNumberOfTimeMeas),
+            _getThreadPoolNumberOfTimeMeas(other._getThreadPoolNumberOfTimeMeas) {
+        other._onClose = nullptr;
+    }
+
     std::set<std::string> getModelNames() override {
         return _modelNames;
     }

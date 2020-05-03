@@ -94,6 +94,41 @@ protected:
 
 public:
 
+    inline FunctorGenericModel(FunctorGenericModel&& other) noexcept:
+            GenericModel<Base>(std::move(other)),
+            _isLibraryReady(other._isLibraryReady),
+            _name(std::move(other._name)),
+            _m(other._m),
+            _n(other._n),
+            _in(std::move(other._in)),
+            _inHess(std::move(other._inHess)),
+            _out(std::move(other._out)),
+            _atomicFuncArg{this, &atomicForward, &atomicReverse},
+            _atomicNames(std::move(other._atomicNames)),
+            _atomic(std::move(other._atomic)),
+            _missingAtomicFunctions(other._missingAtomicFunctions),
+            _zero(other._zero),
+            _forwardOne(other._forwardOne),
+            _reverseOne(other._reverseOne),
+            _reverseTwo(other._reverseTwo),
+            _jacobian(other._jacobian),
+            _hessian(other._hessian),
+            _sparseForwardOne(other._sparseForwardOne),
+            _sparseReverseOne(other._sparseReverseOne),
+            _sparseReverseTwo(other._sparseReverseTwo),
+            _sparseJacobian(other._sparseJacobian),
+            _sparseHessian(other._sparseHessian),
+            _forwardOneSparsity(other._forwardOneSparsity),
+            _reverseOneSparsity(other._reverseOneSparsity),
+            _reverseTwoSparsity(other._reverseTwoSparsity),
+            _jacobianSparsity(other._jacobianSparsity),
+            _hessianSparsity(other._hessianSparsity),
+            _hessianSparsity2(other._hessianSparsity2),
+            _atomicFunctions(other._atomicFunctions) {
+
+        other._isLibraryReady = false;
+    }
+
     FunctorGenericModel(const FunctorGenericModel&) = delete;
     FunctorGenericModel& operator=(const FunctorGenericModel&) = delete;
 
@@ -294,6 +329,8 @@ public:
     bool isForwardZeroAvailable() override {
         return _zero != nullptr;
     }
+
+    using GenericModel<Base>::ForwardZero;
 
     /// calculate the dependent values (zero order)
     void ForwardZero(ArrayView<const Base> x,

@@ -189,6 +189,22 @@ public:
         _fun.reset();
     }
 
+#if CPPAD_CG_SYSTEM_LINUX
+    void testMoveConstructors() {
+        auto& lib = dynamic_cast<LinuxDynamicLib<double>&>(*_dynamicLib);
+        LinuxDynamicLib<double> dynamicLib(std::move(lib));
+
+        auto m2 = dynamicLib.model(_name + "dynamic");
+
+        m2->ForwardZero(_xRun);
+
+        auto& m = dynamic_cast<LinuxDynamicLibModel<double>&>(*_model);
+        LinuxDynamicLibModel<double> model(std::move(m));
+
+        auto depCGen = model.ForwardZero(_xRun);
+    }
+#endif
+
     void testForwardZero() {
         this->testForwardZeroResults(*_model, *_fun, nullptr, _xRun, epsilonR, epsilonA);
     }

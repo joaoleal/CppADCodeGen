@@ -37,6 +37,12 @@ public:
         _evalAtomicForwardOne4CppAD(true) {
     }
 
+    inline GenericModel(GenericModel&& other) noexcept :
+            _atomic(other._atomic),
+            _evalAtomicForwardOne4CppAD(other._evalAtomicForwardOne4CppAD) {
+        other._atomic = nullptr;
+    }
+
     inline virtual ~GenericModel() {
         delete _atomic;
     }

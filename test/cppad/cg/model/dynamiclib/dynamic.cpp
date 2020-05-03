@@ -45,6 +45,13 @@ using namespace CppAD;
 using namespace CppAD::cg;
 using namespace std;
 
+#if CPPAD_CG_SYSTEM_LINUX
+TEST_F(CppADCGDynamicTest1, MoveConstructors) {
+    _maxAssignPerFunc = 1;
+    this->testMoveConstructors();
+}
+#endif
+
 TEST_F(CppADCGDynamicTest1, ForwardZero1Assign) {
     _maxAssignPerFunc = 1;
     this->testForwardZero();
