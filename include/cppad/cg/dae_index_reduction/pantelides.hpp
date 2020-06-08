@@ -19,8 +19,7 @@
 #include <cppad/cg/dae_index_reduction/dae_structural_index_reduction.hpp>
 #include <cppad/cg/dae_index_reduction/augment_path_depth_lookahead.hpp>
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Pantelides DAE index reduction algorithm
@@ -68,7 +67,7 @@ public:
 
     virtual ~Pantelides() = default;
 
-    AugmentPath<Base>& getAugmentPath() const {
+    [[nodiscard]] AugmentPath<Base>& getAugmentPath() const {
         return *augmentPath_;
     }
 
@@ -197,7 +196,6 @@ protected:
 
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

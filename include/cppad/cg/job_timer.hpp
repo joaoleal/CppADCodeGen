@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * A type of executing task
@@ -33,13 +33,13 @@ private:
     std::string _actionEnd;
 public:
 
-    inline JobType(const std::string& action,
-                   const std::string& actionEnd) :
-        _action(action),
-        _actionEnd(actionEnd) {
+    inline JobType(std::string action,
+                   std::string actionEnd) :
+        _action(std::move(action)),
+        _actionEnd(std::move(actionEnd)) {
     }
 
-    inline const std::string& getActionName() const {
+    [[nodiscard]] inline const std::string& getActionName() const {
         return _action;
     }
 
@@ -47,7 +47,7 @@ public:
         _action = action;
     }
 
-    inline const std::string& getActionEndName()const {
+    [[nodiscard]] inline const std::string& getActionEndName()const {
         return _actionEnd;
     }
 
@@ -55,8 +55,7 @@ public:
         _actionEnd = actionEnd;
     }
 
-    inline virtual ~JobType() {
-    }
+    inline virtual ~JobType() = default;
 };
 
 /**
@@ -139,27 +138,26 @@ private:
 public:
 
     inline Job(const JobType& type,
-               const std::string& name) :
+               std::string name) :
         _type(&type),
-        _name(name),
+        _name(std::move(name)),
         _beginTime(std::chrono::steady_clock::now()),
         _nestedJobs(false) {
     }
 
-    inline const JobType& getType()const {
+    [[nodiscard]] inline const JobType& getType() const {
         return *_type;
     }
 
-    inline const std::string& name() const {
+    [[nodiscard]] inline const std::string& name() const {
         return _name;
     }
 
-    inline std::chrono::steady_clock::time_point beginTime() const {
+    [[nodiscard]] inline std::chrono::steady_clock::time_point beginTime() const {
         return _beginTime;
     }
 
-    inline virtual ~Job() {
-    }
+    inline virtual ~Job() = default;
 
     friend class JobTimer;
 };
@@ -261,7 +259,7 @@ public:
                             const JobType& type = JobTypeHolder<>::DEFAULT,
                             const std::string& prefix = "") {
 
-        _jobs.push_back(Job(type, jobName));
+        _jobs.emplace_back(type, jobName);
 
         if (_verbose) {
             OStreamConfigRestore osr(std::cout);
@@ -298,7 +296,7 @@ public:
     inline void finishedJob() {
         using namespace std::chrono;
 
-        CPPADCG_ASSERT_UNKNOWN(_jobs.size() > 0);
+        CPPADCG_ASSERT_UNKNOWN(!_jobs.empty())
 
         Job& job = _jobs.back();
 
@@ -331,7 +329,6 @@ public:
 
 };
 
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

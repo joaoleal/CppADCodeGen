@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Specialization of class Evaluator for an output active type of CG<Base>.
@@ -87,7 +86,7 @@ protected:
      */
     inline void analyzeOutIndeps(const ActiveOut* indep,
                                  size_t n) {
-        CPPAD_ASSERT_KNOWN(indep != nullptr || n == 0, "null array with a non-zero size");
+        CPPAD_ASSERT_KNOWN(indep != nullptr || n == 0, "null array with a non-zero size")
         outHandler_ = findHandler(ArrayView<const ActiveOut>(indep, n));
     }
 
@@ -379,7 +378,6 @@ public:
     }
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -21,8 +22,7 @@
 #include <sstream>
 #include <vector>
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Bipartite graph node
@@ -281,7 +281,7 @@ public:
         antiDerivative_(derivativeOf),
         tapeIndex_(tapeIndex),
         name_(name.empty() ? "d" + derivativeOf->name() + "dt" : name) {
-        CPPADCG_ASSERT_UNKNOWN(antiDerivative_ != nullptr);
+        CPPADCG_ASSERT_UNKNOWN(antiDerivative_ != nullptr)
 
         antiDerivative_->setDerivative(this);
     }
@@ -399,7 +399,7 @@ protected:
 
     inline void addEquation(Enode<Base>* i) {
         if (!deleted_) {
-            CPPADCG_ASSERT_UNKNOWN(std::find(enodes_.begin(), enodes_.end(), i) == enodes_.end());
+            CPPADCG_ASSERT_UNKNOWN(std::find(enodes_.begin(), enodes_.end(), i) == enodes_.end())
             enodes_.push_back(i);
         }
     }
@@ -420,7 +420,6 @@ inline std::ostream& operator <<(std::ostream& os, const Vnode<Base>& j) {
 template<class Base>
 const std::string Vnode<Base>::TYPE = "Variable";
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

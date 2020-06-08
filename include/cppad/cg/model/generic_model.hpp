@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Abstract class used to execute a generated model
@@ -52,7 +51,7 @@ public:
      * 
      * @return The model name
      */
-    virtual const std::string& getName() const = 0;
+    [[nodiscard]] virtual const std::string& getName() const = 0;
 
 
     /**
@@ -60,11 +59,11 @@ public:
      *
      * @return true if it is possible to request the Jacobian sparsity pattern
      */
-    virtual bool isJacobianSparsityAvailable() = 0;
+    [[nodiscard]] virtual bool isJacobianSparsityAvailable() = 0;
 
     // Jacobian sparsity
-    virtual std::vector<std::set<size_t> > JacobianSparsitySet() = 0;
-    virtual std::vector<bool> JacobianSparsityBool() = 0;
+    [[nodiscard]] virtual std::vector<std::set<size_t> > JacobianSparsitySet() = 0;
+    [[nodiscard]] virtual std::vector<bool> JacobianSparsityBool() = 0;
     virtual void JacobianSparsity(std::vector<size_t>& equations,
                                   std::vector<size_t>& variables) = 0;
 
@@ -83,8 +82,8 @@ public:
      * 
      * @return The sparsity
      */
-    virtual std::vector<std::set<size_t> > HessianSparsitySet() = 0;
-    virtual std::vector<bool> HessianSparsityBool() = 0;
+    [[nodiscard]] virtual std::vector<std::set<size_t> > HessianSparsitySet() = 0;
+    [[nodiscard]] virtual std::vector<bool> HessianSparsityBool() = 0;
     virtual void HessianSparsity(std::vector<size_t>& rows,
                                  std::vector<size_t>& cols) = 0;
 
@@ -95,7 +94,7 @@ public:
      * @return true if it is possible to request the parsity pattern for the
      *         Hessians
      */
-    virtual bool isEquationHessianSparsityAvailable() = 0;
+    [[nodiscard]] virtual bool isEquationHessianSparsityAvailable() = 0;
 
     /**
      * Provides the sparsity of the hessian for a dependent variable.
@@ -103,12 +102,12 @@ public:
      * @param i The index of the dependent variable
      * @return The sparsity
      */
-    virtual std::vector<std::set<size_t> > HessianSparsitySet(size_t i) = 0;
+    [[nodiscard]] virtual std::vector<std::set<size_t> > HessianSparsitySet(size_t i) = 0;
 
     /**
      * @copydoc GenericModel::HessianSparsitySet(size_t i)
      */
-    virtual std::vector<bool> HessianSparsityBool(size_t i) = 0;
+    [[nodiscard]] virtual std::vector<bool> HessianSparsityBool(size_t i) = 0;
 
     /**
      * Provides the sparsity of the hessian for a dependent variable.
@@ -126,14 +125,14 @@ public:
      * 
      * @return The number of independent variables
      */
-    virtual size_t Domain() const = 0;
+    [[nodiscard]] virtual size_t Domain() const = 0;
 
     /**
      * Provides the number of dependent variables.
      * 
      * @return The number of dependent variables.
      */
-    virtual size_t Range() const = 0;
+    [[nodiscard]] virtual size_t Range() const = 0;
 
     /**
      * The names of the atomic functions required by this model.
@@ -183,7 +182,7 @@ public:
         _evalAtomicForwardOne4CppAD = evalForwardOne4CppAD;
     }
 
-    inline bool isAtomicEvalForwardOne4CppAD() const {
+    [[nodiscard]] inline bool isAtomicEvalForwardOne4CppAD() const {
         return _evalAtomicForwardOne4CppAD;
     }
 
@@ -197,7 +196,7 @@ public:
      *
      * @return true if it is possible to evaluate the model
      */
-    virtual bool isForwardZeroAvailable() = 0;
+    [[nodiscard]] virtual bool isForwardZeroAvailable() = 0;
 
     /**
      * Evaluates the dependent model variables (zero-order).
@@ -209,7 +208,7 @@ public:
      * @return The dependent variable vector
      */
     template<typename VectorBase>
-    inline VectorBase ForwardZero(const VectorBase& x) {
+    [[nodiscard]] inline VectorBase ForwardZero(const VectorBase& x) {
         VectorBase dep(Range());
         this->ForwardZero(ArrayView<const Base>(&x[0], x.size()),
                           ArrayView<Base>(&dep[0], dep.size()));
@@ -278,7 +277,7 @@ public:
      *
      * @return true if it is possible to evaluate the dense Jacobian
      */
-    virtual bool isJacobianAvailable() = 0;
+    [[nodiscard]] virtual bool isJacobianAvailable() = 0;
 
     /**
      * Calculates a Jacobian using dense methods and saves it into a dense
@@ -290,7 +289,7 @@ public:
      * @return jac a dense Jacobian
      */
     template<typename VectorBase>
-    inline VectorBase Jacobian(const VectorBase& x) {
+    [[nodiscard]] inline VectorBase Jacobian(const VectorBase& x) {
         VectorBase jac(Range() * Domain());
         Jacobian(ArrayView<const Base>(&x[0], x.size()),
                  ArrayView<Base>(&jac[0], jac.size()));
@@ -331,7 +330,7 @@ public:
      * @return true if it is possible to evaluate the dense weighted sum of
      *         the Hessians
      */
-    virtual bool isHessianAvailable() = 0;
+    [[nodiscard]] virtual bool isHessianAvailable() = 0;
 
 
     /**
@@ -344,8 +343,8 @@ public:
      * @return The values of the dense hessian
      */
     template<typename VectorBase>
-    inline VectorBase Hessian(const VectorBase& x,
-                              const VectorBase& w) {
+    [[nodiscard]] inline VectorBase Hessian(const VectorBase& x,
+                                            const VectorBase& w) {
         VectorBase hess(Domain() * Domain());
         this->Hessian(ArrayView<const Base>(&x[0], x.size()),
                       ArrayView<const Base>(&w[0], w.size()),
@@ -381,8 +380,8 @@ public:
      * @return The values of the dense hessian for the function/dependent variable i
      */
     template<typename VectorBase>
-    inline VectorBase Hessian(const VectorBase& x,
-                              size_t i) {
+    [[nodiscard]] inline VectorBase Hessian(const VectorBase& x,
+                                            size_t i) {
         CPPADCG_ASSERT_KNOWN(i < Range(), "Invalid equation index")
 
         VectorBase w(Range());
@@ -412,7 +411,7 @@ public:
      * @return true if it is possible to evaluate the first-order forward mode
      *         using the dense vector format
      */
-    virtual bool isForwardOneAvailable() = 0;
+    [[nodiscard]] virtual bool isForwardOneAvailable() = 0;
 
     /**
      * Computes results during a forward mode sweep. 
@@ -426,7 +425,7 @@ public:
      * @return The Taylor coefficients of the dependent variables 
      */
     template<typename VectorBase>
-    inline VectorBase ForwardOne(const VectorBase& tx) {
+    [[nodiscard]] inline VectorBase ForwardOne(const VectorBase& tx) {
         size_t m = Range();
         const size_t k = 1;
         VectorBase ty((k + 1) * m);
@@ -463,7 +462,7 @@ public:
      * @return true if it is possible to evaluate the first-order forward mode
      *         using the sparse vector format
      */
-    virtual bool isSparseForwardOneAvailable() = 0;
+    [[nodiscard]] virtual bool isSparseForwardOneAvailable() = 0;
 
     /**
      * Computes results during a first-order forward mode sweep, the
@@ -498,7 +497,7 @@ public:
      * @return true if it is possible to evaluate the first-order reverse mode
      *         using the dense vector format
      */
-    virtual bool isReverseOneAvailable() = 0;
+    [[nodiscard]] virtual bool isReverseOneAvailable() = 0;
 
     /**
      * Computes results during a reverse mode sweep (adjoints or partial
@@ -508,9 +507,9 @@ public:
      * @warning do not used it as a generic reverse mode function!
      */
     template<typename VectorBase>
-    inline VectorBase ReverseOne(const VectorBase& tx,
-                                 const VectorBase& ty,
-                                 const VectorBase& py) {
+    [[nodiscard]] inline VectorBase ReverseOne(const VectorBase& tx,
+                                               const VectorBase& ty,
+                                               const VectorBase& py) {
         const size_t k = 0;
         VectorBase px((k + 1) * Domain());
         this->ReverseOne(tx, ty, px, py);
@@ -542,7 +541,7 @@ public:
      * @return true if it is possible to evaluate the first-order reverse mode
      *         using the sparse vector format
      */
-    virtual bool isSparseReverseOneAvailable() = 0;
+    [[nodiscard]] virtual bool isSparseReverseOneAvailable() = 0;
 
     /**
      * Computes results during a reverse mode sweep (adjoints or partial
@@ -588,7 +587,7 @@ public:
      * @return true if it is possible to evaluate the second-order reverse mode
      *         using the dense vector format
      */
-    virtual bool isReverseTwoAvailable() = 0;
+    [[nodiscard]] virtual bool isReverseTwoAvailable() = 0;
 
     /**
      * Computes second-order results during a reverse mode sweep (p = 2).
@@ -599,9 +598,9 @@ public:
      *          px[j * (k+1) + 1] is not used during the hessian evaluation.
      */
     template<typename VectorBase>
-    inline VectorBase ReverseTwo(const VectorBase& tx,
-                                 const VectorBase& ty,
-                                 const VectorBase& py) {
+    [[nodiscard]] inline VectorBase ReverseTwo(const VectorBase& tx,
+                                               const VectorBase& ty,
+                                               const VectorBase& py) {
         const size_t k = 1;
         VectorBase px((k + 1) * Domain());
         this->ReverseTwo(tx, ty, px, py);
@@ -634,7 +633,7 @@ public:
      * @return true if it is possible to evaluate the second-order reverse mode
      *         using the sparse vector format
      */
-    virtual bool isSparseReverseTwoAvailable() = 0;
+    [[nodiscard]] virtual bool isSparseReverseTwoAvailable() = 0;
 
     /**
      * Computes second-order results during a reverse mode sweep (p = 2).
@@ -682,7 +681,7 @@ public:
      *
      * @return true if it is possible to evaluate the sparse Jacobian
      */
-    virtual bool isSparseJacobianAvailable() = 0;
+    [[nodiscard]] virtual bool isSparseJacobianAvailable() = 0;
 
     /**
      * Calculates a Jacobian using sparse methods and saves it into a dense
@@ -694,7 +693,7 @@ public:
      * @return a dense Jacobian
      */
     template<typename VectorBase>
-    inline VectorBase SparseJacobian(const VectorBase& x) {
+    [[nodiscard]] inline VectorBase SparseJacobian(const VectorBase& x) {
         VectorBase jac(Range() * Domain());
         SparseJacobian(ArrayView<const Base>(&x[0], x.size()),
                        ArrayView<Base>(&jac[0], jac.size()));
@@ -780,7 +779,7 @@ public:
      * @return true if it is possible to evaluate the sparse weighted sum of
      *         the Hessians
      */
-    virtual bool isSparseHessianAvailable() = 0;
+    [[nodiscard]] virtual bool isSparseHessianAvailable() = 0;
 
     /**
      * Determines the dense weighted sum of the Hessians using sparse methods.
@@ -792,8 +791,8 @@ public:
      * @return The values of the dense Hessian
      */
     template<typename VectorBase>
-    inline VectorBase SparseHessian(const VectorBase& x,
-                                    const VectorBase& w) {
+    [[nodiscard]] inline VectorBase SparseHessian(const VectorBase& x,
+                                                  const VectorBase& w) {
         VectorBase hess(Domain() * Domain());
         SparseHessian(ArrayView<const Base>(&x[0], x.size()),
                       ArrayView<const Base>(&w[0], w.size()),
@@ -894,7 +893,6 @@ public:
     }
 };
 
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

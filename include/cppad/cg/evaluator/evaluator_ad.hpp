@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Specialization of class Evaluator for an output active type of AD<>
@@ -211,7 +210,6 @@ public:
 
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Useful class to call the JIT'ed models with LLVM.
@@ -70,7 +69,6 @@ protected:
     friend class LlvmModelLibrary<Base>;
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

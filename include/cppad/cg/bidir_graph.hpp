@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2016 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class Base>
 class PathNodeEdges {
@@ -39,9 +39,9 @@ public:
 private:
     std::map<Node*, PathNodeEdges<Base> > graph_;
 public:
-    inline virtual ~BidirGraph() { }
+    inline virtual ~BidirGraph() = default;
 
-    inline bool empty() const {
+    [[nodiscard]] inline bool empty() const {
         return graph_.empty();
     }
 
@@ -292,7 +292,6 @@ private:
 
 };
 
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

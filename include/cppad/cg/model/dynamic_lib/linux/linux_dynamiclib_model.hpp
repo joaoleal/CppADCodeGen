@@ -20,8 +20,7 @@
 #include <typeinfo>
 #include <dlfcn.h>
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Useful class to call the compiled model in a dynamic library.
@@ -80,8 +79,7 @@ protected:
     friend class LinuxDynamicLib<Base>;
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif
 #endif

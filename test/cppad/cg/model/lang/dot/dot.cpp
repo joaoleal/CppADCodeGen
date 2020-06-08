@@ -14,7 +14,6 @@
  */
 
 #include <iostream>
-#include <fstream>
 
 #include <cppad/cg/cppadcg.hpp>
 #include <cppad/cg/lang/dot/dot.hpp>

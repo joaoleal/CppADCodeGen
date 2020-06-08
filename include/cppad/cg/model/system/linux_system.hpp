@@ -22,13 +22,10 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 
-namespace CppAD {
-namespace cg {
-
 /**
  * Linux system dependent functions
  */
-namespace system {
+namespace CppAD::cg::system {
 
 namespace {
 
@@ -391,10 +388,7 @@ inline void callExecutable(const std::string& executable,
     }
 }
 
-} // END system namespace
-
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif
 #endif

@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Creates variables names for the source code using a list of provided
@@ -92,7 +91,6 @@ public:
 
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

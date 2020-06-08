@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Clang compiler
@@ -43,7 +42,7 @@ public:
     ClangCompiler(const ClangCompiler& orig) = delete;
     ClangCompiler& operator=(const ClangCompiler& rhs) = delete;
 
-    const std::string& getVersion() {
+    [[nodiscard]] const std::string& getVersion() {
         if(_version.empty()) {
             std::vector<std::string> args {"--version"};
             std::string output;
@@ -65,7 +64,7 @@ public:
         return _version;
     }
 
-    virtual const std::set<std::string>& getBitCodeFiles() const {
+    [[nodiscard]] virtual const std::set<std::string>& getBitCodeFiles() const {
         return _bcfiles;
     }
 
@@ -121,7 +120,7 @@ public:
         }
     }
 
-    void cleanup() override {
+    void cleanup() override final {
         // clean up
         for (const std::string& it : _bcfiles) {
             if (remove(it.c_str()) != 0)
@@ -196,7 +195,6 @@ protected:
 
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

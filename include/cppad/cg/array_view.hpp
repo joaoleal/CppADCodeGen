@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2016 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -19,8 +20,7 @@
 # include <iostream>
 # include <limits>
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * A simple wrapper for C arrays.
@@ -199,18 +199,18 @@ public:
     /**
      * @return number of elements in the array.
      */
-    inline size_t size() const noexcept {
+    [[nodiscard]] inline size_t size() const noexcept {
         return _length;
     }
 
     /**
      * @return number of elements in the array.
      */
-    inline size_type max_size() const noexcept {
+    [[nodiscard]] inline size_type max_size() const noexcept {
         return _length;
     }
 
-    inline bool empty() const noexcept {
+    [[nodiscard]] inline bool empty() const noexcept {
         return size() == 0;
     }
 
@@ -461,7 +461,6 @@ inline std::ostream& operator<<(std::ostream& os,
     return os;
 }
 
-} // END cg namespace
 } // END CppAD namespace
 
 # endif

@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Abstract class used to load models
@@ -32,7 +31,7 @@ public:
      *
      * @return the model names
      */
-    virtual std::set<std::string> getModelNames() = 0;
+    [[nodiscard]] virtual std::set<std::string> getModelNames() = 0;
 
     /**
      * Creates a new GenericModel object that can be used to evaluate the
@@ -42,7 +41,7 @@ public:
      * @return The model object or nullptr if no model exists with the provided
      *         name.
      */
-    virtual std::unique_ptr<GenericModel<Base>> model(const std::string& modelName) = 0;
+    [[nodiscard]] virtual std::unique_ptr<GenericModel<Base>> model(const std::string& modelName) = 0;
 
     /**
      * Defines whether or not to disable multithreaded model evaluations.
@@ -58,7 +57,7 @@ public:
      *
      * @return true if only the current thread is used to evaluate models.
      */
-    virtual bool isThreadPoolDisabled() const = 0;
+    [[nodiscard]] virtual bool isThreadPoolDisabled() const = 0;
 
     /**
      * Provides the maximum number of threads used to determine sparse Jacobians
@@ -68,7 +67,7 @@ public:
      *
      * @return the maximum number of threads
      */
-    virtual unsigned int getThreadNumber() const = 0;
+    [[nodiscard]] virtual unsigned int getThreadNumber() const = 0;
 
     /**
      * Defines the maximum number of threads used to determine sparse Jacobians
@@ -89,7 +88,7 @@ public:
      *
      * @return the thread scheduling strategy
      */
-    virtual ThreadPoolScheduleStrategy getThreadPoolSchedulerStrategy() const = 0;
+    [[nodiscard]] virtual ThreadPoolScheduleStrategy getThreadPoolSchedulerStrategy() const = 0;
 
     /**
      * Defines the thread scheduling strategy used to determine sparse Jacobians
@@ -104,11 +103,11 @@ public:
 
     virtual void setThreadPoolVerbose(bool v) = 0;
 
-    virtual bool isThreadPoolVerbose() const = 0;
+    [[nodiscard]] virtual bool isThreadPoolVerbose() const = 0;
 
     virtual void setThreadPoolGuidedMaxWork(float v) = 0;
 
-    virtual float getThreadPoolGuidedMaxWork() const = 0;
+    [[nodiscard]] virtual float getThreadPoolGuidedMaxWork() const = 0;
 
     /**
      * Defines the number of time measurements taken by each computational
@@ -132,13 +131,12 @@ public:
      *
      * @return the number of time measurements to take per task.
      */
-    virtual unsigned int getThreadPoolNumberOfTimeMeas() const = 0;
+    [[nodiscard]] virtual unsigned int getThreadPoolNumberOfTimeMeas() const = 0;
 
     inline virtual ~ModelLibrary() = default;
 
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

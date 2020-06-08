@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * C compiler class used to create a dynamic library
@@ -34,7 +33,7 @@ public:
      *
      * @return path to a temporary folder.
      */
-    virtual const std::string& getTemporaryFolder() const = 0;
+    [[nodiscard]] virtual const std::string& getTemporaryFolder() const = 0;
 
     /**
      * Defines the path to a temporary folder that should not exist
@@ -44,7 +43,7 @@ public:
      */
     virtual void setTemporaryFolder(const std::string& tmpFolder) = 0;
 
-    virtual bool isSaveToDiskFirst() const = 0;
+    [[nodiscard]] virtual bool isSaveToDiskFirst() const = 0;
 
     virtual void setSaveToDiskFirst(bool saveToDiskFirst) = 0;
 
@@ -54,7 +53,7 @@ public:
      *
      * @return path to a folder.
      */
-    virtual const std::string& getSourcesFolder() const = 0;
+    [[nodiscard]] virtual const std::string& getSourcesFolder() const = 0;
 
     /**
      * Defines the path to a folder where the source files should be created
@@ -64,11 +63,11 @@ public:
      */
     virtual void setSourcesFolder(const std::string& srcFolder) = 0;
 
-    virtual const std::set<std::string>& getObjectFiles() const = 0;
+    [[nodiscard]] virtual const std::set<std::string>& getObjectFiles() const = 0;
 
-    virtual const std::set<std::string>& getSourceFiles() const = 0;
+    [[nodiscard]] virtual const std::set<std::string>& getSourceFiles() const = 0;
 
-    virtual bool isVerbose() const = 0;
+    [[nodiscard]] virtual bool isVerbose() const = 0;
 
     virtual void setVerbose(bool verbose) = 0;
 
@@ -101,7 +100,6 @@ public:
 
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2014 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Arrays in generated source can reuse space from a global array.
@@ -59,7 +59,7 @@ public:
         _idArrayCount(1) {
     }
 
-    inline size_t getIdCount() const {
+    [[nodiscard]] inline size_t getIdCount() const {
         return _idArrayCount;
     }
 
@@ -118,7 +118,7 @@ public:
          * Find the best location for the new array
          */
         std::map<size_t, size_t>::reverse_iterator it;
-        std::map<size_t, size_t>::reverse_iterator itBestFit = _freeArrayStartSpace.rend();
+        auto itBestFit = _freeArrayStartSpace.rend();
         size_t bestCommonValues = 0; // the number of values likely to be the same
         for (it = _freeArrayStartSpace.rbegin(); it != _freeArrayStartSpace.rend(); ++it) {
             size_t start = it->first;
@@ -128,7 +128,7 @@ public:
                 continue;
             }
 
-            std::set<size_t>::const_iterator itBlack = blackList.lower_bound(start);
+            auto itBlack = blackList.lower_bound(start);
             if (itBlack != blackList.end() && *itBlack <= end) {
                 continue; // cannot use this space
             }
@@ -188,7 +188,7 @@ public:
                 size_t lastSpotStart = itEnd->second;
                 size_t lastSpotEnd = itEnd->first;
                 size_t lastSpotSize = lastSpotEnd - lastSpotStart + 1;
-                std::set<size_t>::const_iterator itBlack = blackList.lower_bound(lastSpotStart);
+                auto itBlack = blackList.lower_bound(lastSpotStart);
                 if (itBlack == blackList.end()) {
                     // can use this space
                     _freeArrayEndSpace.erase(itEnd);
@@ -230,11 +230,9 @@ public:
         return false;
     }
 
-    virtual ~ArrayIdCompresser() {
-    }
+    virtual ~ArrayIdCompresser() = default;
 };
 
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

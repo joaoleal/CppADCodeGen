@@ -121,8 +121,8 @@ SET(install_python_location              "${CMAKE_INSTALL_PREFIX}/share/cppadcg/
 #                    Define some optional compiler flags
 # ----------------------------------------------------------------------------
 IF(CMAKE_VERSION VERSION_GREATER "3.1.0")
-    # aim for this version which has explicit support for c++11
-    SET(CMAKE_CXX_STANDARD 11)
+    # aim for this version which has explicit support for c++17
+    SET(CMAKE_CXX_STANDARD 17)
     SET(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 ENDIF()
 
@@ -138,7 +138,7 @@ IF(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     IF(CMAKE_VERSION VERSION_GREATER "3.1.0")
         # do nothing
     ELSE()
-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
     ENDIF()
 
 

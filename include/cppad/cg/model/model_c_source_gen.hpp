@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Auxiliary internal class
@@ -1314,7 +1313,6 @@ protected:
     ModelLibraryProcessor<Base>;
 };
 
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

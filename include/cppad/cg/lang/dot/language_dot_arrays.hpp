@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class Base>
 std::string LanguageDot<Base>::printArrayCreationOp(OperationNode<Base>& array) {
@@ -146,7 +145,6 @@ std::string LanguageDot<Base>::printArrayElementOp(OperationNode<Base>& op) {
     return name;
 }
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

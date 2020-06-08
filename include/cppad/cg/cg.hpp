@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -60,7 +61,7 @@ public:
     /**
      * Move constructor
      */
-    inline CG(CG<Base>&& orig);
+    inline CG(CG<Base>&& orig) noexcept;
 
     /**
      * Copy assignment operator
@@ -70,7 +71,7 @@ public:
     /**
      * Move assignment operator
      */
-    inline CG& operator=(CG<Base>&& rhs);
+    inline CG& operator=(CG<Base>&& rhs) noexcept;
 
     /**
      * Creates a parameter with the provided value
@@ -102,7 +103,7 @@ public:
      *
      * @return true if it represents the result from a symbolic operation
      */
-    inline bool isVariable() const;
+    [[nodiscard]] inline bool isVariable() const;
 
     /**
      * Determines if it a constant parameter which is not the result of
@@ -110,7 +111,7 @@ public:
      *
      * @return true if it represents a constant parameter.
      */
-    inline bool isParameter() const;
+    [[nodiscard]] inline bool isParameter() const;
 
     /**
      * Determines if there is value defined.
@@ -119,14 +120,14 @@ public:
      *
      * @return true if there is a value defined
      */
-    inline bool isValueDefined() const;
+    [[nodiscard]] inline bool isValueDefined() const;
 
     /**
      * Provides the current numerical value
      *
      * @throws CGException if a value is not defined
      */
-    inline const Base& getValue() const;
+    [[nodiscard]] inline const Base& getValue() const;
 
     /**
      * Defines a value which can alter the resulting model if this object is
@@ -136,8 +137,8 @@ public:
      */
     inline void setValue(const Base& val);
 
-    inline bool isIdenticalZero() const;
-    inline bool isIdenticalOne() const;
+    [[nodiscard]] inline bool isIdenticalZero() const;
+    [[nodiscard]] inline bool isIdenticalOne() const;
 
     inline OperationNode<Base>* getOperationNode() const;
 

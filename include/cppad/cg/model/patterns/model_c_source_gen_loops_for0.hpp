@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /***************************************************************************
  *  Methods related with loop insertion into the operation graph
@@ -111,10 +111,10 @@ std::vector<CG<Base> > prepareGraphForward0WithLoops(CodeHandler<Base>& handler,
 
         LoopEndOperationNode<Base>* loopEnd = createLoopEnd(handler, *loopStart, indexedLoopResults, indexesOps, assignOrAdd);
 
-        for (size_t i = 0; i < dependents.size(); i++) {
+        for (const auto& dependent : dependents) {
             for (size_t it = 0; it < nIterations; it++) {
                 // an additional alias variable is required so that each dependent variable can have its own ID
-                size_t e = dependents[i][it].original;
+                size_t e = dependent[it].original;
                 if (e < m) { // some equations are not present in all iteration
                     y[e] = handler.createCG(*handler.makeNode(CGOpCode::DependentRefRhs,{e}, {*loopEnd}));
                 }
@@ -136,7 +136,6 @@ std::vector<CG<Base> > ModelCSourceGen<Base>::prepareForward0WithLoops(CodeHandl
     return prepareGraphForward0WithLoops(handler, _fun.Range(), x, _funNoLoops, _loopTapes);
 }
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

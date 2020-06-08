@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 class ArArchiver : public Archiver {
 protected:
@@ -35,7 +35,7 @@ public:
         _verbose(false) {
     }
 
-    inline virtual bool isVerbose() const {
+    [[nodiscard]] inline virtual bool isVerbose() const {
         return _verbose;
     }
 
@@ -43,7 +43,7 @@ public:
         _verbose = verbose;
     }
 
-    inline const std::vector<std::string>& getFlags() const {
+    [[nodiscard]] inline const std::vector<std::string>& getFlags() const {
         return _flags;
     }
 
@@ -78,7 +78,6 @@ public:
 
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

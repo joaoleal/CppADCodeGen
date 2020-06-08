@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 // ----------------------------------------------------------------------
 // forward mode routine called by CppAD for  y = f(x, dxdt, t)
@@ -30,10 +30,10 @@ bool time_diff_forward(size_t id,
                        CppAD::vector<bool>& vzy,
                        const CppAD::vector<CG<Base> >& tx,
                        CppAD::vector<CG<Base> >& tzy) {
-    CPPADCG_ASSERT_UNKNOWN(n == 3); // [x, dxdt, t]
-    CPPADCG_ASSERT_UNKNOWN(m == 1);
-    CPPADCG_ASSERT_UNKNOWN(tx.size() >= (order + 1) * n);
-    CPPADCG_ASSERT_UNKNOWN(tzy.size() >= (order + 1) * m);
+    CPPADCG_ASSERT_UNKNOWN(n == 3) // [x, dxdt, t]
+    CPPADCG_ASSERT_UNKNOWN(m == 1)
+    CPPADCG_ASSERT_UNKNOWN(tx.size() >= (order + 1) * n)
+    CPPADCG_ASSERT_UNKNOWN(tzy.size() >= (order + 1) * m)
 
     size_t n_order = order + 1;
     const size_t xIndex = 0; // index of the variable in the argument list
@@ -42,8 +42,8 @@ bool time_diff_forward(size_t id,
 
     // check if this is during the call to time_var(id, ax, ay)
     if (vx.size() > 0) {
-        CPPADCG_ASSERT_UNKNOWN(vx.size() >= n);
-        CPPADCG_ASSERT_UNKNOWN(vzy.size() >= m);
+        CPPADCG_ASSERT_UNKNOWN(vx.size() >= n)
+        CPPADCG_ASSERT_UNKNOWN(vzy.size() >= m)
 
         vzy[0] = vx[0] || vx[1] || vx[2];
     }
@@ -53,10 +53,10 @@ bool time_diff_forward(size_t id,
     } else if (order == 1) {
         const CG<Base>& ttime = tx[timeIndex * n_order + order]; //
         const CG<Base>& txx = tx[xIndex * n_order + order]; //
-        CPPADCG_ASSERT_UNKNOWN(ttime.isParameter());
-        CPPADCG_ASSERT_UNKNOWN(txx.isParameter());
+        CPPADCG_ASSERT_UNKNOWN(ttime.isParameter())
+        CPPADCG_ASSERT_UNKNOWN(txx.isParameter())
         if (ttime.getValue() > 0) {
-            CPPADCG_ASSERT_UNKNOWN(txx.getValue() == 0);
+            CPPADCG_ASSERT_UNKNOWN(txx.getValue() == 0)
             tzy[1] = ttime * tx[dxdtIndex * n_order + 0]; // transform x(t) into dx(t)/dt
         } else {
             tzy[1] = txx; // do nothing
@@ -82,11 +82,11 @@ bool time_diff_reverse(size_t id,
                        CppAD::vector<CG<Base> >& px,
                        const CppAD::vector<CG<Base> >& pzy) {
 
-    CPPADCG_ASSERT_UNKNOWN(n == 3); // [x, dxdt, t]
-    CPPADCG_ASSERT_UNKNOWN(m == 1);
-    CPPADCG_ASSERT_UNKNOWN(tx.size() >= (order + 1) * n);
-    CPPADCG_ASSERT_UNKNOWN(tzy.size() >= (order + 1) * m);
-    CPPADCG_ASSERT_UNKNOWN(px.size() >= (order + 1) * n);
+    CPPADCG_ASSERT_UNKNOWN(n == 3) // [x, dxdt, t]
+    CPPADCG_ASSERT_UNKNOWN(m == 1)
+    CPPADCG_ASSERT_UNKNOWN(tx.size() >= (order + 1) * n)
+    CPPADCG_ASSERT_UNKNOWN(tzy.size() >= (order + 1) * m)
+    CPPADCG_ASSERT_UNKNOWN(px.size() >= (order + 1) * n)
 
     CG<Base>* pxx = &px[0];
     CG<Base>* pdxdt = &px[order + 1];
@@ -115,10 +115,10 @@ bool time_diff_for_jac_sparse(size_t id,
                               size_t q,
                               const CppAD::vector< std::set<size_t> >& r,
                               CppAD::vector< std::set<size_t> >& s) {
-    CPPADCG_ASSERT_UNKNOWN(n == 3);
-    CPPADCG_ASSERT_UNKNOWN(m == 1);
-    CPPADCG_ASSERT_UNKNOWN(r.size() >= n);
-    CPPADCG_ASSERT_UNKNOWN(s.size() >= m);
+    CPPADCG_ASSERT_UNKNOWN(n == 3)
+    CPPADCG_ASSERT_UNKNOWN(m == 1)
+    CPPADCG_ASSERT_UNKNOWN(r.size() >= n)
+    CPPADCG_ASSERT_UNKNOWN(s.size() >= m)
 
     // sparsity for z and y are the same as for x
     s[0] = r[0]; // x
@@ -137,10 +137,10 @@ bool time_diff_rev_jac_sparse(size_t id,
                               size_t q,
                               CppAD::vector< std::set<size_t> >& r,
                               const CppAD::vector< std::set<size_t> >& s) {
-    CPPADCG_ASSERT_UNKNOWN(n == 3);
-    CPPADCG_ASSERT_UNKNOWN(m == 1);
-    CPPADCG_ASSERT_UNKNOWN(r.size() >= n);
-    CPPADCG_ASSERT_UNKNOWN(s.size() >= m);
+    CPPADCG_ASSERT_UNKNOWN(n == 3)
+    CPPADCG_ASSERT_UNKNOWN(m == 1)
+    CPPADCG_ASSERT_UNKNOWN(r.size() >= n)
+    CPPADCG_ASSERT_UNKNOWN(s.size() >= m)
 
     r[0] = s[0];
     r[2] = s[0];
@@ -174,7 +174,6 @@ CPPAD_USER_ATOMIC(time_var,
                   CppAD::cg::time_diff_rev_jac_sparse<Base>,
                   CppAD::cg::time_diff_rev_hes_sparse<Base>)
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

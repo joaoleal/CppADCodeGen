@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2015 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -17,8 +18,7 @@
 
 #include <iostream>
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 class OStreamConfigRestore {
 private:
@@ -45,7 +45,6 @@ public:
     }
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

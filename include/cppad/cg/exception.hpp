@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * The exception used by CppADCodeGen
@@ -47,7 +46,7 @@ public:
 
     CGException() noexcept = delete;
 
-    const char* what() const noexcept override {
+    [[nodiscard]] const char* what() const noexcept override {
         return _message.c_str();
     }
 
@@ -73,7 +72,6 @@ inline std::ostream& operator<<(std::ostream& out, const CGException& rhs) {
     return out;
 }
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

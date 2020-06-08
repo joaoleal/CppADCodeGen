@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * An atomic function for source code generation
@@ -78,7 +77,7 @@ public:
      *
      * @return a unique identifier ID
      */
-    inline size_t getId() const {
+    [[nodiscard]] inline size_t getId() const {
         return id_;
     }
 
@@ -87,7 +86,7 @@ public:
      * Taylor coefficients for the dependent variables (ty) and any previous
      * evaluation of other forward/reverse modes.
      */
-    inline bool isStandAlone() const {
+    [[nodiscard]] inline bool isStandAlone() const {
         return standAlone_;
     }
 
@@ -157,8 +156,8 @@ public:
                 return false;
 
             vyLocal.resize(ty.size());
-            for (size_t i = 0; i < vyLocal.size(); i++) {
-                vyLocal[i] = true;
+            for (bool & i : vyLocal) {
+                i = true;
             }
 
             for (size_t i = 0; i < m; i++) {
@@ -167,8 +166,8 @@ public:
 
             if (p == 1) {
                 bool allZero = true;
-                for (size_t i = 0; i < vyLocal.size(); i++) {
-                    if (vyLocal[i]) {
+                for (bool i : vyLocal) {
+                    if (i) {
                         allZero = false;
                         break;
                     }
@@ -264,8 +263,8 @@ public:
          * will always be zero
          */
         vector<bool> vxLocal(px.size());
-        for (size_t j = 0; j < vxLocal.size(); j++) {
-            vxLocal[j] = true;
+        for (bool& j : vxLocal) {
+            j = true;
         }
 
         size_t p1 = p + 1;
@@ -325,8 +324,8 @@ public:
         }
 
         bool allZero = true;
-        for (size_t j = 0; j < vxLocal.size(); j++) {
-            if (vxLocal[j]) {
+        for (bool j : vxLocal) {
+            if (j) {
                 allZero = false;
                 break;
             }
@@ -585,7 +584,6 @@ private:
 
 };
 
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2014 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Smart vector of pointers.
@@ -31,8 +31,7 @@ public:
     using const_reverse_iterator = typename std::vector<Base*>::const_reverse_iterator;
     std::vector<Base*> v;
 
-    inline SmartVectorPointer() {
-    }
+    inline SmartVectorPointer() = default;
 
     inline SmartVectorPointer(size_t size) :
         v(size) {
@@ -42,11 +41,11 @@ public:
         v.swap(v_);
     }
 
-    inline size_t size() const {
+    [[nodiscard]] inline size_t size() const {
         return v.size();
     }
 
-    inline bool empty() const {
+    [[nodiscard]] inline bool empty() const {
         return v.empty();
     }
 
@@ -58,11 +57,11 @@ public:
         v.push_back(x);
     }
 
-    inline Base* operator[](size_t n) const {
+    [[nodiscard]] inline Base* operator[](size_t n) const {
         return v[n];
     }
 
-    inline Base*& operator[](size_t n) {
+    [[nodiscard]] inline Base*& operator[](size_t n) {
         return v[n];
     }
 
@@ -121,18 +120,17 @@ public:
     using iterator = typename std::set<Base*>::iterator;
     std::set<Base*> s;
 
-    inline SmartSetPointer() {
-    }
+    inline SmartSetPointer() = default;
 
     inline SmartSetPointer(std::set<Base*>& s_) {
         s.swap(s_);
     }
 
-    inline size_t size() const {
+    [[nodiscard]] inline size_t size() const {
         return s.size();
     }
 
-    inline bool empty() const {
+    [[nodiscard]] inline bool empty() const {
         return s.empty();
     }
 
@@ -181,18 +179,17 @@ public:
     using const_iterator = typename std::list<Base*>::const_iterator;
     std::list<Base*> l;
 
-    inline SmartListPointer() {
-    }
+    inline SmartListPointer() = default;
 
     inline SmartListPointer(const std::set<Base*>& l_) {
         l.swap(l_);
     }
 
-    inline size_t size() const {
+    [[nodiscard]] inline size_t size() const {
         return l.size();
     }
 
-    inline bool empty() const {
+    [[nodiscard]] inline bool empty() const {
         return l.empty();
     }
 
@@ -251,11 +248,11 @@ public:
     using const_reverse_iterator = typename std::map<Key, Value*>::const_reverse_iterator;
     std::map<Key, Value*> m;
 
-    inline size_t size() const {
+    [[nodiscard]] inline size_t size() const {
         return m.size();
     }
 
-    inline bool empty() const {
+    [[nodiscard]] inline bool empty() const {
         return m.empty();
     }
 
@@ -309,7 +306,6 @@ public:
     }
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

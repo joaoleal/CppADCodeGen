@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class Base>
 class LlvmModel;
@@ -73,7 +72,6 @@ protected:
     friend class LlvmModel<Base>;
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

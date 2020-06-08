@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class Base>
 CodeHandler<Base>::CodeHandler(size_t varCount) :
@@ -422,7 +421,7 @@ void CodeHandler<Base>::generateCode(std::ostream& out,
     std::map<size_t, std::string> atomicFunctionId2Name;
     for (size_t i = 0; i < _atomicFunctionsOrder->size(); i++) {
         const std::string& atomicName = (*_atomicFunctionsOrder)[i];
-        std::map<std::string, size_t>::const_iterator it = atomicFunctionName2Id.find(atomicName);
+        auto it = atomicFunctionName2Id.find(atomicName);
         if (it != atomicFunctionName2Id.end()) {
             atomicFunctionId2Index[it->second] = i;
             atomicFunctionId2Name[it->second] = atomicName;
@@ -688,13 +687,13 @@ inline void CodeHandler<Base>::findRandomIndexPatterns(IndexPattern* ip,
         return;
 
     if (ip->getType() == IndexPatternType::Random1D || ip->getType() == IndexPatternType::Random2D) {
-        found.insert(static_cast<RandomIndexPattern*> (ip));
+        found.insert(dynamic_cast<RandomIndexPattern*> (ip));
     } else {
         std::set<IndexPattern*> indexes;
         ip->getSubIndexes(indexes);
         for (IndexPattern* sip : indexes) {
             if (sip->getType() == IndexPatternType::Random1D || sip->getType() == IndexPatternType::Random2D)
-                found.insert(static_cast<RandomIndexPattern*> (sip));
+                found.insert(dynamic_cast<RandomIndexPattern*> (sip));
         }
     }
 }
@@ -2167,7 +2166,6 @@ inline void CodeHandler<Base>::resetManagedNodes() {
     _scope.fill(0);
 }
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

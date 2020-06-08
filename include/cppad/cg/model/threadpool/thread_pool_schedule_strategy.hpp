@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2016 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 enum class ThreadPoolScheduleStrategy {
     STATIC = 1, // all jobs are assigned to a thread at the beginning
@@ -24,7 +24,6 @@ enum class ThreadPoolScheduleStrategy {
     GUIDED = 3 // each thread can execute multiple jobs before returning to the pool
 };
 
-}
 }
 
 #endif

@@ -18,8 +18,7 @@
 
 #include <cppad/cg/dae_index_reduction/augment_path.hpp>
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Similar algorithm as <code>AugmentPathDepthLookahead</code> which only considers
@@ -76,7 +75,6 @@ public:
 
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

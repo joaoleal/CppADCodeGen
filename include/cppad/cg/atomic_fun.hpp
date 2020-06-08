@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * An atomic function for source code generation
@@ -250,7 +249,6 @@ private:
     }
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

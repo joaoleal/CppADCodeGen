@@ -15,8 +15,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * The steps for a node during the navigation through the graph of operation nodes.
@@ -53,7 +52,7 @@ public:
         return *_parent->getArguments()[_node].getOperation();
     }
 
-    inline size_t argumentIndex() const {
+    [[nodiscard]] inline size_t argumentIndex() const {
         return _node;
     }
 };
@@ -93,11 +92,11 @@ public:
         _stack.reserve(100);
     }
 
-    inline bool empty() const {
+    [[nodiscard]] inline bool empty() const {
         return _stack.empty();
     }
 
-    inline size_t size() const {
+    [[nodiscard]] inline size_t size() const {
         return _stack.size();
     }
 
@@ -105,7 +104,7 @@ public:
         _stack.pop_back();
     }
 
-    inline Element& back() {
+    [[nodiscard]] inline Element& back() {
         return _stack.back();
     }
 
@@ -249,7 +248,6 @@ inline void depthFirstGraphNavigation(OperationNode<Base>& root,
     }
 }
 
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

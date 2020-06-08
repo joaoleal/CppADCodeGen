@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -17,15 +18,14 @@
 
 #include <typeinfo>
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * A tool used to create static libraries from object files
  */
 class Archiver {
 public:
-    virtual bool isVerbose() const = 0;
+    [[nodiscard]] virtual bool isVerbose() const = 0;
 
     virtual void setVerbose(bool verbose) = 0;
 
@@ -33,11 +33,9 @@ public:
                         const std::set<std::string>& objectFiles,
                         JobTimer* timer = nullptr) = 0;
 
-    inline virtual ~Archiver() {
-    };
+    inline virtual ~Archiver() = default;
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

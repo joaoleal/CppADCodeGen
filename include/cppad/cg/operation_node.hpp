@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * An operation node.
@@ -90,7 +89,7 @@ public:
      * Provides the operation type represented by this node.
      * @return Mathematical operation type which this node is the result of.
      */
-    inline CGOpCode getOperationType() const {
+    [[nodiscard]] inline CGOpCode getOperationType() const {
         return operation_;
     }
 
@@ -131,7 +130,7 @@ public:
      * Provides additional information used in the operation.
      * @return the additional operation information/options  (read-only)
      */
-    inline const std::vector<size_t>& getInfo() const {
+    [[nodiscard]] inline const std::vector<size_t>& getInfo() const {
         return info_;
     }
 
@@ -148,7 +147,7 @@ public:
      * @return a variable name for the result of this operation or null if
      *         no name was assigned to this node yet
      */
-    inline const std::string* getName() const {
+    [[nodiscard]] inline const std::string* getName() const {
         return name_.get();
     }
 
@@ -160,7 +159,7 @@ public:
         if (name_ != nullptr)
             *name_ = name;
         else
-            name_.reset(new std::string(name));
+            name_ = std::make_unique<std::string>(name);
     }
 
     /**
@@ -178,7 +177,7 @@ public:
      *
      * @return the index in the CodeHandler's array of managed nodes
      */
-    inline size_t getHandlerPosition() const {
+    [[nodiscard]] inline size_t getHandlerPosition() const {
         return pos_;
     }
 
@@ -283,11 +282,11 @@ protected:
 
     inline OperationNode(CodeHandler<Base>* handler,
                          CGOpCode op,
-                         const std::vector<size_t>& info,
+                         std::vector<size_t> info,
                          const std::vector<Argument<Base> >& args) :
         handler_(handler),
         operation_(op),
-        info_(info),
+        info_(std::move(info)),
         arguments_(args),
         pos_((std::numeric_limits<size_t>::max)()) {
     }
@@ -360,7 +359,6 @@ inline std::ostream& operator<<(
     return os;
 }
 
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

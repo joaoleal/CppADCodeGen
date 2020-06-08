@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class Base>
 void ModelCSourceGen<Base>::generateJacobianSource() {
@@ -193,7 +193,7 @@ void ModelCSourceGen<Base>::generateSparseJacobianForRevSource(bool forward,
         const std::vector<size_t>& els = it.second.indexes;
         const std::vector<set<size_t> >& location = it.second.locations;
         CPPADCG_ASSERT_UNKNOWN(els.size() == location.size());
-        CPPADCG_ASSERT_UNKNOWN(els.size() > 0);
+        CPPADCG_ASSERT_UNKNOWN(!els.empty())
 
         bool passed = true;
         size_t jacArrayStart = *location[0].begin();
@@ -486,7 +486,6 @@ void ModelCSourceGen<Base>::generateJacobianSparsitySource() {
     _cache.str("");
 }
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

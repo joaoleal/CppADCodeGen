@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2014 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -88,8 +89,7 @@ inline adouble CondExpOp(enum CppAD::CompareOp cop,
     }
 }
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Specialization of class Evaluator for Adol-C
@@ -109,7 +109,6 @@ public:
 
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

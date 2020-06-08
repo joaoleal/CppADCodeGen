@@ -20,8 +20,7 @@
 #include <cppad/cg/dae_index_reduction/augment_path_depth_lookahead.hpp>
 #include <cppad/cg/dae_index_reduction/augment_path_depth_lookahead_a.hpp>
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Soares Secchi method for DAE structural index reduction
@@ -76,10 +75,9 @@ public:
 
     SoaresSecchi& operator=(const SoaresSecchi& p) = delete;
 
-    virtual ~SoaresSecchi() {
-    }
+    virtual ~SoaresSecchi() = default;
 
-    AugmentPath<Base>& getAugmentPath() const {
+    [[nodiscard]] AugmentPath<Base>& getAugmentPath() const {
         return *augmentPath_;
     }
 
@@ -101,7 +99,7 @@ public:
      * CppAD::PrintFor(0, "", val, name)
      * should be kept by also adding PrintFor operations in the reduced model.
      */
-    inline bool isPreserveNames() const {
+    [[nodiscard]] inline bool isPreserveNames() const {
         return graph_.isPreserveNames();
     }
 
@@ -154,7 +152,7 @@ public:
      * @return the DAE differentiation index.
      * @throws CGException
      */
-    inline size_t getStructuralIndex() const {
+    [[nodiscard]] inline size_t getStructuralIndex() const override {
         return graph_.getStructuralIndex();
     }
 
@@ -237,7 +235,6 @@ protected:
 
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

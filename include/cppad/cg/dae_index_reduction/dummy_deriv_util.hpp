@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -17,8 +18,7 @@
 
 #include <cppad/cg/dae_index_reduction/bipartite_nodes.hpp>
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Sorts variable nodes according to the variable differentiation order
@@ -138,7 +138,6 @@ inline bool sortEquationByAssignedOrder2(const DaeEqOrderInfo& i,
     }
 }
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

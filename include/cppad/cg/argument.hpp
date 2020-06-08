@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class Base>
 class OperationNode;
@@ -52,7 +52,7 @@ public:
         parameter_(orig.parameter_ != nullptr ? new Base(*orig.parameter_) : nullptr) {
     }
 
-    inline Argument(Argument&& orig) :
+    inline Argument(Argument&& orig) noexcept :
             operation_(orig.operation_),
             parameter_(std::move(orig.parameter_)) {
     }
@@ -75,7 +75,7 @@ public:
         return *this;
     }
 
-    inline Argument& operator=(Argument&& rhs) {
+    inline Argument& operator=(Argument&& rhs) noexcept {
         assert(this != &rhs);
 
         operation_ = rhs.operation_;
@@ -98,7 +98,6 @@ public:
 
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

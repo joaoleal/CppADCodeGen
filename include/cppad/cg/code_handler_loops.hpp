@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class Base>
 const std::map<size_t, LoopModel<Base>*>& CodeHandler<Base>::getLoops() const {
@@ -133,11 +133,10 @@ size_t CodeHandler<Base>::LoopData::addIndependentIndexPattern(IndexPattern& pat
 template<class Base>
 void CodeHandler<Base>::LoopData::addLoopEndNode(OperationNode<Base>& node) {
     CPPADCG_ASSERT_UNKNOWN(node.getOperationType() == CGOpCode::LoopEnd);
-    LoopEndOperationNode<Base>& loopEnd = static_cast<LoopEndOperationNode<Base>&> (node);
+    auto& loopEnd = static_cast<LoopEndOperationNode<Base>&> (node);
     endNodes.push_back(&loopEnd);
 }
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

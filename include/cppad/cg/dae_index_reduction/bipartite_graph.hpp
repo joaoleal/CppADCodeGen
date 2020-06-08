@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2016 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -19,8 +20,7 @@
 #include <cppad/cg/dae_index_reduction/dae_equation_info.hpp>
 #include <cppad/cg/dae_index_reduction/time_diff.hpp>
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Bipartite graph which holds nodes to represent variables and equations
@@ -88,11 +88,11 @@ public:
         using namespace std;
         using std::vector;
 
-        CPPADCG_ASSERT_UNKNOWN(fun_ != nullptr);
+        CPPADCG_ASSERT_UNKNOWN(fun_ != nullptr)
         const size_t m = fun.Range(); // equation count
         const size_t n = fun.Domain(); // total variable count
 
-        CPPADCG_ASSERT_UNKNOWN(varInfo_.size() == n);
+        CPPADCG_ASSERT_UNKNOWN(varInfo_.size() == n)
         for (size_t j = 0; j < n; ++j) {
             varInfo_[j].setOriginalIndex(j);
             varInfo_[j].setId(j);
@@ -100,7 +100,7 @@ public:
 
         for (size_t j = 0; j < n; ++j) {
             int deriv = varInfo_[j].getAntiDerivative();
-            CPPADCG_ASSERT_UNKNOWN(deriv < int(varInfo_.size()));
+            CPPADCG_ASSERT_UNKNOWN(deriv < int(varInfo_.size()))
             if (deriv >= 0) {
                 varInfo_[deriv].setDerivative(j);
             }
@@ -208,7 +208,7 @@ public:
             int tapeIndex0 = varInfo_[tapeIndex].getAntiDerivative();
             const std::string& name = varInfo_[tapeIndex].getName();
 
-            CPPADCG_ASSERT_UNKNOWN(varInfo_[tapeIndex].isFunctionOfIntegrated());
+            CPPADCG_ASSERT_UNKNOWN(varInfo_[tapeIndex].isFunctionOfIntegrated())
 
             if (tapeIndex0 < 0) {
                 // generate the variable name
@@ -425,21 +425,21 @@ public:
      * in any equation.
      */
     inline void remove(const Enode<Base>& i) {
-        CPPADCG_ASSERT_UNKNOWN(enodes_[i.index()] == &i);
-        CPPADCG_ASSERT_UNKNOWN(i.derivative() == nullptr);
+        CPPADCG_ASSERT_UNKNOWN(enodes_[i.index()] == &i)
+        CPPADCG_ASSERT_UNKNOWN(i.derivative() == nullptr)
 
         for (Vnode<Base>* j: i.variables()) {
             // remove the edges (connections in variables)
             auto& eqs = j->equations();
             auto it = std::find(eqs.begin(), eqs.end(), &i);
-            CPPADCG_ASSERT_UNKNOWN(it != eqs.end());
+            CPPADCG_ASSERT_UNKNOWN(it != eqs.end())
             eqs.erase(it);
 
             /**
              * remove variable
              */
             while(j->equations().empty()) {
-                CPPADCG_ASSERT_UNKNOWN(vnodes_[j->index()] == j);
+                CPPADCG_ASSERT_UNKNOWN(vnodes_[j->index()] == j)
 
                 if (j->derivative() == nullptr) {
                     vnodes_.erase(vnodes_.cbegin() + j->index());
@@ -451,7 +451,7 @@ public:
                     }
 
                     auto* jOrig = j->antiDerivative();
-                    CPPADCG_ASSERT_UNKNOWN(jOrig != nullptr);
+                    CPPADCG_ASSERT_UNKNOWN(jOrig != nullptr)
                     jOrig->setDerivative(nullptr);
 
                     delete j; // no longer required
@@ -463,8 +463,8 @@ public:
 
         // update equation indices
         for (size_t ii = i.index() + 1; ii < enodes_.size(); ++ii) {
-            CPPADCG_ASSERT_UNKNOWN(enodes_[ii]->index() > 0);
-            CPPADCG_ASSERT_UNKNOWN(enodes_[ii]->index() == ii);
+            CPPADCG_ASSERT_UNKNOWN(enodes_[ii]->index() > 0)
+            CPPADCG_ASSERT_UNKNOWN(enodes_[ii]->index() == ii)
             enodes_[ii]->setIndex(enodes_[ii]->index() - 1);
         }
 
@@ -473,7 +473,7 @@ public:
         }
 
         auto it = std::find(enodes_.begin(), enodes_.end(), &i);
-        CPPADCG_ASSERT_UNKNOWN(it != enodes_.end());
+        CPPADCG_ASSERT_UNKNOWN(it != enodes_.end())
         enodes_.erase(it);
 
         delete &i; // no longer required
@@ -528,7 +528,7 @@ public:
         size_t origM = this->fun_->Range();
         for (size_t i = 0; i < origM; i++) {
             if (enodes_[i]->derivative() != nullptr) {
-                CPPADCG_ASSERT_UNKNOWN(enodes_[i]->derivativeOf() == nullptr);
+                CPPADCG_ASSERT_UNKNOWN(enodes_[i]->derivativeOf() == nullptr)
                 newEqs.push_back(enodes_[i]->derivative());
             }
         }
@@ -562,7 +562,7 @@ public:
         for (size_t j = origTimeDependentCount_; j < vnodes_.size(); j++) {
             // new variable derivative added by the Pantelides method
             Vnode<Base>* jj = vnodes_[j];
-            CPPADCG_ASSERT_UNKNOWN(jj->antiDerivative() != nullptr);
+            CPPADCG_ASSERT_UNKNOWN(jj->antiDerivative() != nullptr)
             size_t antiDeriv = jj->antiDerivative()->tapeIndex();
             size_t id = newVarInfo.size();
             newVarInfo.push_back(DaeVarInfo(antiDeriv, jj->name(), id)); // create the new variable
@@ -784,7 +784,7 @@ public:
     inline std::vector<CppAD::AD<CG<Base> > > prepareTimeDependentVariables(const std::vector<ADCG>& indepOrig,
                                                                             const std::vector<DaeVarInfo>& newVarInfo,
                                                                             size_t timeTapeIndex) const {
-        CPPADCG_ASSERT_UNKNOWN(timeTapeIndex < indepOrig.size());
+        CPPADCG_ASSERT_UNKNOWN(timeTapeIndex < indepOrig.size())
 
         using std::vector;
         using ADCGBase = CppAD::AD<CGBase>;
@@ -835,7 +835,7 @@ public:
         std::vector<std::string> eqnames(eqInfo.size());
         for (size_t i = 0; i < eqInfo.size(); ++i) {
             if(eqInfo[i].isExplicit()) {
-                CPPADCG_ASSERT_UNKNOWN(eqInfo[i].getAssignedVarIndex() >= 0);
+                CPPADCG_ASSERT_UNKNOWN(eqInfo[i].getAssignedVarIndex() >= 0)
                 eqnames[i] = "d" + varInfo[eqInfo[i].getAssignedVarIndex()].getName() + "dt";
             } else {
                 eqnames[i] = "res[" + std::to_string(i) + "]";
@@ -858,7 +858,7 @@ public:
                            const std::vector<std::string>& depNames = std::vector<std::string>()) const {
         using std::vector;
 
-        CPPADCG_ASSERT_UNKNOWN(fun.Domain() == indepNames.size() || fun.Domain() == indepNames.size() + 1); // with or without time
+        CPPADCG_ASSERT_UNKNOWN(fun.Domain() == indepNames.size() || fun.Domain() == indepNames.size() + 1) // with or without time
 
         CodeHandler<Base> handler;
 
@@ -1010,8 +1010,8 @@ public:
         if (varInfo[index].isFunctionOfIntegrated()) {
             derivOrder = 0;
             while (varInfo[j0].getAntiDerivative() >= 0) {
-                CPPADCG_ASSERT_UNKNOWN(j0 < varInfo.size());
-                CPPADCG_ASSERT_UNKNOWN(varInfo[j0].isFunctionOfIntegrated());
+                CPPADCG_ASSERT_UNKNOWN(j0 < varInfo.size())
+                CPPADCG_ASSERT_UNKNOWN(varInfo[j0].isFunctionOfIntegrated())
                 derivOrder++;
                 j0 = varInfo[j0].getAntiDerivative();
             }
@@ -1054,7 +1054,6 @@ inline std::ostream& operator<<(std::ostream& os,
     return os;
 }
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

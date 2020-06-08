@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class Base>
 inline void CodeHandler<Base>::substituteIndependent(const CG<Base>& indep,
@@ -86,7 +86,6 @@ inline void CodeHandler<Base>::removeIndependent(OperationNode<Base>& indep) {
     _independentVariables.erase(it);
 }
 
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

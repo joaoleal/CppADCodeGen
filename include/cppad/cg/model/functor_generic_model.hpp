@@ -18,8 +18,7 @@
 
 #include <typeinfo>
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * A model which can be accessed through function pointers.
@@ -138,11 +137,11 @@ public:
         }
     }
 
-    const std::string& getName() const override {
+    [[nodiscard]] const std::string& getName() const override {
         return _name;
     }
 
-    const std::vector<std::string>& getAtomicFunctionNames() override {
+    [[nodiscard]] const std::vector<std::string>& getAtomicFunctionNames() override {
         return _atomicNames;
     }
 
@@ -157,11 +156,11 @@ public:
     }
 
     // Jacobian sparsity
-    bool isJacobianSparsityAvailable() override {
+    [[nodiscard]] bool isJacobianSparsityAvailable() override {
         return _jacobianSparsity != nullptr;
     }
 
-    std::vector<bool> JacobianSparsityBool() override {
+    [[nodiscard]] std::vector<bool> JacobianSparsityBool() override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_jacobianSparsity != nullptr, "No Jacobian sparsity function defined in the dynamic library")
 
@@ -177,7 +176,7 @@ public:
         return s;
     }
 
-    std::vector<std::set<size_t> > JacobianSparsitySet() override {
+    [[nodiscard]] std::vector<std::set<size_t> > JacobianSparsitySet() override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_jacobianSparsity != nullptr, "No Jacobian sparsity function defined in the dynamic library")
 
@@ -210,11 +209,11 @@ public:
     }
 
     // Hessian sparsity
-    bool isHessianSparsityAvailable() override {
+    [[nodiscard]] bool isHessianSparsityAvailable() override {
         return _hessianSparsity != nullptr;
     }
 
-    std::vector<bool> HessianSparsityBool() override {
+    [[nodiscard]] std::vector<bool> HessianSparsityBool() override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_hessianSparsity != nullptr, "No Hessian sparsity function defined in the dynamic library")
 
@@ -230,7 +229,7 @@ public:
         return s;
     }
 
-    std::vector<std::set<size_t> > HessianSparsitySet() override {
+    [[nodiscard]] std::vector<std::set<size_t> > HessianSparsitySet() override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_hessianSparsity != nullptr, "No Hessian sparsity function defined in the dynamic library")
 
@@ -262,11 +261,11 @@ public:
         std::copy(col, col + nnz, cols.begin());
     }
 
-    bool isEquationHessianSparsityAvailable() override {
+    [[nodiscard]] bool isEquationHessianSparsityAvailable() override {
         return _hessianSparsity2 != nullptr;
     }
 
-    std::vector<bool> HessianSparsityBool(size_t i) override {
+    [[nodiscard]] std::vector<bool> HessianSparsityBool(size_t i) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_hessianSparsity2 != nullptr, "No Hessian sparsity function defined in the dynamic library")
 
@@ -282,7 +281,7 @@ public:
         return s;
     }
 
-    std::vector<std::set<size_t> > HessianSparsitySet(size_t i) override {
+    [[nodiscard]] std::vector<std::set<size_t> > HessianSparsitySet(size_t i) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, ERROR_LIBRARY_NOT_READY)
         CPPADCG_ASSERT_KNOWN(_hessianSparsity2 != nullptr, "No Hessian sparsity function defined in the dynamic library")
 
@@ -316,17 +315,17 @@ public:
 
     /// number of independent variables
 
-    size_t Domain() const override {
+    [[nodiscard]] size_t Domain() const override {
         return _n;
     }
 
     /// number of dependent variables
 
-    size_t Range() const override {
+    [[nodiscard]] size_t Range() const override {
         return _m;
     }
 
-    bool isForwardZeroAvailable() override {
+    [[nodiscard]] bool isForwardZeroAvailable() override {
         return _zero != nullptr;
     }
 
@@ -394,7 +393,7 @@ public:
         }
     }
 
-    bool isJacobianAvailable() override {
+    [[nodiscard]] bool isJacobianAvailable() override {
         return _jacobian != nullptr;
     }
 
@@ -416,7 +415,7 @@ public:
         (*_jacobian)(&_in[0], &_out[0], _atomicFuncArg);
     }
 
-    bool isHessianAvailable() override {
+    [[nodiscard]] bool isHessianAvailable() override {
         return _hessian != nullptr;
     }
 
@@ -440,7 +439,7 @@ public:
         (*_hessian)(&_inHess[0], &_out[0], _atomicFuncArg);
     }
 
-    bool isForwardOneAvailable() override {
+    [[nodiscard]] bool isForwardOneAvailable() override {
         return _forwardOne != nullptr;
     }
 
@@ -459,7 +458,7 @@ public:
         CPPADCG_ASSERT_KNOWN(ret == 0, "First-order forward mode failed.") // generic failure
     }
 
-    bool isSparseForwardOneAvailable() override {
+    [[nodiscard]] bool isSparseForwardOneAvailable() override {
         return _forwardOneSparsity != nullptr && _sparseForwardOne != nullptr;
     }
 
@@ -501,7 +500,7 @@ public:
         }
     }
 
-    bool isReverseOneAvailable() override {
+    [[nodiscard]] bool isReverseOneAvailable() override {
         return _reverseOne != nullptr;
     }
 
@@ -525,7 +524,7 @@ public:
         CPPADCG_ASSERT_KNOWN(ret == 0, "First-order reverse mode failed.")
     }
 
-    bool isSparseReverseOneAvailable() override {
+    [[nodiscard]] bool isSparseReverseOneAvailable() override {
         return _reverseOneSparsity != nullptr && _sparseReverseOne != nullptr;
     }
 
@@ -567,7 +566,7 @@ public:
         }
     }
 
-    bool isReverseTwoAvailable() override {
+    [[nodiscard]] bool isReverseTwoAvailable() override {
         return _reverseTwo != nullptr;
     }
 
@@ -593,7 +592,7 @@ public:
         CPPADCG_ASSERT_KNOWN(ret == 0, "Second-order reverse mode failed.")
     }
 
-    bool isSparseReverseTwoAvailable() override {
+    [[nodiscard]] bool isSparseReverseTwoAvailable() override {
         return _sparseReverseTwo != nullptr;
     }
 
@@ -639,7 +638,7 @@ public:
         }
     }
 
-    bool isSparseJacobianAvailable() override {
+    [[nodiscard]] bool isSparseJacobianAvailable() override {
         return _jacobianSparsity != nullptr && _sparseJacobian != nullptr;
     }
 
@@ -756,7 +755,7 @@ public:
         }
     }
 
-    bool isSparseHessianAvailable() override {
+    [[nodiscard]] bool isSparseHessianAvailable() override {
         return _hessianSparsity != nullptr && _sparseHessian != nullptr;
     }
 
@@ -1120,7 +1119,6 @@ private:
     friend class AtomicExternalFunctionWrapper<Base>;
 };
 
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * An atomic function wrapper for atomic functions using the ::CppAD::cg::CG
@@ -116,8 +115,8 @@ public:
                 fun_.size_forward_set(0);
             }
 
-            for (size_t i = 0; i < s.size(); i++) {
-                s[i].clear();
+            for (auto& i : s) {
+                i.clear();
             }
             CppAD::cg::multMatrixMatrixSparsity(custom_jac_.getFullElements(), r, s, m, n, q);
         } else {
@@ -147,8 +146,8 @@ public:
                 custom_jac_.setFullElements(jacobianReverseSparsitySet<std::vector<std::set<size_t> > >(fun_));
             }
 
-            for (size_t i = 0; i < st.size(); i++) {
-                st[i].clear();
+            for (auto& i : st) {
+                i.clear();
             }
             CppAD::cg::multMatrixMatrixSparsityTrans(rt, custom_jac_.getFullElements(), st, m, n, q);
         } else {
@@ -341,7 +340,6 @@ private:
 
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

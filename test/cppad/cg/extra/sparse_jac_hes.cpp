@@ -63,11 +63,9 @@ public:
                    const std::vector<size_t>& jacRow, const std::vector<size_t>& jacCol,
                    const std::vector<size_t>& hesRow, const std::vector<size_t>& hesCol) {
 
-        size_t i, j;
-
         // domain space vector
         std::vector<AD<double> > X(n);
-        for (i = 0; i < n; i++)
+        for (size_t i = 0; i < n; i++)
             X[i] = AD<double> (i + 1);
 
         // declare independent variables and starting recording
@@ -81,7 +79,7 @@ public:
 
         // new value for the independent variable vector
         VectorBase x(n);
-        for (i = 0; i < n; i++)
+        for (size_t i = 0; i < n; i++)
             x[i] = 3 * double(i + 1);
 
         // second derivative of y[1]
@@ -99,7 +97,7 @@ public:
          */
         // sparsity pattern
         VectorSet s(m);
-        for (i = 0; i < m; i++)
+        for (size_t i = 0; i < m; i++)
             s[i].insert(i);
         VectorSet jsparsity = f.RevSparseJac(m, s);
 
@@ -120,12 +118,12 @@ public:
          */
         // determine the sparsity pattern p for Hessian of w^T F
         VectorSet r(n);
-        for (j = 0; j < n; j++)
+        for (size_t j = 0; j < n; j++)
             r[j].insert(j);
         f.ForSparseJac(n, r);
         //
         s.resize(1);
-        for (i = 0; i < m; i++)
+        for (size_t i = 0; i < m; i++)
             if (w[i] != 0)
                 s[0].insert(i);
         VectorSet hsparsity = f.RevSparseHes(n, s);

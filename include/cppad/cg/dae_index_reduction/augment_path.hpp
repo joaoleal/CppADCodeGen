@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2016 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -19,8 +20,7 @@
 #include <cppad/cg/dae_index_reduction/dae_equation_info.hpp>
 #include <cppad/cg/dae_index_reduction/simple_logger.hpp>
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Algorithm interface for assigning equations to variables in sorting
@@ -33,15 +33,13 @@ protected:
     using ADCG = CppAD::AD<CGBase>;
 protected:
     SimpleLogger defaultLogger_;
-    // logger
     SimpleLogger* logger_;
 public:
     inline AugmentPath() :
             logger_(&defaultLogger_) {
     }
 
-    inline virtual ~AugmentPath() {
-    }
+    inline virtual ~AugmentPath() = default;
 
     /**
      *
@@ -54,12 +52,11 @@ public:
         logger_ = &logger;
     }
 
-    inline SimpleLogger& getLogger() const {
+    [[nodiscard]] inline SimpleLogger& getLogger() const {
         return *logger_;
     }
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

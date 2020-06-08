@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,10 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
-
-namespace loops {
+namespace CppAD::cg::loops {
 
 template<class Base>
 class HessianWithLoopsEquationGroupInfo {
@@ -49,8 +47,7 @@ public:
      */
     std::map<size_t, std::map<size_t, CG<Base> > > hess;
 
-    inline HessianWithLoopsEquationGroupInfo() {
-    }
+    inline HessianWithLoopsEquationGroupInfo() = default;
 
     inline HessianWithLoopsEquationGroupInfo(const LoopModel<Base>& loop) :
         evalHessSparsity(loop.getTapeIndependentCount()) {
@@ -152,9 +149,6 @@ public:
 
 };
 
-} // END loops namespace
-
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

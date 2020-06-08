@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class Base>
 void ModelCSourceGen<Base>::generateSparseHessianWithLoopsSourceFromRev2(const std::map<size_t, CompressedVectorInfo>& hessInfo,
@@ -61,7 +61,6 @@ void ModelCSourceGen<Base>::generateSparseHessianWithLoopsSourceFromRev2(const s
     _cache.str("");
 }
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

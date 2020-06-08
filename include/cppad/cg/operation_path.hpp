@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -18,8 +19,7 @@
 #include <cppad/cg/operation_path_node.hpp>
 #include <cppad/cg/bidir_graph.hpp>
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Finds all paths from a root node to a target node.
@@ -205,7 +205,6 @@ inline std::vector<std::vector<OperationPathNode<Base> > > CodeHandler<Base>::fi
     return foundPaths;
 }
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

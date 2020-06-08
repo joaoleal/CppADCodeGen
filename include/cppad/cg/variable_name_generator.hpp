@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Function arguments
@@ -53,7 +53,7 @@ public:
      * 
      * @return the dependent variable arguments
      */
-    virtual const std::vector<FuncArgument>& getDependent() const {
+    [[nodiscard]] virtual const std::vector<FuncArgument>& getDependent() const {
         return _dependent;
     }
 
@@ -62,7 +62,7 @@ public:
      * 
      * @return the independent variable arguments
      */
-    virtual const std::vector<FuncArgument>& getIndependent() const {
+    [[nodiscard]] virtual const std::vector<FuncArgument>& getIndependent() const {
         return _independent;
     }
 
@@ -71,29 +71,29 @@ public:
      * 
      * @return the temporary variable arguments
      */
-    virtual const std::vector<FuncArgument>& getTemporary() const {
+    [[nodiscard]] virtual const std::vector<FuncArgument>& getTemporary() const {
         return _temporary;
     }
 
     /**
      * Provides the minimum variable ID of temporary variables.
      */
-    virtual size_t getMinTemporaryVariableID() const = 0;
+    [[nodiscard]] virtual size_t getMinTemporaryVariableID() const = 0;
 
     /**
      * Provides the maximum used variable ID of temporary variables.
      */
-    virtual size_t getMaxTemporaryVariableID() const = 0;
+    [[nodiscard]] virtual size_t getMaxTemporaryVariableID() const = 0;
 
     /**
      * Provides the maximum variable ID of temporary dense array variables.
      */
-    virtual size_t getMaxTemporaryArrayVariableID() const = 0;
+    [[nodiscard]] virtual size_t getMaxTemporaryArrayVariableID() const = 0;
 
     /**
      * Provides the maximum variable ID of temporary sparse array variables.
      */
-    virtual size_t getMaxTemporarySparseArrayVariableID() const = 0;
+    [[nodiscard]] virtual size_t getMaxTemporarySparseArrayVariableID() const = 0;
 
     /**
      * Creates a name for a dependent variable.
@@ -318,11 +318,9 @@ public:
     virtual void finalizeCustomFunctionVariables(std::ostream& out) {
     }
 
-    inline virtual ~VariableNameGenerator() {
-    }
+    inline virtual ~VariableNameGenerator() = default;
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

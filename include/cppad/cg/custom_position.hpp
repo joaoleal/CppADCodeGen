@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Useful class for storing matrix indexes
@@ -64,11 +63,11 @@ public:
         }
     }
 
-    inline bool isFilterDefined() const {
+    [[nodiscard]] inline bool isFilterDefined() const {
         return filterDefined_;
     }
 
-    inline bool isFullDefined() const {
+    [[nodiscard]] inline bool isFullDefined() const {
         return fullDefined_;
     }
 
@@ -78,7 +77,7 @@ public:
         fullDefined_ = true;
     }
 
-    inline const std::vector<std::set<size_t> >& getFullElements()const {
+    [[nodiscard]] inline const std::vector<std::set<size_t> >& getFullElements()const {
         return elements_;
     }
 
@@ -112,7 +111,6 @@ public:
 
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class Base>
 inline void LanguageLatex<Base>::generateNames4RandomIndexPatterns(const std::set<RandomIndexPattern*>& randomPatterns) {
@@ -266,7 +265,6 @@ inline std::string LanguageLatex<Base>::linearIndexPattern2String(const LinearIn
     return ss.str();
 }
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

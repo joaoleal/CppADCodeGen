@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Combines ordered and non-overlapping regions of iteration indexes.
@@ -36,7 +36,7 @@ inline void combineNonOverlapingIterationRanges(std::vector<size_t>& iterRegions
     /**
      * regions are assumed to be ordered and non-overlapping
      */
-    std::vector<size_t>::iterator itPos = iterRegions.begin();
+    auto itPos = iterRegions.begin();
     std::vector<size_t>::const_iterator itNew;
     for (itNew = newIterRegions.begin(); itNew != newIterRegions.end(); ++itNew) {
         size_t pos = *itNew;
@@ -74,7 +74,7 @@ inline void combineOverlapingIterationRanges(std::vector<size_t>& iterRegions,
         sorted.insert(sorted.end(), std::make_pair(iterRegions[i], iterRegions[i + 1]));
     }
 
-    std::vector<std::pair<size_t, size_t> >::iterator begin = sorted.begin();
+    auto begin = sorted.begin();
     for (size_t i = 0; i < newIterRegions.size(); i += 2) {
         std::pair<size_t, size_t> p(newIterRegions[i], newIterRegions[i + 1]);
         begin = std::lower_bound(begin, sorted.end(), p);
@@ -184,7 +184,7 @@ inline std::vector<size_t> ifBranchIterationRanges(const OperationNode<Base>* bS
             CPPADCG_ASSERT_UNKNOWN(cond->getArguments().size() == 1);
             CPPADCG_ASSERT_UNKNOWN(cond->getArguments()[0].getOperation() != nullptr);
             CPPADCG_ASSERT_UNKNOWN(cond->getArguments()[0].getOperation()->getOperationType() == CGOpCode::Index);
-            IndexOperationNode<Base>* indexOp = static_cast<IndexOperationNode<Base>*> (cond->getArguments()[0].getOperation());
+            auto* indexOp = static_cast<IndexOperationNode<Base>*> (cond->getArguments()[0].getOperation());
             CPPADCG_ASSERT_UNKNOWN(iterationIndexOp == nullptr || iterationIndexOp == indexOp);
             iterationIndexOp = indexOp;
 
@@ -201,7 +201,6 @@ inline std::vector<size_t> ifBranchIterationRanges(const OperationNode<Base>* bS
 
 }
 
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

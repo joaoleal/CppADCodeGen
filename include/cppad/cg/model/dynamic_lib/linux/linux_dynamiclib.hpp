@@ -20,8 +20,7 @@
 #include <typeinfo>
 #include <dlfcn.h>
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Useful class to call the compiled source code in a dynamic library.
@@ -124,8 +123,7 @@ protected:
 
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif
 #endif

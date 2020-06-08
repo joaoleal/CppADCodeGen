@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class Base> class LlvmModel;
 
@@ -38,7 +37,7 @@ public:
     LlvmModelLibraryImpl(std::unique_ptr<llvm::Module> module,
                          std::shared_ptr<llvm::LLVMContext> context) :
         _module(module.get()),
-        _context(context) {
+        _context(std::move(context)) {
         using namespace llvm;
 
         // Create the JIT.  This takes ownership of the module.
@@ -51,11 +50,11 @@ public:
 #endif
                 // .setMCJITMemoryManager(llvm::make_unique<llvm::SectionMemoryManager>())
                                .create());
-        if (!_executionEngine.get()) {
+        if (!_executionEngine) {
             throw CGException("Could not create ExecutionEngine: ", errStr);
         }
 
-        _fpm.reset(new llvm::legacy::FunctionPassManager(_module));
+        _fpm = std::make_unique<llvm::legacy::FunctionPassManager>(_module);
 
         preparePassManager();
 
@@ -77,7 +76,7 @@ public:
     /**
      * Set up the optimizer pipeline
      */
-    virtual void preparePassManager() {
+    void preparePassManager() {
         llvm::PassManagerBuilder builder;
         builder.OptLevel = 2;
         builder.populateFunctionPassManager(*_fpm);
@@ -115,7 +114,6 @@ public:
 
 };
 
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

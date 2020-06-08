@@ -196,7 +196,7 @@ public:
 
         auto m2 = dynamicLib.model(_name + "dynamic");
 
-        m2->ForwardZero(_xRun);
+        auto y = m2->ForwardZero(_xRun);
 
         auto& m = dynamic_cast<LinuxDynamicLibModel<double>&>(*_model);
         LinuxDynamicLibModel<double> model(std::move(m));

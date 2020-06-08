@@ -18,11 +18,10 @@
 
 #include <cppad/cg/model/llvm/llvm_base_model_library_processor.hpp>
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
- * Useful class for generating a JIT evaluated model library (LLVM 5.0, 6.0, 7.0, 8.0).
+ * Useful class for generating a JIT evaluated model library (LLVM 5.0, 6.0, 7.0, 8.0, 9.0).
  *
  * @author Joao Leal
  */
@@ -52,7 +51,7 @@ public:
     /**
      * @return The version of LLVM (and Clang).
      */
-    inline const std::string& getVersion() const {
+    [[nodiscard]] inline const std::string& getVersion() const {
         return _version;
     }
 
@@ -66,7 +65,7 @@ public:
     /**
      * User defined header paths.
      */
-    inline const std::vector<std::string>& getIncludePaths() const {
+    [[nodiscard]] inline const std::vector<std::string>& getIncludePaths() const {
         return _includePaths;
     }
 
@@ -153,7 +152,7 @@ public:
                 }
 
                 // create the module
-                Expected<std::unique_ptr<Module>> moduleOrError = llvm::parseBitcodeFile(buffer.get()->getMemBufferRef(), *_context.get());
+                Expected<std::unique_ptr<Module>> moduleOrError = llvm::parseBitcodeFile(buffer.get()->getMemBufferRef(), *_context);
                 if (!moduleOrError) {
                     std::ostringstream error;
                     size_t nError = 0;
@@ -166,9 +165,9 @@ public:
                 }
 
                 // link modules together
-                if (_linker.get() == nullptr) {
+                if (_linker == nullptr) {
                     linkerModule = std::move(moduleOrError.get());
-                    _linker.reset(new llvm::Linker(*linkerModule)); // module not destroyed
+                    _linker = std::make_unique<llvm::Linker>(*linkerModule); // module not destroyed
                 } else {
                     if (_linker->linkInModule(std::move(moduleOrError.get()))) { // module destroyed
                         throw CGException("Failed to link");
@@ -251,8 +250,8 @@ protected:
             hso.AddPath(llvm::StringRef(iClangHeaders), clang::frontend::Angled, false, false);
         }
 
-        for (size_t s = 0; s < _includePaths.size(); s++)
-            hso.AddPath(llvm::StringRef(_includePaths[s]), clang::frontend::Angled, false, false);
+        for (auto& _includePath : _includePaths)
+            hso.AddPath(llvm::StringRef(_includePath), clang::frontend::Angled, false, false);
 
         // Create and execute the frontend to generate an LLVM bitcode module.
         clang::EmitLLVMOnlyAction action(_context.get());
@@ -263,9 +262,9 @@ protected:
         if (module == nullptr)
             throw CGException("No module");
 
-        if (_linker.get() == nullptr) {
-            _module.reset(module.release());
-            _linker.reset(new llvm::Linker(*_module.get()));
+        if (_linker == nullptr) {
+            _module = std::move(module);
+            _linker = std::make_unique<llvm::Linker>(*_module);
         } else {
             if (_linker->linkInModule(std::move(module))) {
                 throw CGException("LLVM failed to link module");
@@ -279,7 +278,6 @@ protected:
 
 };
 
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

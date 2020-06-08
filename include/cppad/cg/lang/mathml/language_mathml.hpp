@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Generates presentation markup using the html  and MathML specification.
@@ -2181,7 +2180,6 @@ const std::string LanguageMathML<Base>::_ATOMIC_PX = "apx"; // NOLINT(cert-err58
 template<class Base>
 const std::string LanguageMathML<Base>::_ATOMIC_PY = "apy"; // NOLINT(cert-err58-cpp)
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

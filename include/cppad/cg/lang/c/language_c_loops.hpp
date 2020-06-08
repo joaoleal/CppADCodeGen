@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class Base>
 void LanguageC<Base>::pushLoopIndexedDep(OperationNode <Base>& node) {
@@ -173,7 +172,6 @@ inline size_t LanguageC<Base>::printLoopIndexedDepsUsingLoop(const std::vector<O
 }
 
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

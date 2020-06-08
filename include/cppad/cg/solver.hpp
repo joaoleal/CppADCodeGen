@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -18,8 +19,7 @@
 #include <cppad/cg/evaluator/evaluator_solve.hpp>
 #include <cppad/cg/lang/dot/dot.hpp>
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class Base>
 inline CG<Base> CodeHandler<Base>::solveFor(OperationNode<Base>& expression,
@@ -260,7 +260,6 @@ inline bool CodeHandler<Base>::isSolvable(const SourceCodePath& path) const {
     return true;
 }
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Generates C source code for a bundle of models.
@@ -192,7 +191,6 @@ protected:
     friend class ModelLibraryProcessor<Base>;
 };
 
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

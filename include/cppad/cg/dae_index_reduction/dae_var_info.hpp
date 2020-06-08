@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * DAE variable information
@@ -314,11 +314,9 @@ public:
         out.flush();
     }
 
-    inline virtual ~DaeVarInfo() {
-    }
+    inline virtual ~DaeVarInfo() = default;
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

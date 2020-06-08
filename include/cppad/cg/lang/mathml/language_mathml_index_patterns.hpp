@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class Base>
 inline void LanguageMathML<Base>::generateNames4RandomIndexPatterns(const std::set<RandomIndexPattern*>& randomPatterns) {
@@ -270,7 +269,6 @@ inline void LanguageMathML<Base>::linearIndexPattern2String(std::ostream& os,
 
 }
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

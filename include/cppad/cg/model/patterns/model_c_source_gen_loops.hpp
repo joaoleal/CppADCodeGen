@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,10 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
-
-namespace loops {
+namespace CppAD::cg::loops {
 
 /***********************************************************************
  *  Utility classes
@@ -30,13 +28,12 @@ public:
     std::map<size_t, size_t> locations;
 public:
 
-    inline IfBranchData() {
-    }
+    inline IfBranchData() = default;
 
     inline IfBranchData(const CG<Base>& v,
-                        const std::map<size_t, size_t>& loc) :
+                        std::map<size_t, size_t> loc) :
         value(v),
-        locations(loc) {
+        locations(std::move(loc)) {
     }
 };
 
@@ -752,8 +749,8 @@ public:
     std::set<size_t> keys;
     std::vector<ArrayElementCopyPattern> elements;
 
-    ArrayElementGroup(const std::set<size_t>& k, size_t size) :
-        keys(k),
+    ArrayElementGroup(std::set<size_t> k, size_t size) :
+        keys(std::move(k)),
         elements(size) {
     }
 };
@@ -810,8 +807,8 @@ inline void determineForRevUsagePatterns(const std::map<LoopModel<Base>*, std::m
              * array start pattern
              */
             bool ordered = true;
-            for (size_t l = 0; l < localit2jcols.size(); l++) {
-                if (!matrixInfo.at(localit2jcols[l]).ordered) {
+            for (unsigned long& localit2jcol : localit2jcols) {
+                if (!matrixInfo.at(localit2jcol).ordered) {
                     ordered = false;
                     break;
                 }
@@ -867,7 +864,7 @@ inline void determineForRevUsagePatterns(const std::map<LoopModel<Base>*, std::m
                         }
                     }
 
-                    ArrayElementGroup* eg = new ArrayElementGroup(keys, commonElSize);
+                    auto* eg = new ArrayElementGroup(keys, commonElSize);
                     data->elCount2elements[commonElSize] = eg;
 
                     for (size_t e = 0; e < commonElSize; e++) {
@@ -948,7 +945,7 @@ void printForRevUsageFunction(std::ostringstream& out,
 
                 CodeHandler<Base>::findRandomIndexPatterns(group->pattern.get(), indexRandomPatterns);
 
-                if (group->startLocPattern.get() != nullptr) {
+                if (group->startLocPattern != nullptr) {
                     CodeHandler<Base>::findRandomIndexPatterns(group->startLocPattern.get(), indexRandomPatterns);
 
                 } else {
@@ -1012,8 +1009,8 @@ void printForRevUsageFunction(std::ostringstream& out,
         size_t index = it.first;
         const set<size_t>& elPos = it.second;
         const std::vector<set<size_t> >& location = matrixInfo.at(index).locations;
-        CPPADCG_ASSERT_UNKNOWN(elPos.size() <= location.size()); // it can be lower because not all elements have to be assigned
-        CPPADCG_ASSERT_UNKNOWN(elPos.size() > 0);
+        CPPADCG_ASSERT_UNKNOWN(elPos.size() <= location.size()) // it can be lower because not all elements have to be assigned
+        CPPADCG_ASSERT_UNKNOWN(!elPos.empty())
         bool rowOrdered = matrixInfo.at(index).ordered;
 
         out << "\n";
@@ -1055,7 +1052,7 @@ void printForRevUsageFunction(std::ostringstream& out,
 
                 string indent = itCount == 1 ? "   " : "      "; //indentation
 
-                if (group->startLocPattern.get() != nullptr) {
+                if (group->startLocPattern != nullptr) {
                     // determine hessRowStart = f(it)
                     out << indent << "outLocal[0] = &" << resultName << "[" << LanguageC<Base>::indexPattern2String(*group->startLocPattern, indexIt) << "];\n";
                 } else {
@@ -1077,7 +1074,7 @@ void printForRevUsageFunction(std::ostringstream& out,
                     out << "(" << key << ", " << loopFArgs << ");\n";
                 }
 
-                if (group->startLocPattern.get() == nullptr) {
+                if (group->startLocPattern == nullptr) {
                     CPPADCG_ASSERT_UNKNOWN(!group->elCount2elements.m.empty());
 
                     std::set<size_t> usedIter;
@@ -1116,9 +1113,7 @@ void printForRevUsageFunction(std::ostringstream& out,
                             indent2 += "   ";
                         }
 
-                        for (size_t e = 0; e < eg->elements.size(); e++) {
-                            const ArrayElementCopyPattern& ePos = eg->elements[e];
-
+                        for (const auto& ePos : eg->elements) {
                             out << indent2 << resultName << "["
                                     << LanguageC<Base>::indexPattern2String(*ePos.resultPattern, indexIt)
                                     << "] += compressed["
@@ -1134,7 +1129,7 @@ void printForRevUsageFunction(std::ostringstream& out,
 
                 out << "\n";
 
-                lastCompressed = group->startLocPattern.get() == nullptr;
+                lastCompressed = group->startLocPattern == nullptr;
             }
         }
 
@@ -1275,9 +1270,6 @@ void generateFunctionDeclarationSourceLoopForRev(std::ostringstream& out,
     }
 }
 
-} // END loops namespace
-
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

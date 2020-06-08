@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Helper class to analyze the operation graph and generate source code
@@ -195,7 +195,7 @@ public:
      * Whether or not node IDs are reused once they are not need by a node
      * anymore.
      */
-    inline bool isReuseVariableIDs() const;
+    [[nodiscard]] inline bool isReuseVariableIDs() const;
 
     /**
      * Marks the provided variables as being independent variables.
@@ -237,12 +237,12 @@ public:
     /**
      * The number of independent variables defined with makeVariable().
      */
-    size_t getIndependentVariableSize() const;
+    [[nodiscard]] size_t getIndependentVariableSize() const;
 
     /**
      * @throws CGException if a variable is not found in the independent vector
      */
-    size_t getIndependentVariableIndex(const Node& var) const;
+    [[nodiscard]] size_t getIndependentVariableIndex(const Node& var) const;
 
     /**
      * Provides variable IDs that were assigned to operation nodes.
@@ -252,13 +252,13 @@ public:
      */
     inline const CodeHandlerVector<Base, size_t>& getVariablesIDs() const;
 
-    inline size_t getMaximumVariableID() const;
+    [[nodiscard]] inline size_t getMaximumVariableID() const;
 
-    inline bool isVerbose() const;
+    [[nodiscard]] inline bool isVerbose() const;
 
     inline void setVerbose(bool verbose);
 
-    inline JobTimer* getJobTimer() const;
+    [[nodiscard]] inline JobTimer* getJobTimer() const;
 
     inline void setJobTimer(JobTimer* jobTimer);
 
@@ -268,7 +268,7 @@ public:
      *
      * @return true if the dependents will be zeroed
      */
-    inline bool isZeroDependents() const;
+    [[nodiscard]] inline bool isZeroDependents() const;
 
     /**
      * Defines whether or not the dependent variables should be set to zero
@@ -278,11 +278,11 @@ public:
      */
     inline void setZeroDependents(bool zeroDependents);
 
-    inline size_t getOperationTreeVisitId() const;
+    [[nodiscard]] inline size_t getOperationTreeVisitId() const;
 
     inline void startNewOperationTreeVisit();
 
-    inline bool isVisited(const Node& node) const;
+    [[nodiscard]] inline bool isVisited(const Node& node) const;
 
     inline void markVisited(const Node& node);
 
@@ -293,7 +293,7 @@ public:
      * @return the atomic function name if it was registered 
      *         or an empty string otherwise.
      */
-    inline std::string getAtomicFunctionName(size_t id) const;
+    [[nodiscard]] inline std::string getAtomicFunctionName(size_t id) const;
 
     /**
      * Provides a map with all the currently registered atomic functions.
@@ -308,14 +308,14 @@ public:
      * in the last call to ::generateCode
      * (-1 means forward mode not used).
      */
-    const std::vector<int>& getExternalFuncMaxForwardOrder() const;
+    [[nodiscard]] const std::vector<int>& getExternalFuncMaxForwardOrder() const;
 
     /**
      * Provides the maximum reverse mode order used by all atomic functions
      * in the last call to ::generateCode
      * (-1 means forward mode not used).
      */
-    const std::vector<int>& getExternalFuncMaxReverseOrder() const;
+    [[nodiscard]] const std::vector<int>& getExternalFuncMaxReverseOrder() const;
 
     /**
      * Provides the name used by a loop atomic function with a given ID.
@@ -324,7 +324,7 @@ public:
      * @return a pointer to the atomic loop function name if it was
      *         registered or nullptr otherwise
      */
-    inline const std::string* getLoopName(size_t id) const;
+    [[nodiscard]] inline const std::string* getLoopName(size_t id) const;
 
     inline const std::vector<ScopePath>& getScopes() const;
 
@@ -417,11 +417,11 @@ public:
                               std::vector<std::string>& atomicFunctions,
                               const std::string& jobName = "source");
 
-    size_t getTemporaryVariableCount() const;
+    [[nodiscard]] size_t getTemporaryVariableCount() const;
 
-    size_t getTemporaryArraySize() const;
+    [[nodiscard]] size_t getTemporaryArraySize() const;
 
-    size_t getTemporarySparseArraySize() const;
+    [[nodiscard]] size_t getTemporarySparseArraySize() const;
 
     /**************************************************************************
      *                       Reusing handler and nodes
@@ -502,12 +502,12 @@ public:
      * the model (dead-code).
      * @return The number of OperationNodes created by the model.
      */
-    inline size_t getManagedNodesCount() const;
+    [[nodiscard]] inline size_t getManagedNodesCount() const;
 
     /**
      * Provides the OperationNodes created by the model.
      */
-    inline const std::vector<Node *>& getManagedNodes() const;
+    [[nodiscard]] inline const std::vector<Node *>& getManagedNodes() const;
 
     /**
      * Allows to delete OperationNodes that are managed internally.
@@ -787,8 +787,9 @@ protected:
                           std::vector<SourceCodePath>& found,
                           size_t max);
 
-    static inline std::vector<SourceCodePath> findPathsFromNode(const std::vector<SourceCodePath> nodePaths,
-                                                                Node& node);
+    [[nodiscard]] static inline std::vector<SourceCodePath>
+    findPathsFromNode(const std::vector<SourceCodePath> nodePaths,
+                      Node& node);
 
     /**************************************************************************
      *                        Operation graph manipulation
@@ -871,7 +872,7 @@ protected:
          * @return a pointer to the atomic loop function name if it was
          *         registered, nullptr otherwise
          */
-        inline const std::string* getLoopName(size_t id) const;
+        [[nodiscard]] inline const std::string* getLoopName(size_t id) const;
 
         inline void registerModel(LoopModel<Base>& loop);
 
@@ -896,7 +897,6 @@ protected:
 
 };
 
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

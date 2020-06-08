@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class Base>
 inline void LanguageDot<Base>::generateNames4RandomIndexPatterns(const std::set<RandomIndexPattern*>& randomPatterns) {
@@ -70,7 +69,7 @@ inline void LanguageDot<Base>::printRandomIndexPatternDeclaration(std::ostringst
             const std::map<size_t, size_t>& x2y = ip1->getValues();
 
             std::vector<size_t> y(x2y.rbegin()->first + 1);
-            for (const std::pair<size_t, size_t>& p : x2y)
+            for (const auto& p : x2y)
                 y[p.first] = p.second;
 
             printStaticIndexArray(os, ip->getName(), y);
@@ -257,7 +256,6 @@ inline void LanguageDot<Base>::linearIndexPattern2String(std::ostream& os,
 
 }
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

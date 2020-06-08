@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class VectorBool, class Base>
 void zeroOrderDependency(ADFun<Base>& fun,
@@ -815,7 +814,6 @@ inline std::string readStringFromFile(const std::string& path) {
     return strStream.str();
 }
 
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

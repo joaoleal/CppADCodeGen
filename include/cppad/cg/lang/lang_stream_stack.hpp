@@ -17,8 +17,7 @@
 
 #include <ostream>
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 namespace _private {
 
@@ -140,7 +139,6 @@ public:
     }
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

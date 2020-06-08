@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Abstract class used to load models
@@ -77,7 +76,7 @@ public:
      */
     virtual std::unique_ptr<FunctorGenericModel<Base>> modelFunctor(const std::string& modelName) = 0;
 
-    std::unique_ptr<GenericModel<Base>> model(const std::string& modelName) override final {
+    std::unique_ptr<GenericModel<Base>> model(const std::string& modelName) final {
         return std::unique_ptr<GenericModel<Base>> (modelFunctor(modelName).release());
     }
 
@@ -112,14 +111,14 @@ public:
         }
     }
 
-    bool isThreadPoolDisabled() const override {
+    [[nodiscard]] bool isThreadPoolDisabled() const override {
         if(_isThreadPoolDisabled != nullptr) {
             return bool((*_isThreadPoolDisabled)());
         }
         return true;
     }
 
-    unsigned int getThreadNumber() const override {
+    [[nodiscard]] unsigned int getThreadNumber() const override {
         if (_getThreads != nullptr) {
             return (*_getThreads)();
         }
@@ -132,7 +131,7 @@ public:
         }
     }
 
-    ThreadPoolScheduleStrategy getThreadPoolSchedulerStrategy() const override {
+    [[nodiscard]] ThreadPoolScheduleStrategy getThreadPoolSchedulerStrategy() const override {
         if (_getSchedulerStrategy != nullptr) {
             return ThreadPoolScheduleStrategy((*_getSchedulerStrategy)());
         }
@@ -151,7 +150,7 @@ public:
         }
     }
 
-    bool isThreadPoolVerbose() const override {
+    [[nodiscard]] bool isThreadPoolVerbose() const override {
         if (_isThreadPoolVerbose != nullptr) {
             return bool((*_isThreadPoolVerbose)());
         }
@@ -164,7 +163,7 @@ public:
         }
     }
 
-    float getThreadPoolGuidedMaxWork() const override {
+    [[nodiscard]] float getThreadPoolGuidedMaxWork() const override {
         if (_getThreadPoolGuidedMaxWork != nullptr) {
             return (*_getThreadPoolGuidedMaxWork)();
         }
@@ -177,7 +176,7 @@ public:
         }
     }
 
-    unsigned int getThreadPoolNumberOfTimeMeas() const override {
+    [[nodiscard]] unsigned int getThreadPoolNumberOfTimeMeas() const override {
         if (_getThreadPoolNumberOfTimeMeas != nullptr) {
             return (*_getThreadPoolNumberOfTimeMeas)();
         }
@@ -258,7 +257,6 @@ protected:
     }
 };
 
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

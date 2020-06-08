@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class Base>
 void ModelCSourceGen<Base>::generateHessianSource() {
@@ -108,7 +108,7 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceDirectly() {
     for (size_t e = 0; e < evalRows.size(); e++) {
         size_t j1 = evalRows[e];
         size_t j2 = evalCols[e];
-        std::map<size_t, std::map<size_t, size_t> >::iterator itJ1 = locations.find(j1);
+        auto itJ1 = locations.find(j1);
         if (itJ1 == locations.end()) {
             locations[j1][j2] = e;
         } else {
@@ -253,8 +253,8 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceFromRev2(MultiThreadingTy
     for (auto& it : hessInfo) {
         const std::vector<size_t>& els = it.second.indexes;
         const std::vector<set<size_t> >& location = it.second.locations;
-        CPPADCG_ASSERT_UNKNOWN(els.size() == location.size());
-        CPPADCG_ASSERT_UNKNOWN(els.size() > 0);
+        CPPADCG_ASSERT_UNKNOWN(els.size() == location.size())
+        CPPADCG_ASSERT_UNKNOWN(!els.empty())
 
         bool passed = true;
         size_t hessRowStart = *location[0].begin();
@@ -342,7 +342,7 @@ std::string ModelCSourceGen<Base>::generateSparseHessianRev2SingleThreadSource(c
         const std::vector<size_t>& els = it.second.indexes;
         const std::vector<std::set<size_t> >& location = it.second.locations;
         CPPADCG_ASSERT_UNKNOWN(els.size() == location.size());
-        CPPADCG_ASSERT_UNKNOWN(els.size() > 0);
+        CPPADCG_ASSERT_UNKNOWN(!els.empty())
 
         _cache << "\n";
         bool compressed = !it.second.ordered;
@@ -618,7 +618,7 @@ void ModelCSourceGen<Base>::determineHessianSparsity() {
              */
             const std::map<size_t, size_t>& var2Eq = color.column2Row;
             for (size_t j : color.forbiddenRows) { //used variables
-                if (sparsityc[j].size() > 0) {
+                if (!sparsityc[j].empty()) {
                     size_t i = var2Eq.at(j);
                     _hessSparsities[i].sparsity[j].insert(sparsityc[j].begin(),
                                                           sparsityc[j].end());
@@ -674,7 +674,6 @@ void ModelCSourceGen<Base>::generateHessianSparsitySource() {
     }
 }
 
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

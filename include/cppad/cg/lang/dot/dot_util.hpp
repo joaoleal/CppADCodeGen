@@ -17,8 +17,7 @@
 
 #include <cppad/cg/lang/c/lang_c_default_var_name_gen.hpp>
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Prints the graph resulting in a single dependent variable.
@@ -54,7 +53,6 @@ inline void printDotExpression(OperationNode<Base>& dep,
     printDotExpression(CG<Base>(dep), out);
 }
 
-}
 }
 
 #endif

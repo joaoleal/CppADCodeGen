@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 // forward declaration
 template<class Base>
@@ -115,7 +114,7 @@ public:
             adjustSize();
     }
 
-    inline reference get(const OperationNode<Base>& node) {
+    [[nodiscard]] inline reference get(const OperationNode<Base>& node) {
         CPPADCG_ASSERT_UNKNOWN(node.getCodeHandler() == this->handler_)
 
         size_t p = node.getHandlerPosition();
@@ -126,7 +125,7 @@ public:
         return data_[p];
     }
 
-    inline const_reference get(const OperationNode<Base>& node) const {
+    [[nodiscard]] inline const_reference get(const OperationNode<Base>& node) const {
         CPPADCG_ASSERT_UNKNOWN(node.getCodeHandler() == this->handler_)
 
         size_t p = node.getHandlerPosition();
@@ -149,11 +148,11 @@ public:
         data_[node.getHandlerPosition()] = val;
     }
 
-    inline size_t size() const {
+    [[nodiscard]] inline size_t size() const {
         return data_.size();
     }
 
-    inline bool empty() const {
+    [[nodiscard]] inline bool empty() const {
         return data_.empty();
     }
 
@@ -235,7 +234,6 @@ public:
 
 };
 
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

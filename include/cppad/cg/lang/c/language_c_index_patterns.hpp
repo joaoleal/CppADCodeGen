@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class Base>
 inline void LanguageC<Base>::generateNames4RandomIndexPatterns(const std::set<RandomIndexPattern*>& randomPatterns) {
@@ -437,7 +436,6 @@ Plane2DIndexPattern* LanguageC<Base>::encapsulateIndexPattern(const SectionedInd
     return new Plane2DIndexPattern(ip2.release(), new LinearIndexPattern(0, 1, 1, 0));
 }
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

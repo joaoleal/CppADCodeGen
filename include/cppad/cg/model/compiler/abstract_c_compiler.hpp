@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Default implementation of a C compiler class used to create
@@ -59,7 +58,7 @@ public:
         _path = path;
     }
 
-    const std::string& getTemporaryFolder() const override {
+    [[nodiscard]] const std::string& getTemporaryFolder() const override {
         return _tmpFolder;
     }
 
@@ -67,7 +66,7 @@ public:
         _tmpFolder = tmpFolder;
     }
 
-    bool isSaveToDiskFirst() const override {
+    [[nodiscard]] bool isSaveToDiskFirst() const override {
         return _saveToDiskFirst;
     }
 
@@ -75,7 +74,7 @@ public:
         _saveToDiskFirst = saveToDiskFirst;
     }
 
-    const std::string& getSourcesFolder() const override {
+    [[nodiscard]] const std::string& getSourcesFolder() const override {
         return _sourcesFolder;
     }
 
@@ -83,15 +82,15 @@ public:
         _sourcesFolder = srcFolder;
     }
 
-    const std::set<std::string>& getObjectFiles() const override {
+    [[nodiscard]] const std::set<std::string>& getObjectFiles() const override {
         return _ofiles;
     }
 
-    const std::set<std::string>& getSourceFiles() const override {
+    [[nodiscard]] const std::set<std::string>& getSourceFiles() const override {
         return _sfiles;
     }
 
-    const std::vector<std::string>& getCompileFlags() const {
+    [[nodiscard]] const std::vector<std::string>& getCompileFlags() const {
         return _compileFlags;
     }
 
@@ -103,7 +102,7 @@ public:
         _compileFlags.push_back(compileFlag);
     }
 
-    const std::vector<std::string>& getLinkFlags() const {
+    [[nodiscard]] const std::vector<std::string>& getLinkFlags() const {
         return _linkFlags;
     }
 
@@ -115,7 +114,7 @@ public:
         _linkFlags.push_back(linkFlag);
     }
 
-    const std::vector<std::string>& getCompileLibFlags() const {
+    [[nodiscard]] const std::vector<std::string>& getCompileLibFlags() const {
         return _compileLibFlags;
     }
 
@@ -127,7 +126,7 @@ public:
         _compileLibFlags.push_back(compileLibFlag);
     }
 
-    bool isVerbose() const override {
+    [[nodiscard]] bool isVerbose() const override {
         return _verbose;
     }
 
@@ -251,7 +250,7 @@ public:
     virtual void buildDynamic(const std::string& library,
                               JobTimer* timer = nullptr) override = 0;
 
-    void cleanup() override {
+    void cleanup() override final {
         // clean up;
         for (const std::string& it : _ofiles) {
             if (remove(it.c_str()) != 0)
@@ -290,7 +289,6 @@ protected:
                              bool posIndepCode) = 0;
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * A stream buffer used to recover OperationNode names defined using
@@ -51,7 +50,7 @@ public:
         CGOStreamFunc<Base>::FUNC = registerNode;
     }
 
-    virtual ~OperationNodeNameStreambuf() {
+    ~OperationNodeNameStreambuf() override {
         BUF = nullptr;
         CGOStreamFunc<Base>::FUNC = nullptr;
     }
@@ -82,7 +81,6 @@ private:
 template<class Base>
 thread_local OperationNodeNameStreambuf<Base>* OperationNodeNameStreambuf<Base>::BUF = nullptr;
 
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

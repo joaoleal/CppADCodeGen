@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -17,8 +18,7 @@
 
 #include <typeinfo>
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class Base>
 const std::string ModelCSourceGen<Base>::FUNCTION_FORWAD_ZERO = "forward_zero";
@@ -237,7 +237,7 @@ void ModelCSourceGen<Base>::generateAtomicFuncNames() {
 template<class Base>
 bool ModelCSourceGen<Base>::isAtomicsUsed() {
     if (_zeroEvaluated) {
-        return _atomicFunctions.size() > 0;
+        return !_atomicFunctions.empty();
     } else {
         return !getAtomicsInfo().empty();
     }
@@ -264,7 +264,7 @@ std::vector<typename ModelCSourceGen<Base>::Color> ModelCSourceGen<Base>::colorB
     size_t c_used = 0;
     for (size_t i = 0; i < sparsity.size(); i++) {
         const std::set<size_t>& row = sparsity[i];
-        if (row.size() == 0) {
+        if (row.empty()) {
             continue; //nothing to do
         }
 
@@ -829,7 +829,6 @@ inline std::string ModelCSourceGen<float>::baseTypeName() {
     return "float";
 }
 
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

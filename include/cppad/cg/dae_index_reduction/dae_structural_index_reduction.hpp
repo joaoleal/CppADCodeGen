@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2016 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -18,8 +19,7 @@
 #include <cppad/cg/dae_index_reduction/dae_index_reduction.hpp>
 #include <cppad/cg/dae_index_reduction/bipartite_graph.hpp>
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Base class for algorithms that perform automatic
@@ -50,14 +50,13 @@ public:
             graph_(fun, varInfo, eqName, *this) {
     }
 
-    inline virtual ~DaeStructuralIndexReduction() {
-    }
+    inline virtual ~DaeStructuralIndexReduction() = default;
 
-    inline BipartiteGraph<Base>& getGraph() {
+    [[nodiscard]] inline BipartiteGraph<Base>& getGraph() {
         return graph_;
     }
 
-    inline const BipartiteGraph<Base>& getGraph() const {
+    [[nodiscard]] inline const BipartiteGraph<Base>& getGraph() const {
         return graph_;
     }
 
@@ -75,7 +74,7 @@ public:
      * CppAD::PrintFor(0, "", val, name)
      * should be kept by also adding PrintFor operations in the reduced model.
      */
-    inline bool isPreserveNames() const {
+    [[nodiscard]] inline bool isPreserveNames() const {
         return graph_.isPreserveNames();
     }
 
@@ -87,13 +86,12 @@ public:
      * @return the DAE structural index.
      * @throws CGException
      */
-    inline size_t getStructuralIndex() const {
+    [[nodiscard]] virtual size_t getStructuralIndex() const {
         return graph_.getStructuralIndex();
     }
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif	
 

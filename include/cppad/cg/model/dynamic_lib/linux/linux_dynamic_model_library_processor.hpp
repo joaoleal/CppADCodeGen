@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -16,8 +17,7 @@
  */
 #if CPPAD_CG_SYSTEM_LINUX
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class Base>
 std::unique_ptr<DynamicLib<Base>> DynamicModelLibraryProcessor<Base>::loadDynamicLibrary() {
@@ -32,8 +32,7 @@ std::unique_ptr<DynamicLib<Base>> DynamicModelLibraryProcessor<Base>::loadDynami
     return lib;
 }
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif
 #endif

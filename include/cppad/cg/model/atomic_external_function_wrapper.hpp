@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class Base>
 class AtomicExternalFunctionWrapper : public ExternalFunctionWrapper<Base> {
@@ -147,7 +146,6 @@ private:
     }
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

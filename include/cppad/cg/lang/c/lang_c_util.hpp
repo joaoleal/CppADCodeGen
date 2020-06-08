@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Prints the model to standard output
@@ -97,7 +96,6 @@ inline void printExpression(OperationNode<Base>& dep,
     printExpression(CG<Base>(dep), out);
 }
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

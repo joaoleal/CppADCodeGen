@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class Base>
 void ModelCSourceGen<Base>::generateSparseReverseTwoSources() {
@@ -367,7 +367,6 @@ void ModelCSourceGen<Base>::generateReverseTwoSources() {
     _cache.str("");
 }
 
-} // END cg namespace
 } // END CppAD namespace
 
 #endif

@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Generates the model using the dot language used by graphviz.
@@ -1475,7 +1474,6 @@ const std::string LanguageDot<Base>::_C_STATIC_INDEX_ARRAY = "index"; // NOLINT(
 template<class Base>
 const std::string LanguageDot<Base>::_C_SPARSE_INDEX_ARRAY = "idx"; // NOLINT(cert-err58-cpp)
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

@@ -18,8 +18,7 @@
 
 #include <cppad/cg/dae_index_reduction/augment_path.hpp>
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * An augment path algorithm based on MC21A.
@@ -80,7 +79,6 @@ public:
 
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

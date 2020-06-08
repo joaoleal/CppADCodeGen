@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Creates a parameter with a zero value
@@ -61,7 +61,7 @@ inline CG<Base>::CG(const CG<Base>& orig) :
  * Move constructor
  */
 template <class Base>
-inline CG<Base>::CG(CG<Base>&& orig):
+inline CG<Base>::CG(CG<Base>&& orig) noexcept:
         node_(orig.node_),
         value_(std::move(orig.value_)) {
 }
@@ -100,7 +100,7 @@ inline CG<Base>& CG<Base>::operator=(const CG<Base>& rhs) {
 }
 
 template <class Base>
-inline CG<Base>& CG<Base>::operator=(CG<Base>&& rhs) {
+inline CG<Base>& CG<Base>::operator=(CG<Base>&& rhs) noexcept {
     assert(this != &rhs);
 
     node_ = rhs.node_;
@@ -114,7 +114,6 @@ inline CG<Base>& CG<Base>::operator=(CG<Base>&& rhs) {
 template <class Base>
 CG<Base>::~CG() = default;
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Generates code for the Latex language.
@@ -2201,7 +2200,6 @@ const std::string LanguageLatex<Base>::_ATOMIC_PX = "apx"; // NOLINT(cert-err58-
 template<class Base>
 const std::string LanguageLatex<Base>::_ATOMIC_PY = "apy"; // NOLINT(cert-err58-cpp)
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

@@ -22,8 +22,7 @@ inline virtual const std::string& fn ## FuncName() {\
     return name;\
 }
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Generates code for the C language
@@ -2257,7 +2256,6 @@ const std::string LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION = // NOLINT(cert-
 "                   const Array py[]);\n"
 "};";
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

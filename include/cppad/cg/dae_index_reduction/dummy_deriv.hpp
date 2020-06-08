@@ -24,8 +24,7 @@
 #include <cppad/cg/dae_index_reduction/pantelides.hpp>
 #include <cppad/cg/dae_index_reduction/dummy_deriv_util.hpp>
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Dummy derivatives DAE index reduction algorithm
@@ -394,9 +393,9 @@ protected:
          */
         newVarInfo = varInfo; //copy
         for (Vnode<Base>* j : dummyD_) {
-            CPPADCG_ASSERT_UNKNOWN(j->tapeIndex() >= 0);
-            CPPADCG_ASSERT_UNKNOWN(j->antiDerivative() != nullptr);
-            CPPADCG_ASSERT_UNKNOWN(j->antiDerivative()->tapeIndex() >= 0);
+            CPPADCG_ASSERT_UNKNOWN(j->tapeIndex() >= 0)
+            CPPADCG_ASSERT_UNKNOWN(j->antiDerivative() != nullptr)
+            CPPADCG_ASSERT_UNKNOWN(j->antiDerivative()->tapeIndex() >= 0)
 
             newVarInfo[j->tapeIndex()].setAntiDerivative(-1);
             newVarInfo[j->antiDerivative()->tapeIndex()].setDerivative(-1);
@@ -435,8 +434,8 @@ protected:
         //auto& vnodes = graph.variables();
         auto& enodes = graph.equations();
 
-        CPPADCG_ASSERT_UNKNOWN(reducedVarInfo.size() == reducedFun_->Domain());
-        CPPADCG_ASSERT_UNKNOWN(reducedEqInfo.size() == reducedFun_->Range());
+        CPPADCG_ASSERT_UNKNOWN(reducedVarInfo.size() == reducedFun_->Domain())
+        CPPADCG_ASSERT_UNKNOWN(reducedEqInfo.size() == reducedFun_->Range())
 
         newEqInfo = reducedEqInfo; // copy
 
@@ -547,7 +546,7 @@ protected:
         /**
          * Prepare the output information
          */
-        CPPADCG_ASSERT_UNKNOWN(tapeIndexReduced2Short.size() == reducedVarInfo.size());
+        CPPADCG_ASSERT_UNKNOWN(tapeIndexReduced2Short.size() == reducedVarInfo.size())
 
         newVarInfo = reducedVarInfo; // copy
         for (int p = tapeIndexReduced2Short.size() - 1; p >= 0; p--) {
@@ -662,7 +661,7 @@ protected:
                 handler.substituteIndependent(indep, dep); // removes indep from the list of variables
 
                 OperationNode<Base>* alias = indep.getOperationNode();
-                CPPADCG_ASSERT_UNKNOWN(alias != nullptr && alias->getOperationType() == CGOpCode::Alias);
+                CPPADCG_ASSERT_UNKNOWN(alias != nullptr && alias->getOperationType() == CGOpCode::Alias)
                 dep.getOperationNode()->makeAlias(alias->getArguments()[0]); // not a residual anymore but equal to alias (explicit equation)
 
                 // it is now an explicit differential equation
@@ -732,9 +731,9 @@ protected:
         auto& vnodes = graph.variables();
         auto& enodes = graph.equations();
 
-        CPPADCG_ASSERT_UNKNOWN(eqInfo.size() == enodes.size());
-        CPPADCG_ASSERT_UNKNOWN(varInfo.size() == reducedFun_->Domain());
-        CPPADCG_ASSERT_UNKNOWN(eqInfo.size() == reducedFun_->Range());
+        CPPADCG_ASSERT_UNKNOWN(eqInfo.size() == enodes.size())
+        CPPADCG_ASSERT_UNKNOWN(varInfo.size() == reducedFun_->Domain())
+        CPPADCG_ASSERT_UNKNOWN(eqInfo.size() == reducedFun_->Range())
 
         CodeHandler<Base> handler;
 
@@ -989,7 +988,7 @@ protected:
             handler.substituteIndependent(indep, dep, false); // indep not removed from the list of variables yet
 
             OperationNode<Base>* alias = indep.getOperationNode();
-            CPPADCG_ASSERT_UNKNOWN(alias != nullptr && alias->getOperationType() == CGOpCode::Alias);
+            CPPADCG_ASSERT_UNKNOWN(alias != nullptr && alias->getOperationType() == CGOpCode::Alias)
 
             // it is now an explicit differential equation
             //newEqInfo[bestEquation].setExplicit(true);
@@ -1249,7 +1248,7 @@ protected:
         using std::vector;
 
         vector<ADCG> indepNewOrder(handler.getIndependentVariableSize());
-        CPPADCG_ASSERT_UNKNOWN(indepNewOrder.size() == newVarInfo.size());
+        CPPADCG_ASSERT_UNKNOWN(indepNewOrder.size() == newVarInfo.size())
 
         for (size_t p = 0; p < newVarInfo.size(); p++) {
             int origIndex = newVarInfo[p].getOriginalIndex();
@@ -1329,7 +1328,7 @@ protected:
 
         for (size_t i = diffEqStart_; i < m; i++) {
             for (size_t j = diffVarStart_; j < vnodes.size(); j++) {
-                CPPADCG_ASSERT_UNKNOWN(vnodes[j]->antiDerivative() != nullptr);
+                CPPADCG_ASSERT_UNKNOWN(vnodes[j]->antiDerivative() != nullptr)
                 size_t t = vnodes[j]->tapeIndex();
                 if (jacSparsity_[i * n + t]) {
                     row.push_back(i);
@@ -1394,7 +1393,7 @@ protected:
             }
 #ifndef NDEBUG
             for (Vnode<Base>* it : vars) {
-                CPPADCG_ASSERT_UNKNOWN(std::find(dummyD_.begin(), dummyD_.end(), it) == dummyD_.end());
+                CPPADCG_ASSERT_UNKNOWN(std::find(dummyD_.begin(), dummyD_.end(), it) == dummyD_.end())
             }
 #endif
             return;
@@ -1525,9 +1524,9 @@ protected:
             // add algebraic first
             for (int i = 0; newDummies.size() < size_t(work.rows()) && i < qr.rank(); i++) {
                 Vnode<Base>* v = varsLocal[indices(i)];
-                CPPADCG_ASSERT_UNKNOWN(v->originalVariable() != nullptr);
+                CPPADCG_ASSERT_UNKNOWN(v->originalVariable() != nullptr)
                 size_t tape = v->originalVariable()->tapeIndex();
-                CPPADCG_ASSERT_UNKNOWN(tape < varInfo.size());
+                CPPADCG_ASSERT_UNKNOWN(tape < varInfo.size())
                 if (varInfo[tape].getDerivative() < 0) {
                     // derivative of a variable which was originally algebraic only
                     newDummies.push_back(v);
@@ -1536,9 +1535,9 @@ protected:
             // add remaining
             for (int i = 0; newDummies.size() < size_t(work.rows()); i++) {
                 Vnode<Base>* v = varsLocal[indices(i)];
-                CPPADCG_ASSERT_UNKNOWN(v->originalVariable() != nullptr);
+                CPPADCG_ASSERT_UNKNOWN(v->originalVariable() != nullptr)
                 size_t tape = v->originalVariable()->tapeIndex();
-                CPPADCG_ASSERT_UNKNOWN(tape < varInfo.size());
+                CPPADCG_ASSERT_UNKNOWN(tape < varInfo.size())
                 if (varInfo[tape].getDerivative() >= 0) {
                     // derivative of a variable which was already differential
                     newDummies.push_back(v);
@@ -1560,7 +1559,7 @@ protected:
         }
 #ifndef NDEBUG
         for (Vnode<Base>* it : newDummies) {
-            CPPADCG_ASSERT_UNKNOWN(std::find(dummyD_.begin(), dummyD_.end(), it) == dummyD_.end());
+            CPPADCG_ASSERT_UNKNOWN(std::find(dummyD_.begin(), dummyD_.end(), it) == dummyD_.end())
         }
 #endif
 
@@ -1582,7 +1581,7 @@ protected:
                 indepNames.push_back(varInfo[p].getName());
             }
         }
-        CPPADCG_ASSERT_UNKNOWN(handler.getIndependentVariableSize() == indepNames.size());
+        CPPADCG_ASSERT_UNKNOWN(handler.getIndependentVariableSize() == indepNames.size())
 
         LanguageC<Base> lang("double");
         vector<CGBase> resAux;
@@ -1629,7 +1628,6 @@ protected:
 
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

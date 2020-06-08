@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2016 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * A very simple logger
@@ -37,10 +37,9 @@ public:
             log_(&std::cout) {
     }
 
-    inline virtual ~SimpleLogger() {
-    }
+    inline virtual ~SimpleLogger() = default;
 
-    inline std::ostream& log() const {
+    [[nodiscard]] inline std::ostream& log() const {
         return *log_;
     }
 
@@ -52,14 +51,13 @@ public:
         verbosity_ = verbosity;
     }
 
-    inline Verbosity getVerbosity() const {
+    [[nodiscard]] inline Verbosity getVerbosity() const {
         return verbosity_;
     }
 
 };
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif	
 

@@ -15,8 +15,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 /**
  * Specialization of the C language function names for floats (requires C99)
@@ -146,7 +145,6 @@ inline const std::string& LanguageC<float>::getPrintfBaseFormat() {
     return format;
 }
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif

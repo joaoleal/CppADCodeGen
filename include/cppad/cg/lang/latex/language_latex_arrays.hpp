@@ -16,8 +16,7 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+namespace CppAD::cg {
 
 template<class Base>
 void LanguageLatex<Base>::printArrayCreationOp(OperationNode<Base>& array) {
@@ -365,7 +364,6 @@ inline void LanguageLatex<Base>::markArrayChanged(OperationNode<Base>& ty) {
     }
 }
 
-} // END cg namespace
-} // END CppAD namespace
+} // END namespace
 
 #endif
