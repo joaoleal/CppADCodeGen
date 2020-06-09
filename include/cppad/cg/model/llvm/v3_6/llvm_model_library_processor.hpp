@@ -95,7 +95,7 @@ public:
         const std::map<std::filesystem::path, std::string>& sources = this->getLibrarySources();
         createLlvmModules(sources);
 
-        const std::map<std::string, std::string>& customSource = this->modelLibraryHelper_->getCustomSources();
+        const std::map<std::filesystem::path, std::string>& customSource = this->modelLibraryHelper_->getCustomSources();
         createLlvmModules(customSource);
 
         llvm::InitializeNativeTarget();
