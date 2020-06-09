@@ -71,23 +71,23 @@ matrix:
           <<: *common_apt
           sources:
             - *common_sources
-            - llvm-toolchain-precise-3.6
+            - llvm-toolchain-precise-4.0
             - ubuntu-toolchain-r-test  # gcc-9
           packages:
             - *common_packages
-            - libclang-3.6-dev
-            - llvm-3.6-dev
-            - clang-3.6
+            - libclang-4.0-dev
+            - llvm-4.0-dev
+            - clang-4.0
             - gcc-9
             - g++-9
       env:
-        - LLVM_VERSION=3.6
+        - LLVM_VERSION=4.0
         - OVERRIDE_CC="CC=gcc-9" OVERRIDE_CXX="CXX=g++-9"
     - os: osx
-      osx_image: xcode10.1
+      osx_image: xcode11.5
       compiler: clang
       env:
-        - LLVM_VERSION=3.6
+        - LLVM_VERSION=9
       addons:
         apt:
           <<: *common_apt
