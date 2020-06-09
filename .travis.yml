@@ -11,16 +11,16 @@ matrix:
             - kubuntu-backports
           packages:
             - cmake
-            - libclang-8-dev
-            - llvm-8-dev
-            - clang-8
-            - gcc-7
-            - g++-7
+            - libclang-9-dev
+            - llvm-9-dev
+            - clang-9
+            - gcc-9
+            - g++-9
             - texlive-extra-utils
             - texlive-fonts-extra
             - texlive-latex-recommended
       env:
-        - LLVM_VERSION=8
+        - LLVM_VERSION=9
     - os: linux
       dist: bionic
       compiler: clang
@@ -30,14 +30,14 @@ matrix:
             - kubuntu-backports
           packages:
             - cmake
-            - libclang-8-dev
-            - llvm-8-dev
-            - clang-8
+            - libclang-9-dev
+            - llvm-9-dev
+            - clang-9
             - texlive-extra-utils
             - texlive-fonts-extra
             - texlive-latex-recommended
       env:
-        - LLVM_VERSION=8
+        - LLVM_VERSION=9
     - os: linux
       dist: trusty
       compiler: gcc
@@ -80,8 +80,8 @@ matrix:
 sudo: false
 
 before_install:
-  - if [ "$CXX" == "g++" ];     then export CC="$(which gcc-6)"   CXX="$(which g++-6)"; fi
-  - if [ "$CXX" == "clang++" ]; then export CC="$(which clang-8)" CXX="$(which clang++-8)"; fi
+  - if [ "$CXX" == "g++" ];     then export CC="$(which gcc-9)"   CXX="$(which g++-9)"; fi
+  - if [ "$CXX" == "clang++" ]; then export CC="$(which clang-9)" CXX="$(which clang++-9)"; fi
 
 install:
   - mkdir cppadcg_deps
@@ -89,7 +89,7 @@ install:
   # get CppAD:
   # - git clone https://github.com/coin-or/CppAD.git cppad
   # - cd cppad
-  - CPPAD_VERSION_NAME=20200000.2
+  - CPPAD_VERSION_NAME=20200000.3
   - wget https://github.com/coin-or/CppAD/archive/${CPPAD_VERSION_NAME}.tar.gz
   - tar -xzf ${CPPAD_VERSION_NAME}.tar.gz
   - cd CppAD-${CPPAD_VERSION_NAME}
