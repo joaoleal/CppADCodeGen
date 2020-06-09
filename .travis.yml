@@ -1,4 +1,29 @@
+# --------------------------------------------------------------------------
+#  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+#    Copyright (C) 2020 Joao Leal
+#
+#  CppADCodeGen is distributed under multiple licenses:
+#
+#   - Eclipse Public License Version 1.0 (EPL1), and
+#   - GNU General Public License Version 3 (GPL3).
+#
+#  EPL1 terms and conditions can be found in the file "epl-v10.txt", while
+#  terms and conditions for the GPL3 can be found in the file "gpl3.txt".
+# ----------------------------------------------------------------------------
+# Author: Joao Leal
+
 language: cpp
+
+addons:
+  apt: &common_apt
+    sources: &common_sources
+      - kubuntu-backports
+    packages: &common_packages
+      - cmake
+      - texlive-extra-utils
+      - texlive-fonts-extra
+      - texlive-latex-recommended
+      - latex-xcolor
 
 matrix:
   include:
@@ -7,35 +32,36 @@ matrix:
       compiler: gcc
       addons:
         apt:
+          <<: *common_apt
           sources:
-            - kubuntu-backports
+            - *common_sources
+            - llvm-toolchain-bionic-9
+            - ubuntu-toolchain-r-test  # gcc-9
           packages:
-            - cmake
+            - *common_packages
             - libclang-9-dev
             - llvm-9-dev
             - clang-9
             - gcc-9
             - g++-9
-            - texlive-extra-utils
-            - texlive-fonts-extra
-            - texlive-latex-recommended
       env:
         - LLVM_VERSION=9
+        - OVERRIDE_CC="CC=gcc-9" OVERRIDE_CXX="CXX=g++-9"
     - os: linux
       dist: bionic
       compiler: clang
       addons:
         apt:
+          <<: *common_apt
           sources:
-            - kubuntu-backports
+            - *common_sources
+            - llvm-toolchain-bionic-9
+            - ubuntu-toolchain-r-test  # gcc-9
           packages:
-            - cmake
+            - *common_packages
             - libclang-9-dev
             - llvm-9-dev
             - clang-9
-            - texlive-extra-utils
-            - texlive-fonts-extra
-            - texlive-latex-recommended
       env:
         - LLVM_VERSION=9
     - os: linux
@@ -43,23 +69,21 @@ matrix:
       compiler: gcc
       addons:
         apt:
+          <<: *common_apt
           sources:
+            - *common_sources
             - llvm-toolchain-precise-3.6
-            - ubuntu-toolchain-r-test
-            - kubuntu-backports
+            - ubuntu-toolchain-r-test  # gcc-9
           packages:
-            - cmake
+            - *common_packages
             - libclang-3.6-dev
             - llvm-3.6-dev
             - clang-3.6
-            - gcc-6
-            - g++-6
-            - texlive-extra-utils
-            - texlive-fonts-extra
-            - texlive-latex-recommended
-            - latex-xcolor
+            - gcc-9
+            - g++-9
       env:
         - LLVM_VERSION=3.6
+        - OVERRIDE_CC="CC=gcc-9" OVERRIDE_CXX="CXX=g++-9"
     - os: osx
       osx_image: xcode10.1
       compiler: clang
@@ -67,14 +91,8 @@ matrix:
         - LLVM_VERSION=3.6
       addons:
         apt:
-          sources:
-            - kubuntu-backports
-          packages:
-            - cmake
-            - texlive-extra-utils
-            - texlive-fonts-extra
-            - texlive-latex-recommended
-            - latex-xcolor
+          <<: *common_apt
+
 
 # use travis-ci docker based infrastructure
 sudo: false
