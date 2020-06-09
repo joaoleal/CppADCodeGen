@@ -55,7 +55,7 @@ public:
 
         std::ostringstream code;
 
-        std::map<std::string, std::string> sources;
+        std::map<std::filesystem::path, std::string> sources;
         langC.setMaxAssignmentsPerFunction(maxAssignPerFunction, &sources);
         langC.setGenerateFunction("split_model");
         langC.setMaxOperationsPerAssignment(maxOperationsPerAssign);
@@ -100,7 +100,7 @@ protected:
         return fun;
     }
 
-    inline static void printSources(const std::map<std::string, std::string>& sources) {
+    inline static void printSources(const std::map<std::filesystem::path, std::string>& sources) {
         for (const auto& name2content : sources) {
             std::ofstream texfile;
             texfile.open(name2content.first);

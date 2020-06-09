@@ -56,6 +56,7 @@ static_assert(false,
 #include <chrono>
 #include <thread>
 #include <functional>
+#include <filesystem>
 
 // ---------------------------------------------------------------------------
 // operating system detection

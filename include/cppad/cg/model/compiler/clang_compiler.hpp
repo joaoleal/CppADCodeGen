@@ -26,12 +26,12 @@ namespace CppAD::cg {
 template<class Base>
 class ClangCompiler : public AbstractCCompiler<Base> {
 protected:
-    std::set<std::string> _bcfiles; // bitcode files
+    std::set<std::filesystem::path> _bcfiles; // bitcode files
     std::string _version;
 public:
 
-    ClangCompiler(const std::string& clangPath = "/usr/bin/clang") :
-        AbstractCCompiler<Base>(clangPath) {
+    ClangCompiler(const std::filesystem::path& clangPath = "/usr/bin/clang") :
+        AbstractCCompiler<Base>(std::move(clangPath)) {
 
         this->_compileFlags.push_back("-O2"); // Optimization level
         this->_compileLibFlags.push_back("-O2"); // Optimization level
@@ -64,11 +64,11 @@ public:
         return _version;
     }
 
-    [[nodiscard]] virtual const std::set<std::string>& getBitCodeFiles() const {
+    [[nodiscard]] virtual const std::set<std::filesystem::path>& getBitCodeFiles() const {
         return _bcfiles;
     }
 
-    virtual void generateLLVMBitCode(const std::map<std::string, std::string>& sources,
+    virtual void generateLLVMBitCode(const std::map<std::filesystem::path, std::string>& sources,
                                      JobTimer* timer = nullptr) {
         bool posIndepCode = false;
         this->_compileFlags.push_back("-emit-llvm");
@@ -85,7 +85,7 @@ public:
      *
      * @param library the path to the dynamic library to be created
      */
-    void buildDynamic(const std::string& library,
+    void buildDynamic(const std::filesystem::path& library,
                       JobTimer* timer = nullptr) override {
 
 #if CPPAD_CG_SYSTEM_APPLE
@@ -93,7 +93,7 @@ public:
 #elif CPPAD_CG_SYSTEM_LINUX
         std::string linkerName = "-soname";
 #endif
-        std::string linkerFlags = "-Wl," + linkerName + "," + system::filenameFromPath(library);
+        std::string linkerFlags = "-Wl," + linkerName + "," + library.filename().string();
         for (size_t i = 0; i < this->_linkFlags.size(); i++)
             linkerFlags += "," + this->_linkFlags[i];
 
@@ -108,7 +108,7 @@ public:
         }
 
         if (timer != nullptr) {
-            timer->startingJob("'" + library + "'", JobTimer::COMPILING_DYNAMIC_LIBRARY);
+            timer->startingJob("'" + library.string() + "'", JobTimer::COMPILING_DYNAMIC_LIBRARY);
         } else if (this->_verbose) {
             std::cout << "building library '" << library << "'" << std::endl;
         }
@@ -122,10 +122,6 @@ public:
 
     void cleanup() override final {
         // clean up
-        for (const std::string& it : _bcfiles) {
-            if (remove(it.c_str()) != 0)
-                std::cerr << "Failed to delete temporary file '" << it << "'" << std::endl;
-        }
         _bcfiles.clear();
 
         // other files and temporary folder
@@ -158,36 +154,36 @@ protected:
      * @param output the compiled output file name (the object file path)
      */
     void compileSource(const std::string& source,
-                       const std::string& output,
+                       const std::filesystem::path& output,
                        bool posIndepCode) override {
         std::vector<std::string> args;
-        args.push_back("-x");
-        args.push_back("c"); // C source files
+        args.emplace_back("-x");
+        args.emplace_back("c"); // C source files
         args.insert(args.end(), this->_compileFlags.begin(), this->_compileFlags.end());
-        args.push_back("-c");
-        args.push_back("-");
+        args.emplace_back("-c");
+        args.emplace_back("-");
         if (posIndepCode) {
-            args.push_back("-fPIC"); // position-independent code for dynamic linking
+            args.emplace_back("-fPIC"); // position-independent code for dynamic linking
         }
-        args.push_back("-o");
+        args.emplace_back("-o");
         args.push_back(output);
 
         system::callExecutable(this->_path, args, nullptr, &source);
     }
 
-    void compileFile(const std::string& path,
-                     const std::string& output,
+    void compileFile(const std::filesystem::path& path,
+                     const std::filesystem::path& output,
                      bool posIndepCode) override {
         std::vector<std::string> args;
-        args.push_back("-x");
-        args.push_back("c"); // C source files
+        args.emplace_back("-x");
+        args.emplace_back("c"); // C source files
         args.insert(args.end(), this->_compileFlags.begin(), this->_compileFlags.end());
         if (posIndepCode) {
-            args.push_back("-fPIC"); // position-independent code for dynamic linking
+            args.emplace_back("-fPIC"); // position-independent code for dynamic linking
         }
-        args.push_back("-c");
+        args.emplace_back("-c");
         args.push_back(path);
-        args.push_back("-o");
+        args.emplace_back("-o");
         args.push_back(output);
 
         system::callExecutable(this->_path, args);

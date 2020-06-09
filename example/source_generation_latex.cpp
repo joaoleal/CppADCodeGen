@@ -68,9 +68,9 @@ int main() {
      *                               Compile a PDF file
      **************************************************************************/
 #ifdef PDFLATEX_COMPILER
-    std::string dir = system::getWorkingDirectory();
+    std::filesystem::path dir = std::filesystem::current_path();
 
     system::callExecutable(PDFLATEX_COMPILER, {"-halt-on-error", "-shell-escape",
-                                               system::createPath({dir, "resources"}, "latex_template.tex")});
+                                               (dir / "resources" / "latex_template.tex").string()});
 #endif
 }

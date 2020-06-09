@@ -69,9 +69,9 @@ TEST(CppADCGLatexTest, latex) { // NOLINT(cert-err58-cpp)
 
     texfile.close();
 
-    std::string dir = system::getWorkingDirectory();
+    std::filesystem::path dir = std::filesystem::current_path();
 
-    ASSERT_NO_THROW(system::callExecutable(PDFLATEX_COMPILER,{"-halt-on-error", "-interaction=nonstopmode", "-shell-escape", system::createPath(dir, "latexTemplate.tex")}));
+    ASSERT_NO_THROW(system::callExecutable(PDFLATEX_COMPILER,{"-halt-on-error", "-interaction=nonstopmode", "-shell-escape", (dir / "latexTemplate.tex").string()}));
 
 }
 
@@ -116,8 +116,8 @@ TEST(CppADCGLatexTest, latexJac) { // NOLINT(cert-err58-cpp)
 
     texfile.close();
 
-    std::string dir = system::getWorkingDirectory();
+    std::filesystem::path dir = std::filesystem::current_path();
 
-    ASSERT_NO_THROW(system::callExecutable(PDFLATEX_COMPILER, {"-halt-on-error", "-interaction=nonstopmode", "-shell-escape", system::createPath(dir, "latexTemplate.tex")}));
+    ASSERT_NO_THROW(system::callExecutable(PDFLATEX_COMPILER, {"-halt-on-error", "-interaction=nonstopmode", "-shell-escape", (dir / "latexTemplate.tex").string()}));
 
 }

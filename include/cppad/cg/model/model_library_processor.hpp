@@ -37,11 +37,11 @@ public:
 
 protected:
 
-    inline const std::map<std::string, std::string>& getLibrarySources() {
+    inline const std::map<std::filesystem::path, std::string>& getLibrarySources() {
         return modelLibraryHelper_->getLibrarySources();
     }
 
-    inline const std::map<std::string, std::string>& getSources(ModelCSourceGen<Base>& model) {
+    inline const std::map<std::filesystem::path, std::string>& getSources(ModelCSourceGen<Base>& model) {
         return model.getSources(modelLibraryHelper_->getMultiThreading(), modelLibraryHelper_);
     }
 

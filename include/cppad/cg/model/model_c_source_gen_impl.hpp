@@ -89,8 +89,8 @@ VariableNameGenerator<Base>* ModelCSourceGen<Base>::createVariableNameGenerator(
 }
 
 template<class Base>
-const std::map<std::string, std::string>& ModelCSourceGen<Base>::getSources(MultiThreadingType multiThreadingType,
-                                                                            JobTimer* timer) {
+const std::map<std::filesystem::path, std::string>& ModelCSourceGen<Base>::getSources(MultiThreadingType multiThreadingType,
+                                                                                      JobTimer* timer) {
     if (_sources.empty()) {
         generateSources(multiThreadingType, timer);
     }

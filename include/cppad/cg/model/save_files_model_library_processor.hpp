@@ -38,22 +38,22 @@ public:
         saveSourcesTo("cppadcg_sources");
     }
 
-    inline void saveSourcesTo(const std::string& sourcesFolder) {
+    inline void saveSourcesTo(const std::filesystem::path& sourcesFolder) {
 
         auto saveFile = [&](const std::string& filename, const std::string& source){
             std::ofstream sourceFile;
-            std::string file = system::createPath(sourcesFolder, filename);
-            sourceFile.open(file.c_str());
+            std::filesystem::path file = sourcesFolder / filename;
+            sourceFile.open(file);
             sourceFile << source;
             sourceFile.close();
         };
 
-        system::createFolder(sourcesFolder);
+        std::filesystem::create_directories(sourcesFolder);
 
         const std::map<std::string, ModelCSourceGen<Base>*>& models = this->modelLibraryHelper_->getModels();
 
         for (const auto& itm : models) {
-            const std::map<std::string, std::string>& sources = this->getSources(*itm.second);
+            const std::map<std::filesystem::path, std::string>& sources = this->getSources(*itm.second);
 
             for (const auto& it : sources) {
                 saveFile(it.first, it.second);
@@ -70,7 +70,7 @@ public:
     }
 
     inline static void saveLibrarySourcesTo(ModelLibraryCSourceGen<Base>& modelLibraryHelper,
-                                            const std::string& sourcesFolder) {
+                                            const std::filesystem::path& sourcesFolder) {
         SaveFilesModelLibraryProcessor s(modelLibraryHelper);
         s.saveSourcesTo(sourcesFolder);
     }

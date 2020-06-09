@@ -233,6 +233,6 @@ public:
     virtual ~ArrayIdCompresser() = default;
 };
 
-} // END CppAD namespace
+} // END namespace
 
 #endif

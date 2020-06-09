@@ -278,7 +278,7 @@ protected:
     /**
      * Generated source code (maps file names to content)
      */
-    std::map<std::string, std::string> _sources;
+    std::map<std::filesystem::path, std::string> _sources;
 public:
 
     /**
@@ -921,8 +921,8 @@ protected:
                                                                      const std::string& tmpName = "v",
                                                                      const std::string& tmpArrayName = "array");
 
-    const std::map<std::string, std::string>& getSources(MultiThreadingType multiThreadingType,
-                                                         JobTimer* timer);
+    const std::map<std::filesystem::path, std::string>& getSources(MultiThreadingType multiThreadingType,
+                                                                   JobTimer* timer);
 
     virtual void generateSources(MultiThreadingType multiThreadingType,
                                  JobTimer* timer = nullptr);
@@ -1313,6 +1313,6 @@ protected:
     ModelLibraryProcessor<Base>;
 };
 
-} // END CppAD namespace
+} // END namespace
 
 #endif

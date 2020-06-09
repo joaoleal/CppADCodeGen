@@ -33,7 +33,7 @@ public:
      *
      * @return path to a temporary folder.
      */
-    [[nodiscard]] virtual const std::string& getTemporaryFolder() const = 0;
+    [[nodiscard]] virtual const std::filesystem::path& getTemporaryFolder() const = 0;
 
     /**
      * Defines the path to a temporary folder that should not exist
@@ -41,7 +41,7 @@ public:
      *
      * @param tmpFolder path to a temporary folder.
      */
-    virtual void setTemporaryFolder(const std::string& tmpFolder) = 0;
+    virtual void setTemporaryFolder(std::filesystem::path tmpFolder) = 0;
 
     [[nodiscard]] virtual bool isSaveToDiskFirst() const = 0;
 
@@ -53,7 +53,7 @@ public:
      *
      * @return path to a folder.
      */
-    [[nodiscard]] virtual const std::string& getSourcesFolder() const = 0;
+    [[nodiscard]] virtual const std::filesystem::path& getSourcesFolder() const = 0;
 
     /**
      * Defines the path to a folder where the source files should be created
@@ -61,11 +61,11 @@ public:
      *
      * @param srcFolder path to the folder.
      */
-    virtual void setSourcesFolder(const std::string& srcFolder) = 0;
+    virtual void setSourcesFolder(std::filesystem::path srcFolder) = 0;
 
-    [[nodiscard]] virtual const std::set<std::string>& getObjectFiles() const = 0;
+    [[nodiscard]] virtual const std::set<std::filesystem::path>& getObjectFiles() const = 0;
 
-    [[nodiscard]] virtual const std::set<std::string>& getSourceFiles() const = 0;
+    [[nodiscard]] virtual const std::set<std::filesystem::path>& getSourceFiles() const = 0;
 
     [[nodiscard]] virtual bool isVerbose() const = 0;
 
@@ -78,7 +78,7 @@ public:
      * @param posIndepCode whether or not to create position-independent
      *                     code for dynamic linking
      */
-    virtual void compileSources(const std::map<std::string, std::string>& sources,
+    virtual void compileSources(const std::map<std::filesystem::path, std::string>& sources,
                                 bool posIndepCode,
                                 JobTimer* timer = nullptr) = 0;
 
@@ -87,7 +87,7 @@ public:
      *
      * @param library the path to the dynamic library to be created
      */
-    virtual void buildDynamic(const std::string& library,
+    virtual void buildDynamic(const std::filesystem::path& library,
                               JobTimer* timer = nullptr) = 0;
 
     /**

@@ -97,7 +97,7 @@ protected:
     // the maximum number of operations per variable assignment
     size_t _maxOperationsPerAssignment;
     //  maps file names to with their contents
-    std::map<std::string, std::string>* _sources;
+    std::map<std::filesystem::path, std::string>* _sources;
     // the values in the temporary array
     std::vector<const Arg*> _tmpArrayValues;
     // the values in the temporary sparse array
@@ -249,7 +249,7 @@ public:
      * @param sources A map where the file names are associated with their contents.
      */
     virtual void setMaxAssignmentsPerFunction(size_t maxAssignmentsPerFunction,
-                                              std::map<std::string, std::string>* sources) {
+                                              std::map<std::filesystem::path, std::string>* sources) {
         _maxAssignmentsPerFunction = maxAssignmentsPerFunction;
         _sources = sources;
     }

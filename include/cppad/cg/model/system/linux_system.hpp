@@ -90,113 +90,11 @@ const std::string SystemInfo<T>::DYNAMIC_LIB_EXTENSION = ".so";
 template<class T>
 const std::string SystemInfo<T>::STATIC_LIB_EXTENSION = ".a";
 
-inline std::string getWorkingDirectory() {
-    char buffer[1024];
-
-    char* ret = getcwd(buffer, 1024);
-    if (ret == nullptr) {
-        const char* error = strerror(errno);
-        throw CGException("Failed to get current working directory: ", error);
-    }
-
-    return buffer;
-}
-
-inline void createFolder(const std::string& folder) {
-    int ret = mkdir(folder.c_str(), 0755);
-    if (ret == -1) {
-        if (errno != EEXIST) {
-            const char* error = strerror(errno);
-            throw CGException("Failed to create directory '", folder + "': ", error);
-        }
-    }
-}
-
-inline std::string createPath(std::initializer_list<std::string> folders,
-                              const std::string& file) {
-    std::string path;
-
-    size_t n = file.size();
-    for (const std::string& folder: folders)
-        n += folder.size() + 1;
-    path.reserve(n);
-
-    for (const std::string& folder: folders) {
-        if (!folder.empty() && folder.back() == '/') {
-            path += folder;
-        } else {
-            path += folder;
-            path += "/";
-        }
-    }
-
-    path += file;
-
-    return path;
-}
-
-inline std::string createPath(const std::string& folder,
-                              const std::string& file) {
-    return createPath({folder}, file);
-}
-
-inline std::string escapePath(const std::string& path) {
-    return std::string("\"") + path + "\"";
-}
-
-inline std::string filenameFromPath(const std::string& path) {
-    size_t pos = path.rfind('/');
-    if (pos != std::string::npos) {
-        if (pos == path.size() - 1) {
-            return "";
-        } else {
-            return path.substr(pos + 1);
-        }
-    } else {
-        return path;
-    }
-}
-
-inline std::string directoryFromPath(const std::string& path) {
-    size_t found = path.find_last_of('/');
-    if (found != std::string::npos) {
-        return path.substr(0, found + 1);
-    }
-    return "./";
-}
-
-inline bool isAbsolutePath(const std::string& path) {
-    if (path.empty())
-        return false;
-
-    return path[0] == '/';
-}
-
-inline bool isDirectory(const std::string& path) {
-    struct stat info;
-
-    if (stat(path.c_str(), &info) != 0) {
-        return false;
-    } else return (info.st_mode & S_IFDIR) != 0;
-}
-
-inline bool isFile(const std::string& path) {
-    struct stat sts;
-    errno = 0;
-    if (stat(path.c_str(), &sts) == 0 && errno == 0) {
-        return S_ISREG(sts.st_mode);
-    } else if (errno == ENOENT) {
-        return false;
-    }
-    // could check for an error message...
-    return false;
-}
-
-inline void callExecutable(const std::string& executable,
+inline void callExecutable(const std::filesystem::path& executable,
                            const std::vector<std::string>& args,
                            std::string* stdOutErrMessage,
                            const std::string* stdInMessage) {
-    std::string execName = filenameFromPath(executable);
+    std::string execName = executable.filename();
 
     PipeHandler pipeMsg; // file descriptors used to communicate between processes
     pipeMsg.create();
@@ -280,7 +178,7 @@ inline void callExecutable(const std::string& executable,
         if (eCode < 0) {
             char buf[512];
 #ifndef CPPAD_CG_SYSTEM_APPLE
-            std::string error = executable + ": " + strerror_r(errno, buf, 511); // thread safe
+            std::string error = executable.string() + ": " + strerror_r(errno, buf, 511); // thread safe
 #else
             std::string error = executable + ": ";
             strerror_r(errno, buf, 511); // thread safe

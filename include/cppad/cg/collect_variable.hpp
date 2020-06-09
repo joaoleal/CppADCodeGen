@@ -282,6 +282,6 @@ inline bool CodeHandler<Base>::isCollectableVariableAddSub(const SourceCodePath&
     return true;
 }
 
-} // END CppAD namespace
+} // END namespace
 
 #endif

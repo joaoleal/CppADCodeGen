@@ -84,7 +84,7 @@ void useLibrary() {
 }
 
 int main() {
-    if (!system::isFile(LIBRARY_NAME_EXT)) {
+    if (!std::filesystem::is_regular_file(LIBRARY_NAME_EXT)) {
         std::cout << "Creating a new library" << std::endl;
         compileLibrary();
     } else {

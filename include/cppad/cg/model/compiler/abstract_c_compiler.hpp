@@ -27,11 +27,11 @@ namespace CppAD::cg {
 template<class Base>
 class AbstractCCompiler : public CCompiler<Base> {
 protected:
-    std::string _path; // the path to the gcc executable
-    std::string _tmpFolder;
-    std::string _sourcesFolder; // path where source files are saved
-    std::set<std::string> _ofiles; // compiled object files
-    std::set<std::string> _sfiles; // compiled source files
+    std::filesystem::path _path; // the path to the gcc executable
+    std::filesystem::path _tmpFolder;
+    std::filesystem::path _sourcesFolder; // path where source files are saved
+    std::set<std::filesystem::path> _ofiles; // compiled object files
+    std::set<std::filesystem::path> _sfiles; // compiled source files
     std::vector<std::string> _compileFlags;
     std::vector<std::string> _compileLibFlags;
     std::vector<std::string> _linkFlags;
@@ -39,8 +39,8 @@ protected:
     bool _saveToDiskFirst;
 public:
 
-    AbstractCCompiler(const std::string& compilerPath) :
-        _path(compilerPath),
+    AbstractCCompiler(std::filesystem::path compilerPath) :
+        _path(std::move(compilerPath)),
         _tmpFolder("cppadcg_tmp"),
         _sourcesFolder("cppadcg_sources"),
         _verbose(false),
@@ -50,20 +50,20 @@ public:
     AbstractCCompiler(const AbstractCCompiler& orig) = delete;
     AbstractCCompiler& operator=(const AbstractCCompiler& rhs) = delete;
 
-    std::string getCompilerPath() const {
+    const std::filesystem::path& getCompilerPath() const {
         return _path;
     }
 
-    void setCompilerPath(const std::string& path) {
+    void setCompilerPath(const std::filesystem::path& path) {
         _path = path;
     }
 
-    [[nodiscard]] const std::string& getTemporaryFolder() const override {
+    [[nodiscard]] const std::filesystem::path& getTemporaryFolder() const override {
         return _tmpFolder;
     }
 
-    void setTemporaryFolder(const std::string& tmpFolder) override {
-        _tmpFolder = tmpFolder;
+    void setTemporaryFolder(std::filesystem::path tmpFolder) override {
+        _tmpFolder = std::move(tmpFolder);
     }
 
     [[nodiscard]] bool isSaveToDiskFirst() const override {
@@ -74,19 +74,19 @@ public:
         _saveToDiskFirst = saveToDiskFirst;
     }
 
-    [[nodiscard]] const std::string& getSourcesFolder() const override {
+    [[nodiscard]] const std::filesystem::path& getSourcesFolder() const override {
         return _sourcesFolder;
     }
 
-    void setSourcesFolder(const std::string& srcFolder) override {
-        _sourcesFolder = srcFolder;
+    void setSourcesFolder(std::filesystem::path srcFolder) override {
+        _sourcesFolder = std::move(srcFolder);
     }
 
-    [[nodiscard]] const std::set<std::string>& getObjectFiles() const override {
+    [[nodiscard]] const std::set<std::filesystem::path>& getObjectFiles() const override {
         return _ofiles;
     }
 
-    [[nodiscard]] const std::set<std::string>& getSourceFiles() const override {
+    [[nodiscard]] const std::set<std::filesystem::path>& getSourceFiles() const override {
         return _sfiles;
     }
 
@@ -142,31 +142,30 @@ public:
      * @param posIndepCode whether or not to create position-independent
      *                     code for dynamic linking
      */
-    void compileSources(const std::map<std::string, std::string>& sources,
+    void compileSources(const std::map<std::filesystem::path, std::string>& sources,
                         bool posIndepCode,
                         JobTimer* timer = nullptr) override {
         compileSources(sources, posIndepCode, timer, ".o", _ofiles);
     }
 
-    virtual void compileSources(const std::map<std::string, std::string>& sources,
+    virtual void compileSources(const std::map<std::filesystem::path, std::string>& sources,
                                 bool posIndepCode,
                                 JobTimer* timer,
                                 const std::string& outputExtension,
-                                std::set<std::string>& outputFiles) {
+                                std::set<std::filesystem::path>& outputFiles) {
         using namespace std::chrono;
 
         if (sources.empty())
             return; // nothing to do
 
-        system::createFolder(this->_tmpFolder);
+        std::filesystem::create_directories(this->_tmpFolder);
 
         // determine the maximum file name length
         size_t maxsize = 0;
-        std::map<std::string, std::string>::const_iterator it;
-        for (it = sources.begin(); it != sources.end(); ++it) {
+        for (auto it = sources.begin(); it != sources.end(); ++it) {
             _sfiles.insert(it->first);
-            std::string file = system::createPath(this->_tmpFolder, it->first + outputExtension);
-            maxsize = std::max<size_t>(maxsize, file.size());
+            auto file = this->_tmpFolder / (it->first.string() + outputExtension);
+            maxsize = std::max<size_t>(maxsize, file.string().size());
         }
 
         size_t countWidth = std::ceil(std::log10(sources.size()));
@@ -184,13 +183,13 @@ public:
         std::ostringstream os;
 
         if (_saveToDiskFirst) {
-            system::createFolder(_sourcesFolder);
+            std::filesystem::create_directories(_sourcesFolder);
         }
 
         // compile each source code file into a different object file
-        for (it = sources.begin(); it != sources.end(); ++it) {
+        for (auto it = sources.begin(); it != sources.end(); ++it) {
             count++;
-            std::string file = system::createPath(this->_tmpFolder, it->first + outputExtension);
+            std::filesystem::path file = this->_tmpFolder / (it->first.string() + outputExtension);
             outputFiles.insert(file);
 
             steady_clock::time_point beginTime;
@@ -201,14 +200,14 @@ public:
             }
 
             if (timer != nullptr) {
-                timer->startingJob("'" + file + "'", JobTypeHolder<>::COMPILING, os.str());
+                timer->startingJob("'" + file.string() + "'", JobTypeHolder<>::COMPILING, os.str());
                 os.str("");
             } else if (_verbose) {
                 beginTime = steady_clock::now();
                 char f = std::cout.fill();
                 std::cout << os.str() << " compiling "
                         << std::setw(maxsize + 9) << std::setfill('.') << std::left
-                        << ("'" + file + "' ") << " ";
+                        << ("'" + file.string() + "' ") << " ";
                 os.str("");
                 std::cout.flush();
                 std::cout.fill(f); // restore fill character
@@ -217,8 +216,8 @@ public:
             if (_saveToDiskFirst) {
                 // save a new source file to disk
                 std::ofstream sourceFile;
-                std::string srcfile = system::createPath(_sourcesFolder, it->first);
-                sourceFile.open(srcfile.c_str());
+                std::filesystem::path srcfile = _sourcesFolder / it->first;
+                sourceFile.open(srcfile);
                 sourceFile << it->second;
                 sourceFile.close();
 
@@ -247,19 +246,15 @@ public:
      *
      * @param library the path to the dynamic library to be created
      */
-    virtual void buildDynamic(const std::string& library,
+    virtual void buildDynamic(const std::filesystem::path& library,
                               JobTimer* timer = nullptr) override = 0;
 
-    void cleanup() override final {
+    void cleanup() override {
         // clean up;
-        for (const std::string& it : _ofiles) {
-            if (remove(it.c_str()) != 0)
-                std::cerr << "Failed to delete temporary file '" << it << "'" << std::endl;
-        }
         _ofiles.clear();
         _sfiles.clear();
 
-        remove(this->_tmpFolder.c_str());
+        std::filesystem::remove_all(this->_tmpFolder);
     }
 
     virtual ~AbstractCCompiler() {
@@ -275,7 +270,7 @@ protected:
      * @param output the compiled output file name (the object file path)
      */
     virtual void compileSource(const std::string& source,
-                               const std::string& output,
+                               const std::filesystem::path& output,
                                bool posIndepCode) = 0;
 
     /**
@@ -284,8 +279,8 @@ protected:
      * @param path the path to the source file
      * @param output the compiled output file name (the object file path)
      */
-    virtual void compileFile(const std::string& path,
-                             const std::string& output,
+    virtual void compileFile(const std::filesystem::path& path,
+                             const std::filesystem::path& output,
                              bool posIndepCode) = 0;
 };
 

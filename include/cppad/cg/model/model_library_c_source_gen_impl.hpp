@@ -72,10 +72,10 @@ template<class Base>
 const std::string ModelLibraryCSourceGen<Base>::CONST = "const";
 
 template<class Base>
-void ModelLibraryCSourceGen<Base>::saveSources(const std::string& sourcesFolder) {
+void ModelLibraryCSourceGen<Base>::saveSources(const std::filesystem::path& sourcesFolder) {
 
     // create the folder if it does not exist
-    system::createFolder(sourcesFolder);
+    std::filesystem::create_directories(sourcesFolder);
 
     // save/generate model sources
     for (const auto& it : _models) {
@@ -90,20 +90,20 @@ void ModelLibraryCSourceGen<Base>::saveSources(const std::string& sourcesFolder)
 }
 
 template<class Base>
-void ModelLibraryCSourceGen<Base>::saveSources(const std::string& sourcesFolder,
-                                               const std::map<std::string, std::string>& sources) {
+void ModelLibraryCSourceGen<Base>::saveSources(const std::filesystem::path& sourcesFolder,
+                                               const std::map<std::filesystem::path, std::string>& sources) {
     for (const auto& it : sources) {
         // for debugging purposes only
         std::ofstream sourceFile;
-        std::string file = system::createPath(sourcesFolder, it.first);
-        sourceFile.open(file.c_str());
+        std::filesystem::path file = sourcesFolder / it.first;
+        sourceFile.open(file);
         sourceFile << it.second;
         sourceFile.close();
     }
 }
 
 template<class Base>
-const std::map<std::string, std::string>& ModelLibraryCSourceGen<Base>::getLibrarySources() {
+const std::map<std::filesystem::path, std::string>& ModelLibraryCSourceGen<Base>::getLibrarySources() {
     if (_libSources.empty()) {
         generateVersionSource(_libSources);
         generateModelsSource(_libSources);
@@ -134,7 +134,7 @@ const std::map<std::string, std::string>& ModelLibraryCSourceGen<Base>::getLibra
 }
 
 template<class Base>
-void ModelLibraryCSourceGen<Base>::generateVersionSource(std::map<std::string, std::string>& sources) {
+void ModelLibraryCSourceGen<Base>::generateVersionSource(std::map<std::filesystem::path, std::string>& sources) {
     _cache.str("");
     _cache << "unsigned long " << FUNCTION_VERSION << "() {\n"
             << "   return " << API_VERSION << "u;\n"
@@ -144,7 +144,7 @@ void ModelLibraryCSourceGen<Base>::generateVersionSource(std::map<std::string, s
 }
 
 template<class Base>
-void ModelLibraryCSourceGen<Base>::generateModelsSource(std::map<std::string, std::string>& sources) {
+void ModelLibraryCSourceGen<Base>::generateModelsSource(std::map<std::filesystem::path, std::string>& sources) {
     _cache.str("");
     LanguageC<Base>::printFunctionDeclaration(_cache, "void", FUNCTION_MODELS, {"char const *const** names",
                                                                                 "int* count"});
@@ -166,7 +166,7 @@ void ModelLibraryCSourceGen<Base>::generateModelsSource(std::map<std::string, st
 }
 
 template<class Base>
-void ModelLibraryCSourceGen<Base>::generateOnCloseSource(std::map<std::string, std::string>& sources) {
+void ModelLibraryCSourceGen<Base>::generateOnCloseSource(std::map<std::filesystem::path, std::string>& sources) {
     bool pthreads = false;
     if(_multiThreading == MultiThreadingType::PTHREADS) {
         for (const auto& it : _models) {
@@ -191,7 +191,7 @@ void ModelLibraryCSourceGen<Base>::generateOnCloseSource(std::map<std::string, s
 }
 
 template<class Base>
-void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::string, std::string>& sources) {
+void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::filesystem::path, std::string>& sources) {
 
     bool usingMultiThreading = false;
     if(_multiThreading != MultiThreadingType::NONE) {

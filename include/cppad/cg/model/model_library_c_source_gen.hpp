@@ -52,11 +52,11 @@ protected:
     /**
      * custom functions to be compiled in the dynamic library
      */
-    std::map<std::string, std::string> _customSource;
+    std::map<std::filesystem::path, std::string> _customSource;
     /**
      * Library level generated source files
      */
-    std::map<std::string, std::string> _libSources;
+    std::map<std::filesystem::path, std::string> _libSources;
     /**
      * Parallelization type for the sparse Jacobian and sparse Hessian
      * (experimental).
@@ -113,11 +113,11 @@ public:
         _libSources.clear(); // must regenerate library sources again
     }
 
-    inline const std::map<std::string, ModelCSourceGen<Base>*>& getModels() const {
+    [[nodiscard]] inline const std::map<std::string, ModelCSourceGen<Base>*>& getModels() const {
         return _models;
     }
 
-    void addCustomFunctionSource(const std::string& filename, const std::string& source) {
+    void addCustomFunctionSource(const std::filesystem::path& filename, const std::string& source) {
         CPPADCG_ASSERT_KNOWN(!filename.empty(), "The filename name cannot be empty")
 
         _customSource[filename] = source;
@@ -129,7 +129,7 @@ public:
      * @return maps filenames to the file content for the user defined
      *         sources.
      */
-    inline const std::map<std::string, std::string>& getCustomSources() const {
+    [[nodiscard]] inline const std::map<std::filesystem::path, std::string>& getCustomSources() const {
         return _customSource;
     }
 
@@ -164,7 +164,7 @@ public:
      *                      created (any existing files with the same names
      *                      will be overridden).
      */
-    void saveSources(const std::string& sourcesFolder);
+    void saveSources(const std::filesystem::path& sourcesFolder);
 
     /**
      * Provides the sources for the model library level.
@@ -174,19 +174,19 @@ public:
      *
      * @return model library sources
      */
-    virtual const std::map<std::string, std::string>& getLibrarySources();
+    [[nodiscard]] virtual const std::map<std::filesystem::path, std::string>& getLibrarySources();
 protected:
 
-    virtual void generateVersionSource(std::map<std::string, std::string>& sources);
+    virtual void generateVersionSource(std::map<std::filesystem::path, std::string>& sources);
 
-    virtual void generateModelsSource(std::map<std::string, std::string>& sources);
+    virtual void generateModelsSource(std::map<std::filesystem::path, std::string>& sources);
 
-    virtual void generateOnCloseSource(std::map<std::string, std::string>& sources);
+    virtual void generateOnCloseSource(std::map<std::filesystem::path, std::string>& sources);
 
-    virtual void generateThreadPoolSources(std::map<std::string, std::string>& sources);
+    virtual void generateThreadPoolSources(std::map<std::filesystem::path, std::string>& sources);
 
-    static void saveSources(const std::string& sourcesFolder,
-                            const std::map<std::string, std::string>& sources);
+    static void saveSources(const std::filesystem::path& sourcesFolder,
+                            const std::map<std::filesystem::path, std::string>& sources);
 
     friend class ModelLibraryProcessor<Base>;
 };

@@ -35,18 +35,19 @@ public:
 
 protected:
 
-    static std::string findInternalClangCHeaders(const std::string& version,
-                                                 const std::string& resourceDir) {
+    static std::filesystem::path findInternalClangCHeaders(const std::string& version,
+                                                           const std::string& resourceDir) {
         // check existing paths
         for (const std::string& path : explode(resourceDir, " ")) {
-            if (system::isFile(system::createPath(path, system::createPath("include", "stddef.h")))) {
+            std::filesystem::path p(path);
+            if (std::filesystem::is_regular_file(p / "include" / "stddef.h")) {
                 return ""; // no need to add anything
             }
         }
 
 #ifdef CPPAD_CG_SYSTEM_LINUX
-        std::string clangHeaders = "/usr/lib/clang/" + version + "/include";
-        if (system::isDirectory(clangHeaders)) {
+        std::filesystem::path clangHeaders = "/usr/lib/clang/" + version + "/include";
+        if (std::filesystem::is_directory(clangHeaders)) {
             return clangHeaders; // found them
         }
 #endif
@@ -55,8 +56,8 @@ protected:
         return "";
     }
 
-    const std::set<std::string>& createBitCode(ClangCompiler<Base>& clang,
-                                               const std::string& version) {
+    const std::set<std::filesystem::path>& createBitCode(ClangCompiler<Base>& clang,
+                                                         const std::string& version) {
         // backup output format so that it can be restored
         OStreamConfigRestore coutb(std::cout);
 
@@ -83,17 +84,17 @@ protected:
              * generate bit code
              */
             for (const auto& p : models) {
-                const std::map<std::string, std::string>& modelSources = this->getSources(*p.second);
+                const std::map<std::filesystem::path, std::string>& modelSources = this->getSources(*p.second);
 
                 this->modelLibraryHelper_->startingJob("", JobTimer::COMPILING_FOR_MODEL);
                 clang.generateLLVMBitCode(modelSources, this->modelLibraryHelper_);
                 this->modelLibraryHelper_->finishedJob();
             }
 
-            const std::map<std::string, std::string>& sources = this->getLibrarySources();
+            const std::map<std::filesystem::path, std::string>& sources = this->getLibrarySources();
             clang.generateLLVMBitCode(sources, this->modelLibraryHelper_);
 
-            const std::map<std::string, std::string>& customSource = this->modelLibraryHelper_->getCustomSources();
+            const std::map<std::filesystem::path, std::string>& customSource = this->modelLibraryHelper_->getCustomSources();
             clang.generateLLVMBitCode(customSource, this->modelLibraryHelper_);
         } catch (...) {
             clang.cleanup();

@@ -131,17 +131,17 @@ public:
         const std::map<std::string, ModelCSourceGen < Base>*>&models = this->modelLibraryHelper_->getModels();
         try {
             for (const auto& p : models) {
-                const std::map<std::string, std::string>& modelSources = this->getSources(*p.second);
+                const std::map<std::filesystem::path, std::string>& modelSources = this->getSources(*p.second);
 
                 this->modelLibraryHelper_->startingJob("", JobTimer::COMPILING_FOR_MODEL);
                 compiler.compileSources(modelSources, true, this->modelLibraryHelper_);
                 this->modelLibraryHelper_->finishedJob();
             }
 
-            const std::map<std::string, std::string>& sources = this->getLibrarySources();
+            const std::map<std::filesystem::path, std::string>& sources = this->getLibrarySources();
             compiler.compileSources(sources, true, this->modelLibraryHelper_);
 
-            const std::map<std::string, std::string>& customSource = this->modelLibraryHelper_->getCustomSources();
+            const std::map<std::filesystem::path, std::string>& customSource = this->modelLibraryHelper_->getCustomSources();
             compiler.compileSources(customSource, true, this->modelLibraryHelper_);
 
             std::string libname = _libraryName;
@@ -188,14 +188,14 @@ public:
         const std::map<std::string, ModelCSourceGen<Base>*>& models = this->modelLibraryHelper_->getModels();
         try {
             for (const auto& p : models) {
-                const std::map<std::string, std::string>& modelSources = this->getSources(*p.second);
+                const std::map<std::filesystem::path, std::string>& modelSources = this->getSources(*p.second);
 
                 this->modelLibraryHelper_->startingJob("", JobTimer::COMPILING_FOR_MODEL);
                 compiler.compileSources(modelSources, posIndepCode, this->modelLibraryHelper_);
                 this->modelLibraryHelper_->finishedJob();
             }
 
-            const std::map<std::string, std::string>& sources = this->getLibrarySources();
+            const std::map<std::filesystem::path, std::string>& sources = this->getLibrarySources();
             compiler.compileSources(sources, posIndepCode, this->modelLibraryHelper_);
 
             const std::map<std::string, std::string>& customSource = this->modelLibraryHelper_->getCustomSources();

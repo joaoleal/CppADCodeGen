@@ -69,8 +69,8 @@ int main() {
      *                        Generate an image
      **************************************************************************/
 #ifdef GRAPHVIZ_DOT_PATH
-    std::string dir = system::getWorkingDirectory();
+    std::filesystem::path dir = std::filesystem::current_path();
 
-    system::callExecutable(GRAPHVIZ_DOT_PATH,{"-Tpng", "-oalgorithm.png", system::createPath(dir, "algorithm.dot")});
+    system::callExecutable(GRAPHVIZ_DOT_PATH,{"-Tpng", "-oalgorithm.png", (dir / "algorithm.dot").string()});
 #endif
 }

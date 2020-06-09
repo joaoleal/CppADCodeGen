@@ -461,6 +461,6 @@ inline std::ostream& operator<<(std::ostream& os,
     return os;
 }
 
-} // END CppAD namespace
+} // END namespace
 
 # endif

@@ -69,9 +69,9 @@ TEST(CppADCGDotTest, dot) {
 
     texfile.close();
 
-    std::string dir = system::getWorkingDirectory();
+    std::filesystem::path dir = std::filesystem::current_path();
 
-    ASSERT_NO_THROW(system::callExecutable(GRAPHVIZ_DOT_PATH,{"-Tsvg", "-oalgorithm.svg", system::createPath(dir, "algorithm.dot")}));
+    ASSERT_NO_THROW(system::callExecutable(GRAPHVIZ_DOT_PATH,{"-Tsvg", "-oalgorithm.svg", (dir / "algorithm.dot").string()}));
 
 }
 
@@ -123,8 +123,8 @@ TEST(CppADCGDotTest, dot_param) {
 
     texfile.close();
 
-    std::string dir = system::getWorkingDirectory();
+    std::filesystem::path dir = std::filesystem::current_path();
 
-    ASSERT_NO_THROW(system::callExecutable(GRAPHVIZ_DOT_PATH,{"-Tsvg", "-oalgorithm2.svg", system::createPath(dir, "algorithm2.dot")}));
+    ASSERT_NO_THROW(system::callExecutable(GRAPHVIZ_DOT_PATH,{"-Tsvg", "-oalgorithm2.svg", (dir / "algorithm2.dot").string()}));
 
 }

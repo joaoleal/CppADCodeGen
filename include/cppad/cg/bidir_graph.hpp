@@ -292,6 +292,6 @@ private:
 
 };
 
-} // END CppAD namespace
+} // END namespace
 
 #endif

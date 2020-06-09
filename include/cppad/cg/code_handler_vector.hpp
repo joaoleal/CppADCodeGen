@@ -234,6 +234,6 @@ public:
 
 };
 
-} // END CppAD namespace
+} // END namespace
 
 #endif

@@ -90,11 +90,11 @@ public:
 
         const std::map<std::string, ModelCSourceGen<Base>*>& models = this->modelLibraryHelper_->getModels();
         for (const auto& p : models) {
-            const std::map<std::string, std::string>& modelSources = this->getSources(*p.second);
+            const std::map<std::filesystem::path, std::string>& modelSources = this->getSources(*p.second);
             createLlvmModules(modelSources);
         }
 
-        const std::map<std::string, std::string>& sources = this->getLibrarySources();
+        const std::map<std::filesystem::path, std::string>& sources = this->getLibrarySources();
         createLlvmModules(sources);
 
         const std::map<std::string, std::string>& customSource = this->modelLibraryHelper_->getCustomSources();

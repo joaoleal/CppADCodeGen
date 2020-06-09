@@ -89,14 +89,14 @@ public:
 
         const std::map<std::string, ModelCSourceGen<Base>*>& models = this->modelLibraryHelper_->getModels();
         for (const auto& p : models) {
-            const std::map<std::string, std::string>& modelSources = this->getSources(*p.second);
+            const std::map<std::filesystem::path, std::string>& modelSources = this->getSources(*p.second);
             createLlvmModules(modelSources);
         }
 
-        const std::map<std::string, std::string>& sources = this->getLibrarySources();
+        const std::map<std::filesystem::path, std::string>& sources = this->getLibrarySources();
         createLlvmModules(sources);
 
-        const std::map<std::string, std::string>& customSource = this->modelLibraryHelper_->getCustomSources();
+        const std::map<std::filesystem::path, std::string>& customSource = this->modelLibraryHelper_->getCustomSources();
         createLlvmModules(customSource);
 
         llvm::InitializeNativeTarget();
@@ -131,7 +131,7 @@ public:
             /**
              * generate bit code
              */
-            const std::set<std::string>& bcFiles = this->createBitCode(clang, _version);
+            const std::set<std::filesystem::path>& bcFiles = this->createBitCode(clang, _version);
 
             /**
              * Load bit code and create a single module
@@ -143,10 +143,10 @@ public:
 
             std::unique_ptr<Module> linkerModule;
 
-            for (const std::string& itbc : bcFiles) {
+            for (const std::filesystem::path& itbc : bcFiles) {
                 // load bitcode file
 
-                ErrorOr<std::unique_ptr<MemoryBuffer>> buffer = MemoryBuffer::getFile(itbc);
+                ErrorOr<std::unique_ptr<MemoryBuffer>> buffer = MemoryBuffer::getFile(itbc.string());
                 if (buffer.get() == nullptr) {
                     throw CGException(buffer.getError().message());
                 }
@@ -193,13 +193,13 @@ public:
 
 protected:
 
-    virtual void createLlvmModules(const std::map<std::string, std::string>& sources) {
+    virtual void createLlvmModules(const std::map<std::filesystem::path, std::string>& sources) {
         for (const auto& p : sources) {
             createLlvmModule(p.first, p.second);
         }
     }
 
-    virtual void createLlvmModule(const std::string& filename,
+    virtual void createLlvmModule(const std::filesystem::path& filename,
                                   const std::string& source) {
         using namespace llvm;
         using namespace clang;
