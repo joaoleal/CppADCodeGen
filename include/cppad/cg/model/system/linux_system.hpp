@@ -180,7 +180,7 @@ inline void callExecutable(const std::filesystem::path& executable,
 #ifndef CPPAD_CG_SYSTEM_APPLE
             std::string error = executable.string() + ": " + strerror_r(errno, buf, 511); // thread safe
 #else
-            std::string error = executable + ": ";
+            std::string error = executable.string() + ": ";
             strerror_r(errno, buf, 511); // thread safe
             error += std::string(buf);
 #endif
