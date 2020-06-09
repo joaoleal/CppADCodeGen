@@ -63,6 +63,7 @@ matrix:
             - clang-9
       env:
         - LLVM_VERSION=9
+        - OVERRIDE_CC="CC=clang-9" OVERRIDE_CXX="CXX=clang++-9"
     - os: linux
       dist: trusty
       compiler: gcc
@@ -71,7 +72,7 @@ matrix:
           <<: *common_apt
           sources:
             - *common_sources
-            - llvm-toolchain-precise-4.0
+            - llvm-toolchain-trusty-4.0
             - ubuntu-toolchain-r-test  # gcc-9
           packages:
             - *common_packages
