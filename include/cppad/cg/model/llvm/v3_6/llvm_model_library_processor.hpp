@@ -128,7 +128,7 @@ public:
             /**
              * generate bit code
              */
-            const std::set<std::string>& bcFiles = this->createBitCode(clang, "3.6");
+            const std::set<std::filesystem::path>& bcFiles = this->createBitCode(clang, "3.6");
 
             /**
              * Load bit code and create a single module
@@ -188,13 +188,13 @@ public:
 
 protected:
 
-    virtual void createLlvmModules(const std::map<std::string, std::string>& sources) {
+    virtual void createLlvmModules(const std::map<std::filesystem::path, std::string>& sources) {
         for (const auto& p : sources) {
             createLlvmModule(p.first, p.second);
         }
     }
 
-    virtual void createLlvmModule(const std::string& filename,
+    virtual void createLlvmModule(const std::filesystem::path& filename,
                                   const std::string& source) {
         using namespace llvm;
         using namespace clang;

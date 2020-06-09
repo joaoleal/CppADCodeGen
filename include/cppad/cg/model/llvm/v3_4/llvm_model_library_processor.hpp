@@ -82,7 +82,7 @@ public:
             /**
              * generate bit code
              */
-            const std::set<std::string>& bcFiles = this->createBitCode(clang, "3.4");
+            const std::set<std::filesystem::path>& bcFiles = this->createBitCode(clang, "3.4");
 
             /**
              * Load bit code and create a single module

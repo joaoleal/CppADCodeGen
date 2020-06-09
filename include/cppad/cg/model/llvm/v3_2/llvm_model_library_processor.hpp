@@ -102,13 +102,13 @@ public:
 
 protected:
 
-    virtual void createLlvmModules(const std::map<std::string, std::string>& sources) {
+    virtual void createLlvmModules(const std::map<std::filesystem::path, std::string>& sources) {
         for (const auto& p : sources) {
             createLlvmModule(p.first, p.second);
         }
     }
 
-    virtual void createLlvmModule(const std::string& filename,
+    virtual void createLlvmModule(const std::filesystem::path& filename,
                                   const std::string& source) {
         using namespace llvm;
         using namespace clang;

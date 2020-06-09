@@ -30,7 +30,7 @@ template<class Base>
 class LlvmModelLibraryProcessor : public LlvmBaseModelLibraryProcessor<Base> {
 protected:
     const std::string _version;
-    std::vector<std::string> _includePaths;
+    std::vector<std::filesystem::path> _includePaths;
     std::shared_ptr<llvm::LLVMContext> _context; // must be deleted after _linker and _module (it must come first)
     std::unique_ptr<llvm::Linker> _linker;
     std::unique_ptr<llvm::Module> _module;
@@ -59,14 +59,14 @@ public:
     /**
      * Define additional header paths.
      */
-    inline void setIncludePaths(const std::vector<std::string>& includePaths) {
+    inline void setIncludePaths(const std::vector<std::filesystem::path>& includePaths) {
         _includePaths = includePaths;
     }
 
     /**
      * User defined header paths.
      */
-    inline const std::vector<std::string>& getIncludePaths() const {
+    inline const std::vector<std::filesystem::path>& getIncludePaths() const {
         return _includePaths;
     }
 
@@ -97,7 +97,7 @@ public:
         const std::map<std::filesystem::path, std::string>& sources = this->getLibrarySources();
         createLlvmModules(sources);
 
-        const std::map<std::string, std::string>& customSource = this->modelLibraryHelper_->getCustomSources();
+        const std::map<std::filesystem::path, std::string>& customSource = this->modelLibraryHelper_->getCustomSources();
         createLlvmModules(customSource);
 
         llvm::InitializeNativeTarget();
@@ -132,7 +132,7 @@ public:
             /**
              * generate bit code
              */
-            const std::set<std::string>& bcFiles = this->createBitCode(clang, "4.0");
+            const std::set<std::filesystem::path>& bcFiles = this->createBitCode(clang, "4.0");
 
             /**
              * Load bit code and create a single module
@@ -199,7 +199,7 @@ public:
 
 protected:
 
-    virtual void createLlvmModules(const std::map<std::string, std::string>& sources) {
+    virtual void createLlvmModules(const std::map<std::filesystem::path, std::string>& sources) {
         for (const auto& p : sources) {
             createLlvmModule(p.first, p.second);
         }
@@ -218,7 +218,7 @@ protected:
         IntrusiveRefCntPtr<DiagnosticIDs> diagID(new DiagnosticIDs());
         IntrusiveRefCntPtr<DiagnosticsEngine> diags(new DiagnosticsEngine(diagID, &*diagOpts, diagClient));
 
-        ArrayRef<const char*> args {"-Wall", "-x", "c", "string-input"}; // -Wall or -v flag is required to avoid an error inside createInvocationFromCommandLine()
+        std::vector<const char*> args {"-Wall", "-x", "c", "string-input"}; // -Wall or -v flag is required to avoid an error inside createInvocationFromCommandLine()
         std::shared_ptr<CompilerInvocation> invocation(createInvocationFromCommandLine(args, diags));
         if (invocation == nullptr)
             throw CGException("Failed to create compiler invocation");
@@ -257,7 +257,7 @@ protected:
         }
 
         for (size_t s = 0; s < _includePaths.size(); s++)
-            hso.AddPath(llvm::StringRef(_includePaths[s]), clang::frontend::Angled, false, false);
+            hso.AddPath(llvm::StringRef(_includePaths[s].string()), clang::frontend::Angled, false, false);
 
         // Create and execute the frontend to generate an LLVM bitcode module.
         clang::EmitLLVMOnlyAction action(_context.get());
