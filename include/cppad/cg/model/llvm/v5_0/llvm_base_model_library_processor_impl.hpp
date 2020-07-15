@@ -213,14 +213,19 @@ protected:
         IntrusiveRefCntPtr<DiagnosticIDs> diagID(new DiagnosticIDs());
         IntrusiveRefCntPtr<DiagnosticsEngine> diags(new DiagnosticsEngine(diagID, &*diagOpts, diagClient));
 
-        ArrayRef<const char*> args {"-Wall", "-x", "c", "string-input"}; // -Wall or -v flag is required to avoid an error inside createInvocationFromCommandLine()
+        std::vector<const char*> args {"-Wall", "-x", "c", "string-input"}; // -Wall or -v flag is required to avoid an error inside createInvocationFromCommandLine()
         std::shared_ptr<CompilerInvocation> invocation(createInvocationFromCommandLine(args, diags));
         if (invocation == nullptr)
             throw CGException("Failed to create compiler invocation");
 
         //invocation->TargetOpts->Triple = llvm::sys::getDefaultTargetTriple();
 
-        CompilerInvocation::setLangDefaults(*invocation->getLangOpts(), InputKind::C,
+        CompilerInvocation::setLangDefaults(*invocation->getLangOpts(),
+#if LLVM_VERSION_MAJOR >= 10
+                                            InputKind(clang::Language::C),
+#else
+                                            InputKind::C,
+#endif
                                             llvm::Triple(invocation->TargetOpts->Triple),
                                             invocation->getPreprocessorOpts(),
                                             LangStandard::lang_unspecified);
@@ -263,8 +268,8 @@ protected:
         if (module == nullptr)
             throw CGException("No module");
 
-        if (_linker.get() == nullptr) {
-            _module.reset(module.release());
+        if (_linker == nullptr) {
+            _module = std::move(module);
             _linker.reset(new llvm::Linker(*_module.get()));
         } else {
             if (_linker->linkInModule(std::move(module))) {

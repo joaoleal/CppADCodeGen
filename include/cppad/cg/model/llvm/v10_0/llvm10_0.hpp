@@ -2,7 +2,7 @@
 #define CPPAD_CG_LLVM10_0_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2019 Joao Leal
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -36,6 +36,7 @@
 
 #endif
 
+#include <clang/Basic/Builtins.h>
 #include <clang/CodeGen/CodeGenAction.h>
 #include <clang/Basic/DiagnosticOptions.h>
 #include <clang/Basic/TargetInfo.h>

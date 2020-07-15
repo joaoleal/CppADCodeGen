@@ -143,6 +143,15 @@ ENDIF()
 EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --ldflags
                 OUTPUT_VARIABLE LLVM_LDFLAGS
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
+IF(${LLVM_VERSION_MAJOR} EQUAL 10)
+    # workaround defect, see:
+    # https://bugs.llvm.org/show_bug.cgi?id=44870
+    # https://github.com/ziglang/zig/issues/4799
+    FIND_LIBRARY(CLANG_Polly_LIB Polly PATH ${LLVM_LIBRARY_DIRS})
+    FIND_LIBRARY(CLANG_PollyPPCG_LIB PollyPPCG PATH ${LLVM_LIBRARY_DIRS})
+    FIND_LIBRARY(CLANG_PollyISL_LIB PollyISL PATH ${LLVM_LIBRARY_DIRS})
+    list(APPEND LLVM_MODULE_LIBS "${CLANG_Polly_LIB}" "${CLANG_PollyPPCG_LIB}" "${CLANG_PollyISL_LIB}")
+ENDIF()
 
 INCLUDE(FindPackageHandleStandardArgs)
 # handle the QUIETLY and REQUIRED arguments and set LLVM_FOUND to TRUE

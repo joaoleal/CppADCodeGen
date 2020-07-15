@@ -122,7 +122,7 @@ SET(install_python_location              "${CMAKE_INSTALL_PREFIX}/share/cppadcg/
 # ----------------------------------------------------------------------------
 IF(CMAKE_VERSION VERSION_GREATER "3.1.0")
     # aim for this version which has explicit support for c++11
-    SET(CMAKE_CXX_STANDARD 11)
+    SET(CMAKE_CXX_STANDARD 14)
     SET(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 ENDIF()
 
