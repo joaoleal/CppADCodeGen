@@ -41,7 +41,7 @@ UNSET(LLVM_MODULE_LIBS CACHE)
 
 MACRO(find_llvm_iteratively)
     IF(NOT LLVM_CONFIG AND NOT LLVM_FIND_VERSION_EXACT)
-        SET(_LLVM_KNOWN_VERSIONS ${LLVM_ADDITIONAL_VERSIONS} "9" "8" "7" "6.0" "5.0" "4.0" "3.8" "3.7" "3.6" "3.5" "3.4" "3.3" "3.2")
+        SET(_LLVM_KNOWN_VERSIONS ${LLVM_ADDITIONAL_VERSIONS} "10" "9" "8" "7" "6.0" "5.0" "4.0" "3.8" "3.7" "3.6" "3.5" "3.4" "3.3" "3.2")
 
         # Select acceptable versions.
         FOREACH(version ${_LLVM_KNOWN_VERSIONS})
@@ -143,6 +143,15 @@ ENDIF()
 EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --ldflags
                 OUTPUT_VARIABLE LLVM_LDFLAGS
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
+IF(${LLVM_VERSION_MAJOR} EQUAL 10)
+    # workaround defect, see:
+    # https://bugs.llvm.org/show_bug.cgi?id=44870
+    # https://github.com/ziglang/zig/issues/4799
+    FIND_LIBRARY(CLANG_Polly_LIB Polly PATH ${LLVM_LIBRARY_DIRS})
+    FIND_LIBRARY(CLANG_PollyPPCG_LIB PollyPPCG PATH ${LLVM_LIBRARY_DIRS})
+    FIND_LIBRARY(CLANG_PollyISL_LIB PollyISL PATH ${LLVM_LIBRARY_DIRS})
+    list(APPEND LLVM_MODULE_LIBS "${CLANG_Polly_LIB}" "${CLANG_PollyPPCG_LIB}" "${CLANG_PollyISL_LIB}")
+ENDIF()
 
 INCLUDE(FindPackageHandleStandardArgs)
 # handle the QUIETLY and REQUIRED arguments and set LLVM_FOUND to TRUE
