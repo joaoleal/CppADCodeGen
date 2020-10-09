@@ -84,8 +84,8 @@ IF (CPPAD_FOUND)
 
         IF (NOT CPPAD_VERSION)
             FILE(STRINGS ${CPPAD_INCLUDE_DIR}/cppad/configure.hpp CPPAD_VERSION_LINE
-                    REGEX "CPPAD_PACKAGE_STRING +\"cppad-[0-9]+\\.[0-9]+\"")
-            STRING(REGEX MATCH "[0-9]+\\.[0-9]+" CPPAD_VERSION "${CPPAD_VERSION_LINE}")
+                    REGEX "CPPAD_PACKAGE_STRING +\"cppad-[0-9]+(\\.[0-9]+)?\"")
+            STRING(REGEX MATCH "[0-9]+(\\.[0-9]+)?" CPPAD_VERSION "${CPPAD_VERSION_LINE}")
         ENDIF ()
 
         IF (CppAD_FIND_VERSION_EXACT)
