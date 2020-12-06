@@ -24,7 +24,45 @@ IF (CPPAD_INCLUDES AND CPPAD_LIBRARIES)
 ENDIF ()
 
 
-IF (DEFINED CPPAD_HOME)
+IF (DEFINED CPPAD_GIT_REPO)
+    # This CppADCodeGen cmake command line option is used for testing CppAD's
+    # use of CppADCodeGen before installing CppAD. CPPAD_GIT_REPO is the CppAD
+    # git repository directory. It is assumed that 'cmake' and 'make'
+    # have been executed in the CPPAD_GIT_REPO/build directory.
+    SET(CPPAD_INCLUDE_DIR "${CPPAD_GIT_REPO}/include" )
+    SET(CPPAD_LIBRARIES
+        "${CPPAD_GIT_REPO}/build/cppad_lib"
+    )
+    INCLUDE_DIRECTORIES(
+        "${CPPAD_INCLUDE_DIR}"
+    )
+    #
+    IF( NOT EXISTS "${CPPAD_INCLUDE_DIR}/cppad/cppad.hpp" )
+        MESSAGE(FATAL_ERROR
+            "Cannot find CPPAD_GIT_REPO/include/cppad/cppad.hpp"
+        )
+    ENDIF()
+    IF( NOT EXISTS "${CPPAD_INCLUDE_DIR}/cppad/configure.hpp" )
+        MESSAGE(FATAL_ERROR
+            "Cannot find CPPAD_GIT_REPO/include/cppad/configure.hpp"
+        )
+    ENDIF()
+    #
+    FIND_LIBRARY( CPPAD_LIB_PATH
+        cppad_lib
+        PATHS ${CPPAD_LIBRARIES}
+        NO_DEFAULT_PATH
+    )
+    IF( NOT CPPAD_LIB_PATH  )
+        MESSAGE(FATAL_ERROR
+            "Cannot find ${library} library below CPPAD_GIT_REPO="
+            "{CPPAD_GIT_REPO}"
+        )
+    ENDIF()
+    #
+    SET(CPPAD_FOUND TRUE)
+
+ELSEIF (DEFINED CPPAD_HOME)
 
     FIND_PATH(CPPAD_INCLUDE_DIR NAMES cppad/cppad.hpp
             PATHS "${CPPAD_HOME}"
