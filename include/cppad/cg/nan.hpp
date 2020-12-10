@@ -26,9 +26,13 @@ inline bool isnan(const cg::CG<Base> &s) {
     } else {
         // a parameter
         const Base& v = s.getValue();
-        return (v != v);
+        if constexpr (std::is_floating_point<Base>::value) {
+            return ::std::isnan(v);
+        }
+        else {
+            return (v != v);
+        }
     }
-}
 
 } // END CppAD namespace
 
