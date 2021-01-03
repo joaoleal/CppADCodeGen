@@ -102,9 +102,9 @@ install:
   - make install
   - cd ../..
   # get Eigen:
-  - wget http://bitbucket.org/eigen/eigen/get/3.3.7.tar.bz2
-  - tar -jxf 3.3.7.tar.bz2
-  - cd eigen-eigen-323c052e1731
+  - wget https://gitlab.com/libeigen/eigen/-/archive/3.3.8/eigen-3.3.8.tar.bz2
+  - tar -jxf eigen-3.3.8.tar.bz2
+  - cd eigen-3.3.8
   - mkdir -p install_eigen/include/eigen3
   - cp -r Eigen ./install_eigen/include/eigen3/
   - EIGEN_HOME=`pwd`/install_eigen/include/eigen3
@@ -119,3 +119,6 @@ script:
   - cd test
   - make -j2 build_tests
   - CTEST_OUTPUT_ON_FAILURE=TRUE make test
+  - cd ..
+  - make DESTDIR=cppadcg-install-dir install
+  - make DESTDIR=cppadcg-install-dir uninstall

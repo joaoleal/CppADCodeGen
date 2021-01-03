@@ -693,6 +693,7 @@ protected:
         _inEquationEnv = false;
         auxArrayName_ = "";
         _currentLoops.clear();
+        _dependentIDs.clear();
 
 
         // save some info
@@ -746,7 +747,7 @@ protected:
         const std::vector<FuncArgument>& indArg = _nameGen->getIndependent();
         const std::vector<FuncArgument>& depArg = _nameGen->getDependent();
         const std::vector<FuncArgument>& tmpArg = _nameGen->getTemporary();
-        CPPADCG_ASSERT_KNOWN(!indArg.empty() && depArg.size() > 0,
+        CPPADCG_ASSERT_KNOWN(!indArg.empty() && !depArg.empty(),
                              "There must be at least one dependent and one independent argument")
         CPPADCG_ASSERT_KNOWN(tmpArg.size() == 3,
                              "There must be three temporary variables")
@@ -808,7 +809,6 @@ protected:
              */
             if (info->zeroDependents) {
                 // zero initial values
-                const std::vector<FuncArgument>& depArg = _nameGen->getDependent();
                 if (!depArg.empty())
                     checkEquationEnvStart();
                 for (size_t i = 0; i < depArg.size(); i++) {
@@ -845,7 +845,7 @@ protected:
                 assignCount += printAssignment(node);
             }
 
-            if (inputLatexFiles.size() > 0 && assignCount > 0) {
+            if (!inputLatexFiles.empty() && assignCount > 0) {
                 assignCount = 0;
                 saveLocalFunction(inputLatexFiles, false);
             }
@@ -858,8 +858,8 @@ protected:
             CPPADCG_ASSERT_KNOWN(tmpArg[0].array,
                                  "The temporary variables must be saved in an array in order to generate multiple functions")
             printAlgorithmFileStart(_code);
-            for (size_t i = 0; i < inputLatexFiles.size(); i++) {
-                _code << "\\input{" << inputLatexFiles[i] << "}" << _endline;
+            for (auto & inputLatexFile : inputLatexFiles) {
+                _code << "\\input{" << inputLatexFile << "}" << _endline;
             }
             printAlgorithmFileEnd(_code);
         }
@@ -1165,7 +1165,7 @@ protected:
 
             } else if (getVariableID(var) < _minTemporaryVarID) {
                 // dependent variable
-                std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(getVariableID(var));
+                auto it = _dependentIDs.find(getVariableID(var));
                 CPPADCG_ASSERT_UNKNOWN(it != _dependentIDs.end())
 
                 size_t index = it->second;
@@ -2181,35 +2181,35 @@ protected:
 };
 
 template<class Base>
-const std::string LanguageLatex<Base>::_COMP_OP_LT = "<";
+const std::string LanguageLatex<Base>::_COMP_OP_LT = "<"; // NOLINT(cert-err58-cpp)
 template<class Base>
-const std::string LanguageLatex<Base>::_COMP_OP_LE = "\\le";
+const std::string LanguageLatex<Base>::_COMP_OP_LE = "\\le"; // NOLINT(cert-err58-cpp)
 template<class Base>
-const std::string LanguageLatex<Base>::_COMP_OP_EQ = "==";
+const std::string LanguageLatex<Base>::_COMP_OP_EQ = "=="; // NOLINT(cert-err58-cpp)
 template<class Base>
-const std::string LanguageLatex<Base>::_COMP_OP_GE = "\\ge";
+const std::string LanguageLatex<Base>::_COMP_OP_GE = "\\ge"; // NOLINT(cert-err58-cpp)
 template<class Base>
-const std::string LanguageLatex<Base>::_COMP_OP_GT = ">";
+const std::string LanguageLatex<Base>::_COMP_OP_GT = ">"; // NOLINT(cert-err58-cpp)
 template<class Base>
-const std::string LanguageLatex<Base>::_COMP_OP_NE = "\\ne";
+const std::string LanguageLatex<Base>::_COMP_OP_NE = "\\ne"; // NOLINT(cert-err58-cpp)
 
 template<class Base>
-const std::string LanguageLatex<Base>::_C_STATIC_INDEX_ARRAY = "index";
+const std::string LanguageLatex<Base>::_C_STATIC_INDEX_ARRAY = "index"; // NOLINT(cert-err58-cpp)
 
 template<class Base>
-const std::string LanguageLatex<Base>::_C_SPARSE_INDEX_ARRAY = "idx";
+const std::string LanguageLatex<Base>::_C_SPARSE_INDEX_ARRAY = "idx"; // NOLINT(cert-err58-cpp)
 
 template<class Base>
-const std::string LanguageLatex<Base>::_ATOMIC_TX = "atx";
+const std::string LanguageLatex<Base>::_ATOMIC_TX = "atx"; // NOLINT(cert-err58-cpp)
 
 template<class Base>
-const std::string LanguageLatex<Base>::_ATOMIC_TY = "aty";
+const std::string LanguageLatex<Base>::_ATOMIC_TY = "aty"; // NOLINT(cert-err58-cpp)
 
 template<class Base>
-const std::string LanguageLatex<Base>::_ATOMIC_PX = "apx";
+const std::string LanguageLatex<Base>::_ATOMIC_PX = "apx"; // NOLINT(cert-err58-cpp)
 
 template<class Base>
-const std::string LanguageLatex<Base>::_ATOMIC_PY = "apy";
+const std::string LanguageLatex<Base>::_ATOMIC_PY = "apy"; // NOLINT(cert-err58-cpp)
 
 } // END cg namespace
 } // END CppAD namespace

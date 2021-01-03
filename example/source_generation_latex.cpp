@@ -19,7 +19,7 @@
 using namespace CppAD;
 using namespace CppAD::cg;
 
-int main(void) {
+int main() {
     // use a special object for source code generation
     using CGD = CG<double>;
     using ADCG = AD<CGD>;
@@ -47,9 +47,6 @@ int main(void) {
      *                       Generate the Latex source code
      **************************************************************************/
 
-    /**
-     * start the special steps for source code generation
-     */
     CodeHandler<double> handler;
 
     CppAD::vector<CGD> xv(x.size());

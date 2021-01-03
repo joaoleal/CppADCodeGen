@@ -503,7 +503,6 @@ private:
          * (compile source code)
          */
         DynamicModelLibraryProcessor<double> p(compDynHelp, "innerModel");
-
         GccCompiler<double> compiler1;
         prepareTestCompilerFlags(compiler1);
 

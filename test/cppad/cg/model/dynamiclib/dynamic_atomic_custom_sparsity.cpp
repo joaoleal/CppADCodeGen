@@ -21,10 +21,10 @@ class CppADCGDynamicAtomicCustomSparsityTest : public CppADCGDynamicAtomicTest {
 protected:
     static const size_t n = 3;
     static const size_t m = 4;
-    CppAD::vector<Base> x;
-    CppAD::vector<Base> par;
-    const CppAD::vector<Base> xNorm;
-    const CppAD::vector<Base> eqNorm;
+    std::vector<Base> x;
+    std::vector<Base> par;
+    const std::vector<Base> xNorm;
+    const std::vector<Base> eqNorm;
     std::vector<std::set<size_t> > jacInner, hessInner;
     std::vector<std::set<size_t> > jacOuter, hessOuter;
 public:

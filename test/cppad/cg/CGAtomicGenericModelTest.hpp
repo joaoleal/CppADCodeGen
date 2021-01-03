@@ -15,6 +15,8 @@
  * Author: Joao Leal
  */
 
+#include <memory>
+
 #include "CppADCGDynamicAtomicTest.hpp"
 
 namespace CppAD {
@@ -32,10 +34,10 @@ protected:
     std::unique_ptr<ADFun<Base>> _funBaseOuterAtom; // outer model tape with atomics
     std::unique_ptr<GenericModel<double>> _innerModel;
     std::unique_ptr<CGAtomicGenericModel<double>> _cgAtomic;
-    const CppAD::vector<Base> _x;
-    const CppAD::vector<Base> _par;
-    const CppAD::vector<Base> _xNorm = {};
-    const CppAD::vector<Base> _eqNorm = {};
+    const std::vector<Base> _x;
+    const std::vector<Base> _par;
+    const std::vector<Base> _xNorm = {};
+    const std::vector<Base> _eqNorm = {};
     const std::vector<std::set<size_t> > _jacSpar;
     const std::vector<std::set<size_t> > _hessSpar;
     std::vector<Base> _stdX;
@@ -57,7 +59,7 @@ public:
     }
 
     CGAtomicGenericModelTest(std::string modelName,
-                             const CppAD::vector<Base>& x,
+                             const std::vector<Base>& x,
                              std::vector<std::set<size_t> > jacSpar = {},
                              std::vector<std::set<size_t> > hessSpar = {},
                              bool verbose = false,
@@ -94,7 +96,7 @@ protected:
         /**
         * Inner model
         */
-        _funInner = tapeInnerModel(_x, _par, _xNorm, _eqNorm);
+        tapeInnerModel(_x, _par, _xNorm, _eqNorm);
 
         _m = _funInner->Range();
         _n = _funInner->Domain();
@@ -104,7 +106,7 @@ protected:
         */
         _innerModel = compileInnerModel("", _jacSpar, _hessSpar);
 
-        _cgAtomic.reset(new CGAtomicGenericModel<double>(*_innerModel));
+        _cgAtomic = std::make_unique<CGAtomicGenericModel<double>>(*_innerModel);
 
         /**
         * Outer model
@@ -295,9 +297,9 @@ private:
 
     template<class Atomic>
     void tapeBaseOuterModelWithAtomic(Atomic &atomic,
-                                      const CppAD::vector<Base> &x,
-                                      const CppAD::vector<Base> &xNorm,
-                                      const CppAD::vector<Base> &eqNorm) {
+                                      const std::vector<Base> &x,
+                                      const std::vector<Base> &xNorm,
+                                      const std::vector<Base> &eqNorm) {
         const size_t n = _funInner->Domain();
         const size_t m = _funInner->Range();
 
@@ -307,7 +309,7 @@ private:
             ax[j] = x[j];
 
         CppAD::Independent(ax);
-        if (xNorm.size() > 0) {
+        if (!xNorm.empty()) {
             for (size_t j = 0; j < n; j++)
                 ax[j] *= xNorm[j];
         }
@@ -319,7 +321,7 @@ private:
 
         atomic(ax, ay); // atomic function
 
-        if (eqNorm.size() > 0) {
+        if (!eqNorm.empty()) {
             ASSERT_EQ(ay.size(), eqNorm.size());
             for (size_t i = 0; i < ay.size(); i++)
                 ay[i] /= eqNorm[i];
@@ -328,7 +330,7 @@ private:
         std::vector<AD<Base>> az = modelBaseOuter(ay);
 
         // create f: ax -> az
-        _funBaseOuterAtom.reset(new ADFun<Base>());
+        _funBaseOuterAtom = std::make_unique<ADFun<Base>>();
         _funBaseOuterAtom->Dependent(az);
     }
 

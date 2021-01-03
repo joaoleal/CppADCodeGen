@@ -1,6 +1,7 @@
 # --------------------------------------------------------------------------
 #  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
 #    Copyright (C) 2016 Ciengis
+#    Copyright (C) 2020 Joao Leal
 #
 #  CppADCodeGen is distributed under multiple licenses:
 #
@@ -32,3 +33,4 @@ ENDFUNCTION()
 # tests
 ################################################################################
 add_cppadcg_dot_test(dot.cpp)
+add_cppadcg_dot_test(lang_dot_reset.cpp)

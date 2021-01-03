@@ -36,6 +36,12 @@ public:
         _evalAtomicForwardOne4CppAD(true) {
     }
 
+    inline GenericModel(GenericModel&& other) noexcept :
+        _atomic(std::move(other._atomic)),
+        _evalAtomicForwardOne4CppAD(other._evalAtomicForwardOne4CppAD) {
+        other._atomic = nullptr;
+    }
+
     inline virtual ~GenericModel() = default;
 
     /**
@@ -91,13 +97,25 @@ public:
     virtual bool isEquationHessianSparsityAvailable() = 0;
 
     /**
-     * Provides the sparsity of the hessian for a dependent variable
+     * Provides the sparsity of the hessian for a dependent variable.
      *
      * @param i The index of the dependent variable
      * @return The sparsity
      */
     virtual std::vector<std::set<size_t> > HessianSparsitySet(size_t i) = 0;
+
+    /**
+     * @copydoc GenericModel::HessianSparsitySet(size_t i)
+     */
     virtual std::vector<bool> HessianSparsityBool(size_t i) = 0;
+
+    /**
+     * Provides the sparsity of the hessian for a dependent variable.
+     *
+     * @param i The index of the dependent variable
+     * @param rows The sparsity pattern row indices.
+     * @param cols The sparsity pattern column indices.
+     */
     virtual void HessianSparsity(size_t i,
                                  std::vector<size_t>& rows,
                                  std::vector<size_t>& cols) = 0;
@@ -227,6 +245,17 @@ public:
         return dep;
     }
 
+     /**
+      * Evaluates the dependent model variables (zero-order).
+      * This method considers that the generic model was prepared
+      * with a single array for the independent variables (the default
+      * behavior).
+      *
+      * @param vx If it is not empty then it provides which independent variables are considered as variables (not parameters)
+      * @param vy If vx and vy are not empty, it identifies which elements of ty are variables
+      * @param tx The independent variable vector
+      * @param ty The dependent variable vector
+      */
     virtual void ForwardZero(const CppAD::vector<bool>& vx,
                              CppAD::vector<bool>& vy,
                              ArrayView<const Base> tx,
@@ -280,10 +309,13 @@ public:
     virtual bool isJacobianAvailable() = 0;
 
     /**
-     * Computes a dense Jacobian marix.
+     * Calculates a Jacobian using dense methods and saves it into a dense
+     * format:
+     *  \f[ jac[ i n + j ] = \frac{\partial F_i( x ) }{\partial x_j } \f]
+     *  \f$ i = 0 , \ldots , m - 1 \f$ and \f$j = 0 , \ldots , n - 1 \f$.
      *
-     * @param x The independent variable vector
-     * @return The Jacobian matrix
+     * @param x independent variable vector
+     * @return jac a dense Jacobian
      */
     template<typename VectorBase>
     inline VectorBase Jacobian(const VectorBase& x) {
@@ -295,7 +327,10 @@ public:
     }
 
     /**
-     * Computes a dense Jacobian matrix.
+     * Calculates a Jacobian using dense methods and saves it into a dense
+     * format:
+     *  \f[ jac[ i n + j ] = \frac{\partial F_i( x ) }{\partial x_j } \f]
+     *  \f$ i = 0 , \ldots , m - 1 \f$ and \f$j = 0 , \ldots , n - 1 \f$.
      *
      * @param x The independent variable vector
      * @param p The parameter vector
@@ -312,11 +347,14 @@ public:
     }
 
     /**
-     * Computes a dense Jacobian matrix.
+     * Calculates a Jacobian using dense methods and saves it into a dense
+     * format:
+     *  \f[ jac[ i n + j ] = \frac{\partial F_i( x ) }{\partial x_j } \f]
+     *  \f$ i = 0 , \ldots , m - 1 \f$ and \f$j = 0 , \ldots , n - 1 \f$.
      *
-     * @param x The independent variable vector
+     * @param x independent variable vector
      * @param p The parameter vector
-     * @param jac The Jacobian matrix
+     * @param jac a dense Jacobian
      */
     template<typename VectorBase>
     inline void Jacobian(const VectorBase& x,
@@ -329,11 +367,7 @@ public:
     }
 
     /**
-     * Computes a dense Jacobian matrix.
-     *
-     * @param x The independent variable vector
-     * @param p The parameter vector
-     * @param jac The Jacobian matrix
+     * @copydoc GenericModel::Jacobian(const VectorBase&, VectorBase&)
      */
     virtual void Jacobian(ArrayView<const Base> x,
                           ArrayView<const Base> p,
@@ -352,6 +386,17 @@ public:
      */
     virtual bool isHessianAvailable() = 0;
 
+
+    /**
+     * Determines the dense weighted sum of the Hessians using dense methods.
+     * \f[ hess = \frac{\rm d^2  }{{\rm d} x^2 }  \sum_{i} w_i F_i (x) \f]
+     * \f[ i = 0 , \ldots , m - 1 \f]
+     *
+     * @param x The independent variables
+     * @param p The parameter vector
+     * @param w The equation multipliers
+     * @return The values of the dense hessian
+     */
     template<typename VectorBase>
     inline VectorBase Hessian(const VectorBase& x,
                               const VectorBase& p,
@@ -364,6 +409,16 @@ public:
         return hess;
     }
 
+    /**
+     * Determines the dense weighted sum of the Hessians using dense methods.
+     * \f[ hess = \frac{\rm d^2  }{{\rm d} x^2 }  \sum_{i} w_i F_i (x) \f]
+     * \f[ i = 0 , \ldots , m - 1 \f]
+     *
+     * @param x The independent variables
+     * @param p The parameter vector
+     * @param w The equation multipliers
+     * @param hess The values of the dense hessian
+     */
     template<typename VectorBase>
     inline void Hessian(const VectorBase& x,
                         const VectorBase& p,
@@ -376,8 +431,15 @@ public:
                       ArrayView<Base>(hess.data(), hess.size()));
     }
 
-    /// calculate Hessian for one component of f
-
+    /**
+     * Determines the dense Hessian for a given dependent variable using dense methods.
+     * \f[ hess = \frac{{\rm d^2} F_i }{{\rm d} x^2 } (x) \f]
+     *
+     * @param x The independent variables
+     * @param p The parameter vector
+     * @param i The index of the function/dependent variable
+     * @return The values of the dense hessian for the function/dependent variable i
+     */
     template<typename VectorBase>
     inline VectorBase Hessian(const VectorBase& x,
                               const VectorBase& p,
@@ -394,6 +456,9 @@ public:
         return hess;
     }
 
+    /**
+     * @copydoc GenericModel::Hessian(const VectorBase&, const VectorBase&,VectorBase&)
+     */
     virtual void Hessian(ArrayView<const Base> x,
                          ArrayView<const Base> p,
                          ArrayView<const Base> w,
@@ -708,7 +773,7 @@ public:
      * \f$ i = 0 , \ldots , m - 1 \f$ and \f$j = 0 , \ldots , n - 1 \f$.
      *
      * @param x The independent variable vector
-     * @return a dense jacobian
+     * @return a dense Jacobian
      */
     template<typename VectorBase>
     inline VectorBase SparseJacobian(const VectorBase& x) {
@@ -727,7 +792,7 @@ public:
      *
      * @param x The independent variable vector
      * @param p The parameter vector
-     * @return a dense jacobian
+     * @return a dense Jacobian
      */
     template<typename VectorBase>
     inline VectorBase SparseJacobian(const VectorBase& x,
@@ -747,7 +812,7 @@ public:
      *
      * @param x The independent variable vector
      * @param p The parameter vector
-     * @param jac a vector where the dense jacobian will be placed
+     * @param jac a vector where the dense Jacobian will be placed
      */
     template<typename VectorBase>
     inline void SparseJacobian(const VectorBase& x,
@@ -763,21 +828,35 @@ public:
      * Calculates a Jacobian using sparse methods and saves it into a dense
      * format:
      *  \f[ jac[ i n + j ] = \frac{\partial F_i( x ) }{\partial x_j } \f]
-     * \f$ i = 0 , \ldots , m - 1 \f$ and \f$j = 0 , \ldots , n - 1 \f$.
+     *  \f$ i = 0 , \ldots , m - 1 \f$ and \f$j = 0 , \ldots , n - 1 \f$.
      *
      * @param x independent variable array (must have n elements)
-     * @param jac an array where the dense jacobian will be placed (must be allocated with at least m * n elements)
+     * @param p The parameter vector
+     * @param jac an array where the dense Jacobian will be placed (must be allocated with at least m * n elements)
      */
     virtual void SparseJacobian(ArrayView<const Base> x,
                                 ArrayView<const Base> p,
                                 ArrayView<Base> jac) = 0;
 
+    /**
+     * Calculates a Jacobian using sparse methods and saves it into a sparse format.
+     *
+     * @param x independent variable array (must have n elements)
+     * @param p The parameter vector
+     * @param jac The values of the sparse Jacobian in the order provided by row and col
+     *           (must be allocated with at least the same number of non-zero elements as the Jacobian)
+     * @param row The row indices of the Jacobian values
+     * @param col The column indices of the Jacobian values
+     */
     virtual void SparseJacobian(const std::vector<Base>& x,
                                 const std::vector<Base>& p,
                                 std::vector<Base>& jac,
                                 std::vector<size_t>& row,
                                 std::vector<size_t>& col) = 0;
 
+    /**
+     * @copydoc GenericModel::SparseJacobian(const std::vector<Base>&, std::vector<Base>&, std::vector<size_t>&, std::vector<size_t>&)
+     */
     virtual void SparseJacobian(ArrayView<const Base> x,
                                 ArrayView<const Base> p,
                                 ArrayView<Base> jac,
@@ -797,6 +876,16 @@ public:
      */
     virtual bool isSparseHessianAvailable() = 0;
 
+    /**
+     * Determines the dense weighted sum of the Hessians using sparse methods.
+     * \f[ hess = \frac{\rm d^2  }{{\rm d} x^2 }  \sum_{i} w_i F_i (x) \f]
+     * \f[ i = 0 , \ldots , m - 1 \f]
+     *
+     * @param x The independent variables
+     * @param p The parameter vector
+     * @param w The equation multipliers
+     * @return The values of the dense Hessian
+     */
     template<typename VectorBase>
     inline VectorBase SparseHessian(const VectorBase& x,
                                     const VectorBase& p,
@@ -809,6 +898,16 @@ public:
         return hess;
     }
 
+    /**
+     * Determines the dense weighted sum of the Hessians using sparse methods.
+     * \f[ hess = \frac{\rm d^2  }{{\rm d} x^2 }  \sum_{i} w_i F_i (x) \f]
+     * \f[ i = 0 , \ldots , m - 1 \f]
+     *
+     * @param x The independent variables
+     * @param p The parameter vector
+     * @param w The equation multipliers
+     * @param hess The values of the dense Hessian
+     */
     template<typename VectorBase>
     inline void SparseHessian(const VectorBase& x,
                               const VectorBase& p,
@@ -821,11 +920,28 @@ public:
                       ArrayView<Base>(hess.data(), hess.size()));
     }
 
+    /**
+     * @copydoc GenericModel::SparseHessian(const VectorBase&, const VectorBase&, VectorBase&)
+     */
     virtual void SparseHessian(ArrayView<const Base> x,
                                ArrayView<const Base> p,
                                ArrayView<const Base> w,
                                ArrayView<Base> hess) = 0;
 
+    /**
+     * Determines the sparse weighted sum of the Hessians using a variable
+     * number of independent variable arrays.
+     * \f[ hess = \frac{\rm d^2  }{{\rm d} x^2 }  \sum_{i} w_i F_i (x) \f]
+     * \f[ i = 0 , \ldots , m - 1 \f]
+     *
+     * @param x The independent variables
+     * @param p The parameter vector
+     * @param w The equation multipliers
+     * @param hess The values of the sparse hessian in the order provided by
+     *             row and col
+     * @param row The row indices of the hessian values
+     * @param col The column indices of the hessian values
+     */
     virtual void SparseHessian(const std::vector<Base>& x,
                                const std::vector<Base>& p,
                                const std::vector<Base>& w,
@@ -833,6 +949,25 @@ public:
                                std::vector<size_t>& row,
                                std::vector<size_t>& col) = 0;
 
+    /**
+     * Determines the sparse weighted sum of the Hessians using a variable
+     * number of independent variable arrays.
+     * \f[ hess = \frac{\rm d^2  }{{\rm d} x^2 }  \sum_{i} w_i F_i (x) \f]
+     * \f[ i = 0 , \ldots , m - 1 \f]
+     *
+     * This method can be useful if the generic model was
+     * prepared considering that the independent variables are provided
+     * by several arrays.
+     *
+     * @param x Contains the several independent variable vectors
+     * @param p The parameter vector
+     * @param w The equation multipliers
+     * @param w_size The number of equations
+     * @param hess The values of the sparse hessian in the order provided by
+     *             row and col
+     * @param row The row indices of the hessian values
+     * @param col The column indices of the hessian values
+     */
     virtual void SparseHessian(ArrayView<const Base> x,
                                ArrayView<const Base> p,
                                ArrayView<const Base> w,

@@ -1,7 +1,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2018 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -76,6 +76,19 @@ protected:
             std::cout << x[j];
         }
         std::cout << "}" << std::endl;
+    }
+
+    static inline ::testing::AssertionResult compareValues(const std::vector<Base>& depCGen,
+                                                           const std::vector<CppAD::cg::CG<Base> >& dep,
+                                                           double epsilonR = 1e-14, double epsilonA = 1e-14) {
+
+        std::vector<double> depd(dep.size());
+
+        for (size_t i = 0; i < depd.size(); i++) {
+            depd[i] = dep[i].getValue();
+        }
+
+        return compareValues<Base>(depCGen, depd, epsilonR, epsilonA);
     }
 
     template<class T>
@@ -356,6 +369,16 @@ protected:
         size_t n = x.size();
 
         CppAD::vector<CGD> x2(n);
+        for (size_t j = 0; j < n; j++)
+            x2[j] = x[j];
+
+        return x2;
+    }
+
+    static std::vector<CGD> makeCGVector(const std::vector<Base>& x) {
+        size_t n = x.size();
+
+        std::vector<CGD> x2(n);
         for (size_t j = 0; j < n; j++)
             x2[j] = x[j];
 

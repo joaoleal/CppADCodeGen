@@ -1,6 +1,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2016 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -19,7 +20,7 @@
 using namespace CppAD;
 using namespace CppAD::cg;
 
-int main(void) {
+int main() {
     // use a special object for source code generation
     using CGD = CG<double>;
     using ADCG = AD<CGD>;
@@ -44,12 +45,9 @@ int main(void) {
     ADFun<CGD> fun(x, y); // the model tape
 
     /***************************************************************************
-     *                       Generate the Latex source code
+     *                       Generate the dot file
      **************************************************************************/
 
-    /**
-     * start the special steps for source code generation
-     */
     CodeHandler<double> handler;
 
     CppAD::vector<CGD> xv(x.size());

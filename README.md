@@ -34,10 +34,10 @@ See epl-v10.txt and gpl3.txt for a copy of the licenses.
 
 ## Requirements ##
 
-CppADCodeGen is a C++11 header only library, therefore there aren't many dependencies:
+CppADCodeGen is a C++14 header only library, therefore there aren't many dependencies:
 
  - **CppAD** (2020),
- - A **C++11** compiler (such as GCC and Clang),
+ - A **C++14** compiler (such as GCC and Clang),
  - Clang/LLVM (only required for JIT compilation), and
  - Eigen 3 (required when DAE differentiation index reduction is used).
 

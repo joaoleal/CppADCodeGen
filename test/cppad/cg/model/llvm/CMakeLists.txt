@@ -22,17 +22,17 @@ ADD_DEFINITIONS(${LLVM_CFLAGS_NO_NDEBUG} -DLLVM_WITH_NDEBUG=${LLVM_WITH_NDEBUG})
 add_cppadcg_test(llvm_external_compiler.cpp)
 add_cppadcg_test(llvm_link_clang.cpp)
 
-TARGET_LINK_LIBRARIES(llvm_external_compiler
-                      ${LLVM_MODULE_LIBS}
-                      ${LLVM_LDFLAGS})
-
-TARGET_LINK_LIBRARIES(llvm_link_clang
-                      ${LLVM_MODULE_LIBS}
-                      ${LLVM_LDFLAGS})
-
 IF("${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}" MATCHES "^(${CPPADCG_LLVM_LINK_LIB})$")
   TARGET_LINK_LIBRARIES(llvm_external_compiler
                         ${CLANG_LIBS})
   TARGET_LINK_LIBRARIES(llvm_link_clang
                         ${CLANG_LIBS})
 ENDIF()
+
+TARGET_LINK_LIBRARIES(llvm_external_compiler
+        ${LLVM_MODULE_LIBS}
+        ${LLVM_LDFLAGS})
+
+TARGET_LINK_LIBRARIES(llvm_link_clang
+        ${LLVM_LDFLAGS}
+        ${LLVM_MODULE_LIBS})

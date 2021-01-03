@@ -51,23 +51,23 @@ public:
 /**
  * @test
  */
-TEST_F(SingleVarAtomicGenericModelTest, TestForwardZero) {
+TEST_F(SingleVarAtomicGenericModelTest, TestForwardZero) { // NOLINT(cert-err58-cpp)
     this->testCGAtomicGenericModelForwardZero();
 }
 
-TEST_F(SingleVarAtomicGenericModelTest, TestReverseOne) {
+TEST_F(SingleVarAtomicGenericModelTest, TestReverseOne) { // NOLINT(cert-err58-cpp)
     this->testCGAtomicGenericModelReverseOne();
 }
 
-TEST_F(SingleVarAtomicGenericModelTest, TestReverseTwo) {
+TEST_F(SingleVarAtomicGenericModelTest, TestReverseTwo) { // NOLINT(cert-err58-cpp)
     this->testCGAtomicGenericModelReverseTwo();
 }
 
-TEST_F(SingleVarAtomicGenericModelTest, TestJacobian) {
+TEST_F(SingleVarAtomicGenericModelTest, TestJacobian) { // NOLINT(cert-err58-cpp)
     this->testCGAtomicGenericModelJacobian();
 }
 
-TEST_F(SingleVarAtomicGenericModelTest, TestHessian) {
+TEST_F(SingleVarAtomicGenericModelTest, TestHessian) { // NOLINT(cert-err58-cpp)
     this->testCGAtomicGenericModelHessian();
 }
 
@@ -98,23 +98,23 @@ public:
 } // END cg namespace
 } // END CppAD namespace
 
-TEST_F(SingleVarAtomicGenericModelTest2, TestForwardZero) {
+TEST_F(SingleVarAtomicGenericModelTest2, TestForwardZero) { // NOLINT(cert-err58-cpp)
     this->testCGAtomicGenericModelForwardZero();
 }
 
-TEST_F(SingleVarAtomicGenericModelTest2, TestReverseOne) {
+TEST_F(SingleVarAtomicGenericModelTest2, TestReverseOne) { // NOLINT(cert-err58-cpp)
     this->testCGAtomicGenericModelReverseOne();
 }
 
-TEST_F(SingleVarAtomicGenericModelTest2, TestReverseTwo) {
+TEST_F(SingleVarAtomicGenericModelTest2, TestReverseTwo) { // NOLINT(cert-err58-cpp)
     this->testCGAtomicGenericModelReverseTwo();
 }
 
-TEST_F(SingleVarAtomicGenericModelTest2, TestJacobian) {
+TEST_F(SingleVarAtomicGenericModelTest2, TestJacobian) { // NOLINT(cert-err58-cpp)
     this->testCGAtomicGenericModelJacobian();
 }
 
-TEST_F(SingleVarAtomicGenericModelTest2, TestHessian) {
+TEST_F(SingleVarAtomicGenericModelTest2, TestHessian) { // NOLINT(cert-err58-cpp)
     this->testCGAtomicGenericModelHessian();
 }
 
@@ -145,23 +145,23 @@ public:
 } // END CppAD namespace
 
 
-TEST_F(MultiVarAtomicGenericModelTest, TestForwardZero) {
+TEST_F(MultiVarAtomicGenericModelTest, TestForwardZero) { // NOLINT(cert-err58-cpp)
     this->testCGAtomicGenericModelForwardZero();
 }
 
-TEST_F(MultiVarAtomicGenericModelTest, TestReverseOne) {
+TEST_F(MultiVarAtomicGenericModelTest, TestReverseOne) { // NOLINT(cert-err58-cpp)
     this->testCGAtomicGenericModelReverseOne();
 }
 
-TEST_F(MultiVarAtomicGenericModelTest, TestReverseTwo) {
+TEST_F(MultiVarAtomicGenericModelTest, TestReverseTwo) { // NOLINT(cert-err58-cpp)
     this->testCGAtomicGenericModelReverseTwo();
 }
 
-TEST_F(MultiVarAtomicGenericModelTest, TestJacobian) {
+TEST_F(MultiVarAtomicGenericModelTest, TestJacobian) { // NOLINT(cert-err58-cpp)
     this->testCGAtomicGenericModelJacobian();
 }
 
-TEST_F(MultiVarAtomicGenericModelTest, TestHessian) {
+TEST_F(MultiVarAtomicGenericModelTest, TestHessian) { // NOLINT(cert-err58-cpp)
     this->testCGAtomicGenericModelHessian();
 }
 
@@ -179,7 +179,7 @@ public:
 } // END cg namespace
 } // END CppAD namespace
 
-TEST_F(MultiVarAtomicGenericModelLowerTest, TestHessian) {
+TEST_F(MultiVarAtomicGenericModelLowerTest, TestHessian) { // NOLINT(cert-err58-cpp)
     this->testCGAtomicGenericModelHessian();
 }
 
@@ -195,7 +195,7 @@ public:
 } // END cg namespace
 } // END CppAD namespace
 
-TEST_F(MultiVarAtomicGenericModelUpperTest, TestHessian) {
+TEST_F(MultiVarAtomicGenericModelUpperTest, TestHessian) { // NOLINT(cert-err58-cpp)
     this->testCGAtomicGenericModelHessian();
 }
 
@@ -237,22 +237,22 @@ public:
 } // END CppAD namespace
 
 
-TEST_F(MultiVarAtomicGenericModelTest2, TestForwardZero) {
+TEST_F(MultiVarAtomicGenericModelTest2, TestForwardZero) { // NOLINT(cert-err58-cpp)
     this->testCGAtomicGenericModelForwardZero();
 }
 
-TEST_F(MultiVarAtomicGenericModelTest2, TestReverseOne) {
+TEST_F(MultiVarAtomicGenericModelTest2, TestReverseOne) { // NOLINT(cert-err58-cpp)
     this->testCGAtomicGenericModelReverseOne();
 }
 
-TEST_F(MultiVarAtomicGenericModelTest2, TestReverseTwo) {
+TEST_F(MultiVarAtomicGenericModelTest2, TestReverseTwo) { // NOLINT(cert-err58-cpp)
     this->testCGAtomicGenericModelReverseTwo();
 }
 
-TEST_F(MultiVarAtomicGenericModelTest2, TestJacobian) {
+TEST_F(MultiVarAtomicGenericModelTest2, TestJacobian) { // NOLINT(cert-err58-cpp)
     this->testCGAtomicGenericModelJacobian();
 }
 
-TEST_F(MultiVarAtomicGenericModelTest2, TestHessian) {
+TEST_F(MultiVarAtomicGenericModelTest2, TestHessian) { // NOLINT(cert-err58-cpp)
     this->testCGAtomicGenericModelHessian();
 }

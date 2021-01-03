@@ -1,6 +1,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2015 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -14,7 +15,6 @@
  */
 
 #include <iostream>
-#include <fstream>
 
 #include <cppad/cg/cppadcg.hpp>
 #include <cppad/cg/lang/mathml/mathml.hpp>
@@ -40,7 +40,7 @@ TEST(CppADCGLatexTest, latex) {
     // the model
     ADCG a = x[0] / 1. + x[1] * x[1];
     ADCG b = a / 2e-6;
-    y[0] = b + 1 / (sign(b)*5 * a);
+    y[0] = b + 1 / (sign(b) * 5 * a);
     y[1] = x[1];
     y[2] = CondExpLt(ADCG(1.0), x[0], x[1], b);
     y[3] = CondExpLe(x[0], ADCG(2.0), x[1], b);
@@ -68,39 +68,18 @@ TEST(CppADCGLatexTest, latex) {
     langMathML.setSaveVariableRelations(true);
 
     // add some additional code to select variables
-    langMathML.setStyle(langMathML.getStyle() + "\n.selectedProp{background-color: #ccc;}"
-                                                "\n.faded{\n"
-                                                "    opacity: 0.2;\n"
-                                                "    filter: alpha(opacity=20); /* For IE8 and earlier */\n"
-                                                "}\n"
-                                                "\n.faded2{\n"
-                                                "    opacity: 0.5;\n"
-                                                "    filter: alpha(opacity=50); /* For IE8 and earlier */\n"
-                                                "}");
+    langMathML.setStyle(langMathML.getStyle() + readStringFromFile("mathml.css"));
 
     // use block display
-    langMathML.setEquationMarkup("<math display=\"block\" class=\"equation\">", "</math>");
+    langMathML.setEquationMarkup(R"(<math display="block" class="equation">)", "</math>");
 
     // use inline display
     //langMathML.setEquationMarkup("<math>", "</math><br/>");
 
     // use MathJax (and align to the left)
-    langMathML.setHeadExtraMarkup("<script type=\"text/x-mathjax-config\">\n"
-                                  //"MathJax.Hub.Config({    MMLorHTML: { prefer: { Firefox: \"MML\" } }  });\n" // use this to define a prefered browser renderer
-                                  "MathJax.Hub.Config({\n"
-                                  "    jax: [\"input/TeX\",\"output/HTML-CSS\"],\n"
-                                  "    displayAlign: \"left\"\n"
-                                  "});\n"
-                                  "</script>\n"
-                                  "<script type=\"text/javascript\" src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML\"></script>");
+    langMathML.setHeadExtraMarkup(readStringFromFile("head_extra.html"));
 
-    std::ifstream jsFile;
-    jsFile.open("variableSelection.js");
-
-    std::stringstream strStream;
-    strStream << jsFile.rdbuf();
-
-    langMathML.setJavascript(strStream.str());
+    langMathML.setJavascript(readStringFromFile("variableSelection.js"));
 
     // create the HMTL file
     std::ofstream htmlFile;

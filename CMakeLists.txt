@@ -19,7 +19,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(cppadcg CXX C)
 
-SET(cppadcg_version      "2.4.0" )
+SET(cppadcg_version      "3.0.0" )
 SET(cppadcg_url          "https://github.com/joaoleal/CppADCodeGen" )
 SET(cppadcg_description  "A C++ Algorithmic Differentiation Package with Source Code Generation" )
 
@@ -38,7 +38,8 @@ SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 # ----------------------------------------------------------------------------
 FIND_PACKAGE(Threads REQUIRED)
 
-FIND_PACKAGE(CppAD REQUIRED)
+SET(cppad_version_min 20200000.1)
+FIND_PACKAGE(CppAD ${cppad_version_min} REQUIRED)
 
 FIND_PACKAGE(ADOLC)
 
@@ -121,7 +122,7 @@ SET(install_python_location              "${CMAKE_INSTALL_PREFIX}/share/cppadcg/
 # ----------------------------------------------------------------------------
 IF(CMAKE_VERSION VERSION_GREATER "3.1.0")
     # aim for this version which has explicit support for c++11
-    SET(CMAKE_CXX_STANDARD 11)
+    SET(CMAKE_CXX_STANDARD 14)
     SET(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 ENDIF()
 
@@ -153,7 +154,7 @@ ENDIF()
 # ----------------------------------------------------------------------------
 # Check if it is possible to use LLVM/Clang for JIT
 # ----------------------------------------------------------------------------
-SET(CPPADCG_LLVM_LINK_LIB "3.2|3.6|3.8|4.0|5.0|6.0|7.0|8.0")
+SET(CPPADCG_LLVM_LINK_LIB "3.2|3.6|3.8|4.0|5.0|6.0|7.0|8.0|9.0|10.0")
 
 IF((("${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}" MATCHES "^(${CPPADCG_LLVM_LINK_LIB})$") AND CLANG_FOUND)
         OR
@@ -178,3 +179,8 @@ ADD_SUBDIRECTORY(doc)
 # enable testing must be called here in order for the target test to be created
 ENABLE_TESTING()
 ADD_SUBDIRECTORY(test EXCLUDE_FROM_ALL)
+
+# =============================================================================
+# uninstall procedure
+# =============================================================================
+ADD_CUSTOM_TARGET(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cppadcodegen_uninstall.cmake)

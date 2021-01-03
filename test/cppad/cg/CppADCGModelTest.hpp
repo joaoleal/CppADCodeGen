@@ -48,12 +48,13 @@ public:
      * @param epsilonR relative error
      * @param epsilonA absolute error
      */
-    void testForwardZeroResults(GenericModel<Base>& model,
-                                ADFun<CGD>& fun,
-                                const std::vector<Base>& x,
-                                const std::vector<Base>& p = {},
-                                double epsilonR = 1e-14,
-                                double epsilonA = 1e-14) {
+    static void testForwardZeroResults(GenericModel<Base>& model,
+                                       ADFun<CGD>& fun,
+                                       ADFun<Base>* fun2,
+                                       const std::vector<Base>& x,
+                                       const std::vector<Base>& p = {},
+                                       double epsilonR = 1e-14,
+                                       double epsilonA = 1e-14) {
         ASSERT_EQ(model.Domain(), fun.Domain());
         ASSERT_EQ(model.Parameters(), fun.size_dyn_ind());
         ASSERT_EQ(model.Range(), fun.Range());
@@ -66,6 +67,174 @@ public:
         std::vector<Base> depCGen = model.ForwardZero(x, p);
 
         ASSERT_TRUE(compareValues(depCGen, dep, epsilonR, epsilonA));
+
+        if (fun2 != nullptr) {
+            std::vector<Base> yOuter = fun2->Forward(0, x);
+            ASSERT_TRUE(compareValues<Base>(yOuter, depCGen, epsilonR, epsilonA));
+        }
+    }
+
+    static void testForwardOneResults(GenericModel<Base>& model,
+                                      ADFun<CGD>& fun,
+                                      ADFun<Base>* funWrapModel,
+                                      const std::vector<Base>& x,
+                                      const std::vector<Base>& p = {},
+                                      double epsilonR = 1e-14,
+                                      double epsilonA = 1e-14) {
+        ASSERT_EQ(model.Domain(), fun.Domain());
+        ASSERT_EQ(model.Range(), fun.Range());
+
+        size_t n = model.Domain();
+
+        /**
+         * Test first order forward mode
+         */
+        size_t k = 1;
+        size_t k1 = k + 1;
+
+        std::vector<Base> x_p(n, 0.0);
+        std::vector<CGD> x_pOrig(n);
+        std::vector<Base> tx(k1 * n);
+        for (size_t j = 0; j < n; j++)
+            tx[j * k1] = x[j]; // zero order
+        for (size_t j = 0; j < n; j++)
+            tx[j * k1 + 1] = 0; // first order
+
+        for (size_t j = 0; j < n; j++) {
+            x_p[j] = 1;
+            x_pOrig[j] = 1;
+            tx[j * k1 + 1] = 1;
+
+            std::vector<CGD> y_pOrig = fun.Forward(1, x_pOrig);
+            std::vector<Base> y_pInner = model.ForwardOne(tx, p);
+
+            ASSERT_TRUE(compareValues<Base>(y_pInner, y_pOrig, epsilonR, epsilonA));
+
+            if (funWrapModel != nullptr) {
+                std::vector<Base> y_pOuter = funWrapModel->Forward(1, x_p);
+                ASSERT_TRUE(compareValues<Base>(y_pOuter, y_pOrig, epsilonR, epsilonA));
+            }
+
+            x_p[j] = 0;
+            x_pOrig[j] = 0;
+            tx[j * k1 + 1] = 0;
+        }
+    }
+
+    static void testReverseOneResults(GenericModel<Base>& model,
+                                      ADFun<CGD>& fun,
+                                      ADFun<Base>* funWrapModel,
+                                      const std::vector<Base>& x,
+                                      const std::vector<Base>& p = {},
+                                      double epsilonR = 1e-14,
+                                      double epsilonA = 1e-14) {
+        ASSERT_EQ(model.Domain(), fun.Domain());
+        ASSERT_EQ(model.Range(), fun.Range());
+
+        size_t m = model.Range();
+        size_t n = model.Domain();
+
+        size_t k = 0;
+        size_t k1 = k + 1;
+
+        std::vector<Base> yInner = model.ForwardZero(x);
+
+        std::vector<Base> w(m, 0.0);
+        std::vector<CGD> wOrig(m);
+        std::vector<Base> tx(k1 * n);
+        for (size_t j = 0; j < n; j++)
+            tx[j * k1] = x[j]; // zero order
+        std::vector<Base> ty(k1 * m);
+        for (size_t i = 0; i < m; i++)
+            ty[i * k1] = yInner[i]; // zero order
+
+        for (size_t i = 0; i < m; i++) {
+            w[i] = 1;
+            wOrig[i] = 1;
+
+            std::vector<CGD> dwOrig = fun.Reverse(1, wOrig);
+            std::vector<Base> dwInner = model.ReverseOne(tx, p, ty, w);
+
+            ASSERT_TRUE(compareValues<Base>(dwInner, dwOrig, epsilonR, epsilonA));
+
+            if (funWrapModel != nullptr) {
+                std::vector<Base> dwOuter = funWrapModel->Reverse(1, w);
+                ASSERT_TRUE(compareValues<Base>(dwOuter, dwOrig, epsilonR, epsilonA));
+            }
+
+            w[i] = 0;
+            wOrig[i] = 0;
+        }
+    }
+
+    static void testReverseTwoResults(GenericModel<Base>& model,
+                                      ADFun<CGD>& fun,
+                                      ADFun<Base>* funWrapModel,
+                                      const std::vector<Base>& x,
+                                      const std::vector<Base>& p = {},
+                                      double epsilonR = 1e-14,
+                                      double epsilonA = 1e-14) {
+        ASSERT_EQ(model.Domain(), fun.Domain());
+        ASSERT_EQ(model.Range(), fun.Range());
+
+        size_t m = model.Range();
+        size_t n = model.Domain();
+
+        std::vector<Base> yInner = model.ForwardZero(x);
+
+        size_t k = 1;
+        size_t k1 = k + 1;
+        std::vector<Base> tx(k1 * n);
+        std::vector<Base> ty(k1 * m);
+        std::vector<Base> py(k1 * m);
+        std::vector<CGD> pyOrig(k1 * m);
+        //wOrig.resize(k1 * m);
+        for (size_t j = 0; j < n; j++) {
+            tx[j * k1] = x[j]; // zero order
+            tx[j * k1 + 1] = 0; // first order
+        }
+        for (size_t i = 0; i < m; i++) {
+            ty[i * k1] = yInner[i]; // zero order
+            py[i * k1] = 0.0;
+            py[i * k1 + 1] = 1.0; // first order
+            pyOrig[i * k1] = 0.0;
+            pyOrig[i * k1 + 1] = 1.0; // first order
+        }
+
+        std::vector<Base> x_p(n, 0.0);
+        std::vector<CGD> x_pOrig(n);
+
+        for (size_t j = 0; j < n; j++) {
+            x_p[j] = 1;
+            x_pOrig[j] = 1;
+            tx[j * k1 + 1] = 1;
+
+            fun.Forward(1, x_pOrig);
+            std::vector<CGD> dwOrig = fun.Reverse(2, pyOrig);
+            std::vector<Base> dwInner = model.ReverseTwo(tx, p, ty, py);
+
+            // only compare second order information
+            // (location of the elements is different then if py.size() == m)
+            ASSERT_EQ(dwOrig.size(), n * k1);
+            ASSERT_EQ(dwOrig.size(), dwInner.size());
+
+            for (size_t j2 = 0; j2 < n; j2++) {
+                ASSERT_TRUE(nearEqual(dwInner[j2 * k1], dwOrig[j2 * k1].getValue()));
+            }
+
+            if(funWrapModel != nullptr) {
+                funWrapModel->Forward(1, x_p);
+                std::vector<Base> dwOuter = funWrapModel->Reverse(2, py);
+                ASSERT_EQ(dwOrig.size(), dwOuter.size());
+                for (size_t j2 = 0; j2 < n; j2++) {
+                    ASSERT_TRUE(nearEqual(dwOuter[j2 * k1], dwOrig[j2 * k1].getValue()));
+                }
+            }
+
+            x_p[j] = 0;
+            x_pOrig[j] = 0;
+            tx[j * k1 + 1] = 0;
+        }
     }
 
     /**
@@ -142,6 +311,7 @@ public:
 
 private:
     void testJacobianResults(GenericModel<Base>& model,
+                             ADFun<Base>* funWrapModel,
                              const std::vector<CGD>& jac,
                              const std::vector<Base>& x,
                              const std::vector<Base>& par,
@@ -176,9 +346,30 @@ private:
         }
 
         ASSERT_TRUE(this->compareValues(jacCGenDense, jacAdFunPartial, epsilonR, epsilonA));
+
+        if (funWrapModel != nullptr) {
+            auto jacOuter = funWrapModel->SparseJacobian(x);
+
+            if (verbose_) {
+                std::cout << "ADFun2 Jacobian" << std::endl;
+                print(jacOuter);
+            }
+
+            ASSERT_TRUE(compareValues<Base>(jacOuter, jac, epsilonR, epsilonA));
+
+            // sparse reverse
+            const auto jacSparsityWrap = jacobianReverseSparsitySet<std::vector<std::set<size_t>>, Base>(*funWrapModel);
+
+            sparse_jacobian_work workWrapFun;
+            std::vector<Base> jacWrapFunSparse(row.size());
+            funWrapModel->SparseJacobianReverse(x, jacSparsityWrap, row, col, jacWrapFunSparse, workWrapFun);
+
+            ASSERT_TRUE(compareValues<Base>(jacCGen, jacWrapFunSparse, epsilonR, epsilonA));
+        }
     }
 
     void testHessianResults(GenericModel<Base>& model,
+                            ADFun<Base>* funWrapModel,
                             const std::vector<CGD>& hess,
                             const std::vector<Base>& x,
                             const std::vector<Base>& par,
@@ -214,27 +405,63 @@ private:
         }
 
         ASSERT_TRUE(this->compareValues(hessCGenDense, hessAdFunPartial, epsilonR, epsilonA));
+
+        if(funWrapModel != nullptr) {
+            auto hessFunWrap = funWrapModel->SparseHessian(x, w);
+
+            if (verbose_) {
+                std::cout << "ADFun2 Hessian" << std::endl;
+                print(hessFunWrap);
+            }
+
+            ASSERT_TRUE(compareValues<Base>(hessFunWrap, hessAdFunPartial, epsilonR, epsilonA));
+
+            const auto hessSparsityWrap = hessianSparsitySet<std::vector<std::set<size_t>>, Base>(*funWrapModel);
+
+            sparse_hessian_work workWrapFun;
+            std::vector<Base> hessWrapFunSparse(row.size());
+            funWrapModel->SparseHessian(x, w, hessSparsityWrap, row, col, hessWrapFunSparse, workWrapFun);
+
+            ASSERT_TRUE(compareValues<double>(hessCGen, hessWrapFunSparse, epsilonR, epsilonA));
+        }
     }
 
 public:
 
+    static void testJacobianSparsity(ADFun<CGD>& fun1,
+                                     ADFun<Base>& fun2) {
+        const std::vector<bool> jacSparsityOrig = jacobianForwardSparsityBool<std::vector<bool>, CGD>(fun1);
+        const std::vector<bool> jacSparsityOuter = jacobianForwardSparsityBool<std::vector<bool>, double>(fun2);
+
+        compareBoolValues(jacSparsityOrig, jacSparsityOuter);
+
+        const std::vector<bool> jacSparsityOrigRev = jacobianForwardSparsityBool<std::vector<bool>, CGD>(fun1);
+        const std::vector<bool> jacSparsityOuterRev = jacobianForwardSparsityBool<std::vector<bool>, double>(fun2);
+
+        compareBoolValues(jacSparsityOrigRev, jacSparsityOrig);
+        compareBoolValues(jacSparsityOrigRev, jacSparsityOuterRev);
+    }
+
     /**
      * Compares the results from a sparse Jacobian.
      *
+     * @param n_tests number of times to run this test
      * @param model
      * @param fun
      * @param x independent vector values
+     * @param customSparsity
      * @param epsilonR relative error
      * @param epsilonA absolute error
      */
-    void testJacobianResults(ModelLibrary<Base>& lib,
-                             GenericModel<Base>& model,
-                             ADFun<CGD>& fun,
-                             const std::vector<Base>& x,
-                             const std::vector<Base>& p,
-                             bool customSparsity,
-                             double epsilonR = 1e-14,
-                             double epsilonA = 1e-14) {
+    void testSparseJacobianResults(size_t n_tests,
+                                   GenericModel<Base>& model,
+                                   ADFun<CGD>& fun,
+                                   ADFun<Base>* funWrapModel,
+                                   const std::vector<Base>& x,
+                                   const std::vector<Base>& p,
+                                   bool customSparsity,
+                                   double epsilonR = 1e-14,
+                                   double epsilonA = 1e-14) {
         ASSERT_EQ(model.Domain(), fun.Domain());
         ASSERT_EQ(model.Parameters(), fun.size_dyn_ind());
         ASSERT_EQ(model.Range(), fun.Range());
@@ -250,13 +477,9 @@ public:
             print(jac);
         }
 
-        testJacobianResults(model, jac, x, p, customSparsity, epsilonR, epsilonA);
-
-        if (lib.getThreadNumber() > 1) {
-            // sparse Jacobian again (make sure the second run is also OK)
-            testJacobianResults(model, jac, x, p, customSparsity, epsilonR, epsilonA);
+        for (size_t i = 0; i< n_tests; ++i) {
+            testJacobianResults(model, funWrapModel, jac, x, p, customSparsity, epsilonR, epsilonA);
         }
-
     }
 
     /**
@@ -268,14 +491,15 @@ public:
      * @param epsilonR relative error
      * @param epsilonA absolute error
      */
-    void testHessianResults(ModelLibrary<Base>& lib,
-                            GenericModel<Base>& model,
-                            ADFun<CGD>& fun,
-                            const std::vector<Base>& x,
-                            const std::vector<Base>& p,
-                            bool customSparsity,
-                            double epsilonR = 1e-14,
-                            double epsilonA = 1e-14) {
+    void testSparseHessianResults(size_t n_tests,
+                                  GenericModel<Base>& model,
+                                  ADFun<CGD>& fun,
+                                  ADFun<Base>* funWrapModel,
+                                  const std::vector<Base>& x,
+                                  const std::vector<Base>& p,
+                                  bool customSparsity,
+                                  double epsilonR = 1e-14,
+                                  double epsilonA = 1e-14) {
         ASSERT_EQ(model.Domain(), fun.Domain());
         ASSERT_EQ(model.Parameters(), fun.size_dyn_ind());
         ASSERT_EQ(model.Range(), fun.Range());
@@ -294,68 +518,9 @@ public:
             print(hess);
         }
 
-        testHessianResults(model, hess, x, p, customSparsity, epsilonR, epsilonA);
-
-        if (lib.getThreadNumber() > 1) {
-            // sparse Hessian again (make sure the second run is also OK)
-            testHessianResults(model, hess, x, p, customSparsity, epsilonR, epsilonA);
+        for (size_t i = 0; i < n_tests; ++i) {
+            testHessianResults(model, funWrapModel, hess, x, p, customSparsity, epsilonR, epsilonA);
         }
-    }
-
-    /**
-     * Compares the results from Hessian, Jacobian, sparse Hessian and
-     * sparse Jacobian.
-     *
-     * @param model
-     * @param fun
-     * @param x independent vector values
-     * @param epsilonR relative error
-     * @param epsilonA absolute error
-     */
-    void testModelResults(ModelLibrary<Base>& lib,
-                          GenericModel<Base>& model,
-                          ADFun<CGD>& fun,
-                          const std::vector<Base>& x,
-                          const std::vector<Base>& p,
-                          bool customSparsity,
-                          double epsilonR = 1e-14,
-                          double epsilonA = 1e-14,
-                          bool denseJacobian = true,
-                          bool denseHessian = true) {
-        // dimensions
-        ASSERT_EQ(model.Domain(), fun.Domain());
-        ASSERT_EQ(model.Parameters(), fun.size_dyn_ind());
-        ASSERT_EQ(model.Range(), fun.Range());
-
-        testForwardZeroResults(model, fun, x, p, epsilonR, epsilonA);
-
-        // Jacobian
-        if (denseJacobian) {
-            testDenseJacResults(model, fun, x, p, epsilonR, epsilonA);
-        }
-
-        if (denseHessian) {
-            testDenseHessianResults(model, fun, x, p, epsilonR, epsilonA);
-        }
-
-        // sparse Jacobian
-        testJacobianResults(lib, model, fun, x, p, customSparsity, epsilonR, epsilonA);
-
-        // sparse Hessian
-        testHessianResults(lib, model, fun, x, p, customSparsity, epsilonR, epsilonA);
-    }
-
-    inline ::testing::AssertionResult compareValues(const std::vector<double>& depCGen,
-                                                    const std::vector<CppAD::cg::CG<double> >& dep,
-                                                    double epsilonR = 1e-14, double epsilonA = 1e-14) {
-
-        std::vector<double> depd(dep.size());
-
-        for (size_t i = 0; i < depd.size(); i++) {
-            depd[i] = dep[i].getValue();
-        }
-
-        return CppADCGTest::compareValues(depCGen, depd, epsilonR, epsilonA);
     }
 
 };

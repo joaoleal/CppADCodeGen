@@ -4,6 +4,24 @@ cppadcodegen (3.0.0-1) unstable; urgency=low
 
  -- Joao Leal <joaoruileal@gmail.com>  Sun, 03 Jan 2021 18:00:00 +0000
 
+cppadcodegen (2.4.3-1) unstable; urgency=low
+
+   * fix getCustomLibraryExtension()
+
+ -- Joao Leal <joaoruileal@gmail.com>  Mon, 16 Mar 2020 18:00:00 +0000
+
+cppadcodegen (2.4.2-1) unstable; urgency=low
+
+   * fix missing inline
+
+ -- Joao Leal <joaoruileal@gmail.com>  Thu, 12 Mar 2020 18:00:00 +0000
+
+cppadcodegen (2.4.1-1) unstable; urgency=low
+
+   * fix cppad version in pkgconfig
+
+ -- Joao Leal <joaoruileal@gmail.com>  Mon, 9 Mar 2020 18:00:00 +0000
+
 cppadcodegen (2.4.0-1) unstable; urgency=low
 
    * add support for CppAD 2020

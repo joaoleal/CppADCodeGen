@@ -4,6 +4,7 @@
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -121,7 +122,6 @@ public:
      * @param n the number of time measurements to take per task.
      */
     virtual void setThreadPoolNumberOfTimeMeas(unsigned int n) = 0;
-
 
     /**
      * Provides the number of time measurements taken by each computational

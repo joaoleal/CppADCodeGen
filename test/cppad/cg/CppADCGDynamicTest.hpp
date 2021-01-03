@@ -140,6 +140,23 @@ public:
         SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(libSourceGen, "sources_" + _name + "_1");
 
         DynamicModelLibraryProcessor<double> p(libSourceGen);
+
+        // some additional tests
+        ASSERT_EQ(p.getLibraryName(), "cppad_cg_model");
+        p.setLibraryName("cppad_cg_lib");
+        ASSERT_EQ(p.getLibraryName(), "cppad_cg_lib");
+
+        ASSERT_EQ(p.getCustomLibraryExtension(), nullptr);
+        p.setCustomLibraryExtension(".so.123");
+        ASSERT_NE(p.getCustomLibraryExtension(), nullptr);
+        ASSERT_EQ(*p.getCustomLibraryExtension(), ".so.123");
+
+        p.removeCustomLibraryExtension();
+        ASSERT_EQ(p.getCustomLibraryExtension(), nullptr);
+
+        const auto& cp = p;
+        ASSERT_TRUE(cp.getOptions().empty());
+
         GccCompiler<double> compiler;
         //compiler.setSaveToDiskFirst(true); // useful to detect problem
         prepareTestCompilerFlags(compiler);
@@ -151,6 +168,7 @@ public:
 #ifdef CPPAD_CG_SYSTEM_LINUX
             // this is required because the OpenMP implementation in GCC causes a segmentation fault on dlclose
             p.getOptions()["dlOpenMode"] = std::to_string(RTLD_NOW | RTLD_NODELETE);
+            ASSERT_TRUE(!p.getOptions().empty());
 #endif
         } else if(libSourceGen.getMultiThreading() == MultiThreadingType::PTHREADS) {
             compiler.addCompileFlag("-pthread");
@@ -174,8 +192,24 @@ public:
         _fun.reset();
     }
 
+#if CPPAD_CG_SYSTEM_LINUX
+    void testMoveConstructors() {
+        auto& lib = dynamic_cast<LinuxDynamicLib<double>&>(*_dynamicLib);
+        LinuxDynamicLib<double> dynamicLib(std::move(lib));
+
+        auto m2 = dynamicLib.model(_name + "dynamic");
+
+        m2->ForwardZero(_xRun);
+
+        auto& m = dynamic_cast<LinuxDynamicLibModel<double>&>(*_model);
+        LinuxDynamicLibModel<double> model(std::move(m));
+
+        auto depCGen = model.ForwardZero(_xRun);
+    }
+#endif
+
     void testForwardZero() {
-        this->testForwardZeroResults(*_model, *_fun, _xRun, _parRun, epsilonR, epsilonA);
+        this->testForwardZeroResults(*_model, *_fun, nullptr, _xRun, _parRun, epsilonR, epsilonA);
     }
 
     // Jacobian
@@ -189,12 +223,18 @@ public:
 
     // sparse Jacobian
     void testJacobian() {
-        this->testJacobianResults(*_dynamicLib, *_model, *_fun, _xRun,  _parRun, !_jacRow.empty(),epsilonR, epsilonA);
+        // sparse Jacobian again (make sure the second run is also OK)
+        size_t n_tests = _dynamicLib->getThreadNumber() > 1 ? 2 : 1;
+
+        this->testSparseJacobianResults(n_tests, *_model, *_fun, nullptr, _xRun,  _parRun, !_jacRow.empty(), epsilonR, epsilonA);
     }
 
     // sparse Hessian
     void testHessian() {
-        this->testHessianResults(*_dynamicLib, *_model, *_fun, _xRun,  _parRun, !_hessRow.empty(), epsilonR, epsilonA);
+        // sparse Hessian again (make sure the second run is also OK)
+        size_t n_tests = _dynamicLib->getThreadNumber() > 1 ? 2 : 1;
+
+        this->testSparseHessianResults(n_tests, *_model, *_fun, nullptr, _xRun,  _parRun, !_hessRow.empty(), epsilonR, epsilonA);
     }
 
 };

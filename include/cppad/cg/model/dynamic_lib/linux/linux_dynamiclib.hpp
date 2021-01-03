@@ -61,6 +61,14 @@ public:
         this->validate();
     }
 
+    inline LinuxDynamicLib(LinuxDynamicLib&& other) noexcept :
+            DynamicLib<Base>(std::move(other)),
+            _dynLibName(std::move(other._dynLibName)),
+            _dynLibHandle(other._dynLibHandle),
+            _models(std::move(other._models)) {
+        other._dynLibHandle = nullptr;
+    }
+
     LinuxDynamicLib(const LinuxDynamicLib&) = delete;
     LinuxDynamicLib& operator=(const LinuxDynamicLib&) = delete;
 
@@ -97,7 +105,7 @@ public:
         }
 
         if (_dynLibHandle != nullptr) {
-            if(this->_onClose != nullptr) {
+            if (this->_onClose != nullptr) {
                 (*this->_onClose)();
             }
 

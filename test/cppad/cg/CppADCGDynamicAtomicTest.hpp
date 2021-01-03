@@ -16,13 +16,15 @@
  * Author: Joao Leal
  */
 
-#include "CppADCGTest.hpp"
+#include <memory>
+
+#include "CppADCGModelTest.hpp"
 #include "gccCompilerFlags.hpp"
 
 namespace CppAD {
 namespace cg {
 
-class CppADCGDynamicAtomicTest : public CppADCGTest {
+class CppADCGDynamicAtomicTest : public CppADCGModelTest {
 public:
     using Super = CppADCGTest;
     using Base = Super::Base;
@@ -43,7 +45,7 @@ public:
     explicit CppADCGDynamicAtomicTest(std::string modelName,
                                       bool verbose = false,
                                       bool printValues = false) :
-            CppADCGTest(verbose, printValues),
+            CppADCGModelTest(verbose, printValues),
             _modelName(std::move(modelName)) {
         //this->verbose_ = true;
     }
@@ -77,8 +79,8 @@ public:
 
     ~CppADCGDynamicAtomicTest() override = default;
 
-    inline static CppAD::vector<Base> makeValues(size_t n) {
-        CppAD::vector<Base> x(n);
+    inline static std::vector<Base> makeValues(size_t n) {
+        std::vector<Base> x(n);
 
         for (size_t j = 0; j < n; j++)
             x[j] = j + 2;
@@ -91,12 +93,12 @@ public:
      * The outer model method (modelOuter) is NOT used here!
      * It uses z = g(x) = f(x).
      */
-    void testADFunAtomicLibSimple(const CppAD::vector<Base>& x,
-                                  const CppAD::vector<Base>& par = {},
-                                  const CppAD::vector<Base>& xNorm = {},
-                                  const CppAD::vector<Base>& eqNorm = {},
+    void testADFunAtomicLibSimple(const std::vector<Base>& x,
+                                  const std::vector<Base>& par = {},
+                                  const std::vector<Base>& xNorm = {},
+                                  const std::vector<Base>& eqNorm = {},
                                   Base epsilonR = 1e-14, Base epsilonA = 1e-14) {
-        ASSERT_TRUE(xNorm.size() == 0 || x.size() == xNorm.size());
+        ASSERT_TRUE(xNorm.empty() || x.size() == xNorm.size());
 
         using namespace CppAD;
         using namespace std;
@@ -106,212 +108,71 @@ public:
 
         unique_ptr<GenericModel<Base> > modelLib = compileInnerModel("");
 
-        const size_t n = _funInner->Domain();
         const size_t m = _funInner->Range();
 
-        vector<AD<double> > ax = makeADVector(x);
-        vector<AD<double> > ap = makeADVector(par);
+        auto ax = makeADVector(x);
+        auto ap = makeADVector(par);
 
         // declare independent variables and start tape recording
         size_t abort_op_index = 0;
         bool record_compare = true;
         CppAD::Independent(ax, abort_op_index, record_compare, ap);
 
-        vector<AD<double> > ay(m);
+        std::vector<AD<double> > ay(m);
 
         // call user function and store CGAtomicLibModel(x) in au[0]
         CGAtomicGenericModel<double>& atomicfun = modelLib->asAtomic();
 
         atomicfun(ax, ay);
 
-        // create f2: x -> y and stop tape recording
-        ADFun<double> f2(ax, ay);
+        // create fWrapAtom: x -> y and stop tape recording
+        ADFun<double> fWrapAtom(ax, ay);
 
         /**
          * Test zero order
          */
-        vector<CGD> xOrig = makeCGVector(x);
-
-        vector<CGD> yOrig = _funInner->Forward(0, xOrig);
-        vector<double> yInner = modelLib->ForwardZero(x, par);
-        vector<double> yOuter = f2.Forward(0, x);
-
-        ASSERT_TRUE(compareValues<double>(yInner, yOrig, epsilonR, epsilonA));
-        ASSERT_TRUE(compareValues<double>(yOuter, yOrig, epsilonR, epsilonA));
+         testForwardZeroResults(*modelLib, *_funInner, &fWrapAtom, x, par, epsilonR, epsilonA);
 
         /**
          * Test first order forward mode
          */
-        size_t k = 1;
-        size_t k1 = k + 1;
-
-        vector<double> x_p(n);
-        for (size_t j = 0; j < n; j++)
-            x_p[j] = 0;
-
-        vector<CGD> x_pOrig(n);
-        vector<double> tx(k1 * n);
-        for (size_t j = 0; j < n; j++)
-            tx[j * k1] = x[j]; // zero order
-        for (size_t j = 0; j < n; j++)
-            tx[j * k1 + 1] = 0; // first order
-
-        for (size_t j = 0; j < n; j++) {
-            x_p[j] = 1;
-            x_pOrig[j] = 1;
-            tx[j * k1 + 1] = 1;
-
-            vector<CGD> y_pOrig = _funInner->Forward(1, x_pOrig);
-            vector<double> y_pInner = modelLib->ForwardOne(tx, par);
-            vector<double> y_pOuter = f2.Forward(1, x_p);
-
-            x_p[j] = 0;
-            x_pOrig[j] = 0;
-            tx[j * k1 + 1] = 0;
-
-            ASSERT_TRUE(compareValues<double>(y_pInner, y_pOrig, epsilonR, epsilonA));
-            ASSERT_TRUE(compareValues<double>(y_pOuter, y_pOrig, epsilonR, epsilonA));
-        }
+        testForwardOneResults(*modelLib, *_funInner, &fWrapAtom, x, par, epsilonR, epsilonA);
 
         /**
          * Test first order reverse mode
          */
-        k = 0;
-        k1 = k + 1;
-
-        vector<double> w(m);
-        for (size_t i = 0; i < m; i++)
-            w[i] = 0;
-        vector<CGD> wOrig(m);
-        tx.resize(k1 * n);
-        for (size_t j = 0; j < n; j++)
-            tx[j * k1] = x[j]; // zero order
-        vector<double> ty(k1 * m);
-        for (size_t i = 0; i < m; i++)
-            ty[i * k1] = yInner[i]; // zero order
-
-        for (size_t i = 0; i < m; i++) {
-            w[i] = 1;
-            wOrig[i] = 1;
-
-            vector<CGD> dwOrig = _funInner->Reverse(1, wOrig);
-            vector<double> dwInner = modelLib->ReverseOne(tx, par, ty, w);
-            vector<double> dwOuter = f2.Reverse(1, w);
-
-            w[i] = 0;
-            wOrig[i] = 0;
-
-            ASSERT_TRUE(compareValues<double>(dwInner, dwOrig, epsilonR, epsilonA));
-            ASSERT_TRUE(compareValues<double>(dwOuter, dwOrig, epsilonR, epsilonA));
-        }
+        testReverseOneResults(*modelLib, *_funInner, &fWrapAtom, x, par, epsilonR, epsilonA);
 
         /**
          * Test second order reverse mode
          */
-        k = 1;
-        k1 = k + 1;
-        tx.resize(k1 * n);
-        ty.resize(k1 * m);
-        vector<double> py(k1 * m);
-        vector<CGD> pyOrig(k1 * m);
-        //wOrig.resize(k1 * m);
-        for (size_t j = 0; j < n; j++) {
-            tx[j * k1] = x[j]; // zero order
-            tx[j * k1 + 1] = 0; // first order
-        }
-        for (size_t i = 0; i < m; i++) {
-            ty[i * k1] = yInner[i]; // zero order
-            py[i * k1] = 0.0;
-            py[i * k1 + 1] = 1.0; // first order
-            pyOrig[i * k1] = 0.0;
-            pyOrig[i * k1 + 1] = 1.0; // first order
-        }
-
-        for (size_t j = 0; j < n; j++) {
-            x_p[j] = 1;
-            x_pOrig[j] = 1;
-            tx[j * k1 + 1] = 1;
-
-            _funInner->Forward(1, x_pOrig);
-            vector<CGD> dwOrig = _funInner->Reverse(2, pyOrig);
-            vector<double> dwInner = modelLib->ReverseTwo(tx, par, ty, py);
-            f2.Forward(1, x_p);
-            vector<double> dwOuter = f2.Reverse(2, py);
-
-            x_p[j] = 0;
-            x_pOrig[j] = 0;
-            tx[j * k1 + 1] = 0;
-
-            // only compare second order information
-            // (location of the elements is different then if py.size() == m)
-            ASSERT_EQ(dwOrig.size(), n * k1);
-            ASSERT_EQ(dwOrig.size(), dwInner.size());
-            ASSERT_EQ(dwOrig.size(), dwOuter.size());
-            for (size_t j2 = 0; j2 < n; j2++) {
-                ASSERT_TRUE(nearEqual(dwInner[j2 * k1], dwOrig[j2 * k1].getValue()));
-                ASSERT_TRUE(nearEqual(dwOuter[j2 * k1], dwOrig[j2 * k1].getValue()));
-            }
-        }
+        testReverseTwoResults(*modelLib, *_funInner, &fWrapAtom, x, par, epsilonR, epsilonA);
 
         /**
-         * Jacobian
+         * Dense Jacobian
          */
-        vector<CGD> jacOrig = _funInner->Jacobian(xOrig);
-        vector<double> jacOuter = f2.Jacobian(x);
-        ASSERT_TRUE(compareValues<double>(jacOuter, jacOrig, epsilonR, epsilonA));
+        testDenseJacResults(*modelLib, *_funInner, x, par, epsilonR, epsilonA);
 
         /**
          * Jacobian sparsity
          */
-        const std::vector<bool> jacSparsityOrig = jacobianForwardSparsityBool<std::vector<bool>, CGD>(*_funInner);
-        const std::vector<bool> jacSparsityOuter = jacobianForwardSparsityBool<std::vector<bool>, double>(f2);
-
-        compareBoolValues(jacSparsityOrig, jacSparsityOuter);
-
-        const std::vector<bool> jacSparsityOrigRev = jacobianReverseSparsityBool<std::vector<bool>, CGD>(*_funInner);
-        const std::vector<bool> jacSparsityOuterRev = jacobianReverseSparsityBool<std::vector<bool>, double>(f2);
-
-        compareBoolValues(jacSparsityOrigRev, jacSparsityOrig);
-        compareBoolValues(jacSparsityOrigRev, jacSparsityOuterRev);
+        testJacobianSparsity(*_funInner, fWrapAtom);
 
         /**
-         * Sparse jacobian
+         * Sparse Jacobian
          */
-        jacOrig = _funInner->SparseJacobian(xOrig);
-        jacOuter = f2.SparseJacobian(x);
-        ASSERT_TRUE(compareValues<double>(jacOuter, jacOrig, epsilonR, epsilonA));
-
-        // sparse reverse
-        std::vector<size_t> row, col;
-        generateSparsityIndexes(jacSparsityOuter, m, n, row, col);
-
-        sparse_jacobian_work workOrig;
-        jacOrig.resize(row.size());
-        _funInner->SparseJacobianReverse(xOrig, jacSparsityOrig, row, col, jacOrig, workOrig);
-
-        sparse_jacobian_work work2;
-        jacOuter.resize(row.size());
-        f2.SparseJacobianReverse(x, jacSparsityOuter, row, col, jacOuter, work2);
-
-        ASSERT_TRUE(compareValues<double>(jacOuter, jacOrig, epsilonR, epsilonA));
+        size_t n_tests = _dynamicLib->getThreadNumber() > 1 ? 2 : 1;
+        testSparseJacobianResults(n_tests, *modelLib, *_funInner, &fWrapAtom, x, par, false, epsilonR, epsilonA);
 
         /**
-         * Hessian
+         * Dense Hessian
          */
-        for (size_t i = 0; i < m; i++) {
-            w[i] = 1;
-            wOrig[i] = 1;
-        }
-        vector<CGD> hessOrig = _funInner->Hessian(xOrig, wOrig);
-        vector<double> hessOuter = f2.Hessian(x, w);
-        ASSERT_TRUE(compareValues<double>(hessOuter, hessOrig, epsilonR, epsilonA));
+        testDenseHessianResults(*modelLib, *_funInner, x, par, epsilonR, epsilonA);
 
         /**
          * Sparse Hessian
          */
-        hessOrig = _funInner->SparseHessian(xOrig, wOrig);
-        hessOuter = f2.SparseHessian(x, w);
-        ASSERT_TRUE(compareValues<double>(hessOuter, hessOrig, epsilonR, epsilonA));
+        testSparseHessianResults(n_tests, *modelLib, *_funInner, &fWrapAtom, x, par, false, epsilonR, epsilonA);
     }
 
     /**
@@ -319,10 +180,10 @@ public:
      * The outer model method (modelOuter) is used!
      * It uses z = g(f(x)).
      */
-    void testADFunAtomicLib(const CppAD::vector<Base>& x,
-                            const CppAD::vector<Base>& par,
-                            const CppAD::vector<Base>& xNorm = {},
-                            const CppAD::vector<Base>& eqNorm = {},
+    void testADFunAtomicLib(const std::vector<Base>& x,
+                            const std::vector<Base>& par,
+                            const std::vector<Base>& xNorm = {},
+                            const std::vector<Base>& eqNorm = {},
                             Base epsilonR = 1e-14,
                             Base epsilonA = 1e-14) {
         prepareAtomicLibAtomicLib(x, par, xNorm, eqNorm);
@@ -333,7 +194,7 @@ public:
                           std::vector<ADCGD>& ay){
             assert(_modelLib != nullptr);
             assert(_modelLib->getName() ==  _modelName);
-            _atomFun.reset(new CGAtomicFun<double> (_modelLib->asAtomic(), x, par.size()));
+            _atomFun = std::make_unique<CGAtomicFun<double>>(_modelLib->asAtomic(), x, par.size());
 
             (*_atomFun)(ax, ay); // atomic function
         };
@@ -347,10 +208,10 @@ public:
     /**
      * Test 2 models in 2 dynamic libraries
      */
-    void testAtomicLibAtomicLib(const CppAD::vector<Base>& x,
-                                const CppAD::vector<Base>& par,
-                                const CppAD::vector<Base>& xNorm = {},
-                                const CppAD::vector<Base>& eqNorm = {},
+    void testAtomicLibAtomicLib(const std::vector<Base>& x,
+                                const std::vector<Base>& par,
+                                const std::vector<Base>& xNorm = {},
+                                const std::vector<Base>& eqNorm = {},
                                 Base epsilonR = 1e-14, Base epsilonA = 1e-14) {
         using namespace std;
 
@@ -367,10 +228,10 @@ public:
     /**
      * Test 2 models in the same dynamic library
      */
-    void testAtomicLibModelBridge(const CppAD::vector<Base>& x,
-                                  const CppAD::vector<Base>& par,
-                                  const CppAD::vector<Base>& xNorm,
-                                  const CppAD::vector<Base>& eqNorm,
+    void testAtomicLibModelBridge(const std::vector<Base>& x,
+                                  const std::vector<Base>& par,
+                                  const std::vector<Base>& xNorm,
+                                  const std::vector<Base>& eqNorm,
                                   Base epsilonR = 1e-14, Base epsilonA = 1e-14) {
         using namespace std;
 
@@ -386,10 +247,10 @@ public:
     /**
      * Test 2 models in the same dynamic library
      */
-    void testAtomicLibModelBridgeCustom(const CppAD::vector<Base>& x,
-                                        const CppAD::vector<Base>& par,
-                                        const CppAD::vector<Base>& xNorm,
-                                        const CppAD::vector<Base>& eqNorm,
+    void testAtomicLibModelBridgeCustom(const std::vector<Base>& x,
+                                        const std::vector<Base>& par,
+                                        const std::vector<Base>& xNorm,
+                                        const std::vector<Base>& eqNorm,
                                         const std::vector<std::set<size_t> >& jacInner,
                                         const std::vector<std::set<size_t> >& hessInner,
                                         const std::vector<std::set<size_t> >& jacOuter,
@@ -416,8 +277,8 @@ public:
      * Test the Jacobian and Hessian sparsity patterns computed directly with
      * the methods of the CGAbstractAtomicFun.
      */
-    void testAtomicSparsities(const CppAD::vector<Base>& x,
-                              const CppAD::vector<Base>& par) {
+    void testAtomicSparsities(const std::vector<Base>& x,
+                              const std::vector<Base>& par) {
         CGAtomicFunBridge<double> atomicfun("innerModel", *_funInner, true);
 
         //const size_t n = _funInner->Domain();
@@ -446,12 +307,12 @@ private:
 
     void test2LevelAtomicLibModel(GenericModel<Base>* modelLib,
                                   GenericModel<Base>* modelLibOuter,
-                                  const CppAD::vector<Base>& x,
-                                  const CppAD::vector<Base>& par,
-                                  const CppAD::vector<Base>& xNorm,
-                                  const CppAD::vector<Base>& eqNorm,
+                                  const std::vector<Base>& x,
+                                  const std::vector<Base>& par,
+                                  const std::vector<Base>& xNorm,
+                                  const std::vector<Base>& eqNorm,
                                   Base epsilonR = 1e-14, Base epsilonA = 1e-14) {
-        ASSERT_TRUE(xNorm.size() == 0 || x.size() == xNorm.size());
+        ASSERT_TRUE(xNorm.empty() || x.size() == xNorm.size());
 
         using namespace CppAD;
         using namespace std;
@@ -467,12 +328,12 @@ private:
         /**
          * Test zero order
          */
-        vector<CGD> xOrig(n);
+        std::vector<CGD> xOrig(n);
         for (size_t j = 0; j < n; j++)
             xOrig[j] = x[j];
 
-        vector<CGD> yOrig = _funOuterNoAtom->Forward(0, xOrig);
-        vector<double> yOuter = modelLibOuter->ForwardZero(x);
+        auto yOrig = _funOuterNoAtom->Forward(0, xOrig);
+        auto yOuter = modelLibOuter->ForwardZero(x);
 
         ASSERT_TRUE(compareValues<double>(yOuter, yOrig, epsilonR, epsilonA));
 
@@ -487,7 +348,7 @@ private:
             x_p[j] = 0;
 
         vector<CGD> x_pOrig(n);
-        vector<double> tx(k1 * n);
+        std::vector<double> tx(k1 * n);
         for (size_t j = 0; j < n; j++)
             tx[j * k1] = x[j]; // zero order
         for (size_t j = 0; j < n; j++)
@@ -497,8 +358,8 @@ private:
             x_pOrig[j] = 1;
             tx[j * k1 + 1] = 1;
 
-            vector<CGD> y_pOrig = _funOuterNoAtom->Forward(1, x_pOrig);
-            vector<double> y_pOuter = modelLibOuter->ForwardOne(tx, par);
+            auto y_pOrig = _funOuterNoAtom->Forward(1, x_pOrig);
+            auto y_pOuter = modelLibOuter->ForwardOne(tx, par);
 
             x_pOrig[j] = 0;
             tx[j * k1 + 1] = 0;
@@ -512,14 +373,14 @@ private:
         k = 0;
         k1 = k + 1;
 
-        vector<double> w(m);
+        std::vector<double> w(m);
         for (size_t i = 0; i < m; i++)
             w[i] = 0;
-        vector<CGD> wOrig(m);
+        std::vector<CGD> wOrig(m);
         tx.resize(k1 * n);
         for (size_t j = 0; j < n; j++)
             tx[j * k1] = x[j]; // zero order
-        vector<double> ty(k1 * m);
+        std::vector<double> ty(k1 * m);
         for (size_t i = 0; i < m; i++)
             ty[i * k1] = yOuter[i]; // zero order
 
@@ -527,8 +388,8 @@ private:
             w[i] = 1;
             wOrig[i] = 1;
 
-            vector<CGD> dwOrig = _funOuterNoAtom->Reverse(1, wOrig);
-            vector<double> dwOuter = modelLibOuter->ReverseOne(tx, par, ty, w);
+            auto dwOrig = _funOuterNoAtom->Reverse(1, wOrig);
+            auto dwOuter = modelLibOuter->ReverseOne(tx, par, ty, w);
 
             w[i] = 0;
             wOrig[i] = 0;
@@ -543,8 +404,8 @@ private:
         k1 = k + 1;
         tx.resize(k1 * n);
         ty.resize(k1 * m);
-        vector<double> py(k1 * m);
-        vector<CGD> pyOrig(k1 * m);
+        std::vector<double> py(k1 * m);
+        std::vector<CGD> pyOrig(k1 * m);
         //wOrig.resize(k1 * m);
         for (size_t j = 0; j < n; j++) {
             tx[j * k1] = x[j]; // zero order
@@ -563,8 +424,8 @@ private:
             tx[j * k1 + 1] = 1;
 
             _funOuterNoAtom->Forward(1, x_pOrig);
-            vector<CGD> dwOrig = _funOuterNoAtom->Reverse(2, pyOrig);
-            vector<double> dwOuter = modelLibOuter->ReverseTwo(tx, par, ty, py);
+            auto dwOrig = _funOuterNoAtom->Reverse(2, pyOrig);
+            auto dwOuter = modelLibOuter->ReverseTwo(tx, par, ty, py);
 
             x_pOrig[j] = 0;
             tx[j * k1 + 1] = 0;
@@ -581,8 +442,8 @@ private:
         /**
          * Jacobian
          */
-        vector<CGD> jacOrig = _funOuterNoAtom->Jacobian(xOrig);
-        vector<double> jacOuter = modelLibOuter->Jacobian(x, par);
+        auto jacOrig = _funOuterNoAtom->Jacobian(xOrig);
+        auto jacOuter = modelLibOuter->Jacobian(x, par);
         ASSERT_TRUE(compareValues<double>(jacOuter, jacOrig, epsilonR, epsilonA));
 
         /**
@@ -607,8 +468,8 @@ private:
             w[i] = 1;
             wOrig[i] = 1;
         }
-        vector<CGD> hessOrig = _funOuterNoAtom->Hessian(xOrig, wOrig);
-        vector<double> hessOuter = modelLibOuter->Hessian(x, par, w);
+        auto hessOrig = _funOuterNoAtom->Hessian(xOrig, wOrig);
+        auto hessOuter = modelLibOuter->Hessian(x, par, w);
         ASSERT_TRUE(compareValues<double>(hessOuter, hessOrig, epsilonR, epsilonA));
 
         /**
@@ -627,11 +488,11 @@ private:
         ASSERT_TRUE(compareValues<double>(hessOuter, hessOrig, epsilonR, epsilonA));
     }
 
-    void testAtomicLibModelInCppAD(ADFun<CGD>& funOuter,
-                                   ADFun<CGD>& funOuterAtom, // with an atomic function
-                                   const CppAD::vector<Base>& xx,
-                                   const CppAD::vector<Base>& par,
-                                   Base epsilonR = 1e-14, Base epsilonA = 1e-14) {
+    static void testAtomicLibModelInCppAD(ADFun<CGD>& funOuter,
+                                          ADFun<CGD>& funOuterAtom, // with an atomic function
+                                          const std::vector<Base>& xx,
+                                          const std::vector<Base>& par,
+                                          Base epsilonR = 1e-14, Base epsilonA = 1e-14) {
         using namespace CppAD;
         using namespace std;
         using CppAD::vector;
@@ -644,18 +505,16 @@ private:
         /**
          * Test zero order
          */
-        vector<CGD> x = makeCGVector(xx);
+        auto x = makeCGVector(xx);
 
-        vector<CGD> y = funOuter.Forward(0, x);
-        vector<CGD> yAtom = funOuterAtom.Forward(0, x); // with an atomic function
+        auto y = funOuter.Forward(0, x);
+        auto yAtom = funOuterAtom.Forward(0, x); // with an atomic function
 
         ASSERT_TRUE(compareValues<double>(y, yAtom, epsilonR, epsilonA));
 
         /**
          * Test first order forward mode
          */
-        size_t k = 1;
-        size_t k1 = k + 1;
 
         vector<CGD> x_p(n);
 
@@ -673,12 +532,12 @@ private:
         /**
          * Test first order reverse mode
          */
-        vector<CGD> w(m);
+        std::vector<CGD> w(m);
         for (size_t i = 0; i < m; i++) {
             w[i] = 1;
 
-            vector<CGD> dw = funOuter.Reverse(1, w);
-            vector<CGD> dwAtom = funOuterAtom.Reverse(1, w); // with an atomic function
+            auto dw = funOuter.Reverse(1, w);
+            auto dwAtom = funOuterAtom.Reverse(1, w); // with an atomic function
 
             w[i] = 0;
 
@@ -688,8 +547,8 @@ private:
         /**
          * Test second order reverse mode
          */
-        k = 1;
-        k1 = k + 1;
+        size_t k = 1;
+        size_t k1 = k + 1;
         vector<CGD> py(m); // not (k1 * m)
         for (size_t i = 0; i < m; i++) {
             //py[i * k1] = 0.0;
@@ -718,8 +577,8 @@ private:
         /**
          * Jacobian
          */
-        vector<CGD> jac = funOuter.Jacobian(x);
-        vector<CGD> jacAtom = funOuterAtom.Jacobian(x); // with an atomic function
+        auto jac = funOuter.Jacobian(x);
+        auto jacAtom = funOuterAtom.Jacobian(x); // with an atomic function
         ASSERT_TRUE(compareValues<double>(jac, jacAtom, epsilonR, epsilonA));
 
         /**
@@ -743,8 +602,8 @@ private:
         for (size_t i = 0; i < m; i++) {
             w[i] = 1;
         }
-        vector<CGD> hess = funOuter.Hessian(x, w);
-        vector<CGD> hessAtom = funOuterAtom.Hessian(x, w); // with an atomic function
+        auto hess = funOuter.Hessian(x, w);
+        auto hessAtom = funOuterAtom.Hessian(x, w); // with an atomic function
         ASSERT_TRUE(compareValues<double>(hess, hessAtom, epsilonR, epsilonA));
 
         /**
@@ -776,14 +635,14 @@ private:
 
     void test2LevelAtomicLibModelCustomEls(GenericModel<Base>* modelLib,
                                            GenericModel<Base>* modelLibOuter,
-                                           const CppAD::vector<Base>& x,
-                                           const CppAD::vector<Base>& par,
-                                           const CppAD::vector<Base>& xNorm,
-                                           const CppAD::vector<Base>& eqNorm,
+                                           const std::vector<Base>& x,
+                                           const std::vector<Base>& par,
+                                           const std::vector<Base>& xNorm,
+                                           const std::vector<Base>& eqNorm,
                                            const std::vector<std::set<size_t> >& jacOuterSpar,
                                            const std::vector<std::set<size_t> >& hessOuterSpar,
                                            Base epsilonR = 1e-14, Base epsilonA = 1e-14) {
-        ASSERT_TRUE(xNorm.size() == 0 || x.size() == xNorm.size());
+        ASSERT_TRUE(xNorm.empty() || x.size() == xNorm.size());
 
         using namespace CppAD;
         using namespace std;
@@ -796,10 +655,10 @@ private:
         /**
          * Test zero order
          */
-        vector<CGD> xOrig = makeCGVector(x);
+        auto xOrig = makeCGVector(x);
 
-        vector<CGD> yOrig = _funOuterNoAtom->Forward(0, xOrig);
-        vector<double> yOuter = modelLibOuter->ForwardZero(x);
+        auto yOrig = _funOuterNoAtom->Forward(0, xOrig);
+        auto yOuter = modelLibOuter->ForwardZero(x);
 
         ASSERT_TRUE(compareValues<double>(yOuter, yOrig, epsilonR, epsilonA));
 
@@ -814,7 +673,7 @@ private:
         CppAD::sparse_jacobian_work work; // temporary structure for CPPAD
         std::vector<size_t> jacOuterRows, jacOuterCols;
         generateSparsityIndexes(jacOuterSpar, jacOuterRows, jacOuterCols);
-        vector<CGD> jacOrig(jacOuterCols.size());
+        std::vector<CGD> jacOrig(jacOuterCols.size());
         _funOuterNoAtom->SparseJacobianReverse(xOrig, jacSparsityOrig,
                                                jacOuterRows, jacOuterCols, jacOrig, work);
 
@@ -839,8 +698,8 @@ private:
         /**
          * Sparse Hessian
          */
-        vector<CGD> wOrig(m);
-        vector<double> w(m);
+        std::vector<CGD> wOrig(m);
+        std::vector<double> w(m);
         for (size_t i = 0; i < m; i++) {
             wOrig[i] = 1;
             w[i] = 1;
@@ -848,7 +707,7 @@ private:
         CppAD::sparse_hessian_work hessWork;
         std::vector<size_t> hessOuterRows, hessOuterCols;
         generateSparsityIndexes(hessOuterSpar, hessOuterRows, hessOuterCols);
-        vector<CGD> hessOrig(hessOuterRows.size());
+        std::vector<CGD> hessOrig(hessOuterRows.size());
         _funOuterNoAtom->SparseHessian(xOrig, wOrig, hessSparsityOrig,
                                        hessOuterRows, hessOuterCols, hessOrig, hessWork);
 
@@ -862,10 +721,10 @@ private:
         ASSERT_TRUE(compareValues<double>(hessOuter, hessOrig, epsilonR, epsilonA));
     }
 
-    virtual void prepareAtomicLibAtomicLib(const CppAD::vector<Base>& x,
-                                           const CppAD::vector<Base>& par,
-                                           const CppAD::vector<Base>& xNorm,
-                                           const CppAD::vector<Base>& eqNorm) {
+    virtual void prepareAtomicLibAtomicLib(const std::vector<Base>& x,
+                                           const std::vector<Base>& par,
+                                           const std::vector<Base>& xNorm,
+                                           const std::vector<Base>& eqNorm) {
         using CppAD::vector;
 
         tapeInnerModel(x, par, xNorm, eqNorm);
@@ -948,15 +807,15 @@ private:
         tapeOuterModelNoAtomics(x, par, xNorm, eqNorm);
     }
 
-    virtual void prepareAtomicLibModelBridge(const CppAD::vector<Base>& x,
-                                             const CppAD::vector<Base>& par,
-                                             const CppAD::vector<Base>& xNorm,
-                                             const CppAD::vector<Base>& eqNorm,
-                                             const std::vector<std::set<size_t> >& jacInner = {},
-                                             const std::vector<std::set<size_t> >& hessInner = {},
-                                             const std::vector<std::set<size_t> >& jacOuter = {},
-                                             const std::vector<std::set<size_t> >& hessOuter = {},
-                                             bool createOuterReverse2 = true) {
+    void prepareAtomicLibModelBridge(const std::vector<Base>& x,
+                                     const std::vector<Base>& par,
+                                     const std::vector<Base>& xNorm,
+                                     const std::vector<Base>& eqNorm,
+                                     const std::vector<std::set<size_t> >& jacInner = {},
+                                     const std::vector<std::set<size_t> >& hessInner = {},
+                                     const std::vector<std::set<size_t> >& jacOuter = {},
+                                     const std::vector<std::set<size_t> >& hessOuter = {},
+                                     bool createOuterReverse2 = true) {
 
         tapeInnerModel(x, par, xNorm, eqNorm);
 
@@ -967,10 +826,10 @@ private:
     }
 
 protected:
-    void tapeInnerModel(const CppAD::vector<Base>& x,
-                        const CppAD::vector<Base>& par,
-                        const CppAD::vector<Base>& xNorm,
-                        const CppAD::vector<Base>& eqNorm) {
+    void tapeInnerModel(const std::vector<Base>& x,
+                        const std::vector<Base>& par,
+                        const std::vector<Base>& xNorm,
+                        const std::vector<Base>& eqNorm) {
         const size_t n = x.size();
 
         // independent variables
@@ -994,14 +853,14 @@ protected:
         normalizeDependents(ay, eqNorm);
 
         // create f: U -> ay and vectors used for derivative calculations
-        _funInner.reset(new ADFun<CGD>());
+        _funInner = std::make_unique<ADFun<CGD>>();
         _funInner->Dependent(ay);
     }
 
-    void tapeOuterModelNoAtomics(const CppAD::vector<Base>& x,
-                                 const CppAD::vector<Base>& par,
-                                 const CppAD::vector<Base>& xNorm,
-                                 const CppAD::vector<Base>& eqNorm) {
+    void tapeOuterModelNoAtomics(const std::vector<Base>& x,
+                                 const std::vector<Base>& par,
+                                 const std::vector<Base>& xNorm,
+                                 const std::vector<Base>& eqNorm) {
         // independent variables
         std::vector<ADCGD> ax = makeADCGVector(x);
 
@@ -1024,16 +883,16 @@ protected:
         std::vector<ADCGD> az = modelOuter(ay, ap);
 
         // create f: ax -> az
-        _funOuterNoAtom.reset(new ADFun<CGD>());
+        _funOuterNoAtom = std::make_unique<ADFun<CGD>>();
         _funOuterNoAtom->Dependent(az);
     }
 
     template<class Atomic>
     void tapeOuterModelWithAtomic(Atomic atomic,
-                                  const CppAD::vector<Base>& x,
-                                  const CppAD::vector<Base>& par,
-                                  const CppAD::vector<Base>& xNorm,
-                                  const CppAD::vector<Base>& eqNorm) {
+                                  const std::vector<Base>& x,
+                                  const std::vector<Base>& par,
+                                  const std::vector<Base>& xNorm,
+                                  const std::vector<Base>& eqNorm) {
         const size_t m = _modelLib->Range();
 
         // independent variables
@@ -1056,7 +915,7 @@ protected:
         // call user function and store CGAtomicLibModel(x) in au[0]
         assert(_modelLib != nullptr);
         assert(_modelLib->getName() ==  _modelName);
-        _atomFun.reset(new CGAtomicFun<double> (_modelLib->asAtomic(), x, _modelLib->Parameters()));
+        _atomFun = std::make_unique<CGAtomicFun<double>>(_modelLib->asAtomic(), x, _modelLib->Parameters());
         //CGAtomicGenericModel<double>& atomicfun = _modelLib->asAtomic();
 
         (*_atomFun)(ax, ay); // atomic function
@@ -1066,7 +925,7 @@ protected:
         std::vector<ADCGD> az = modelOuter(ay, ap);
 
         // create f: ax -> az
-        _funOuterAtom.reset(new ADFun<CGD>());
+        _funOuterAtom = std::make_unique<ADFun<CGD>>();
         _funOuterAtom->Dependent(az);
     }
 
@@ -1081,6 +940,8 @@ protected:
         cSourceInner->setCreateForwardOne(true);
         cSourceInner->setCreateReverseOne(true);
         cSourceInner->setCreateReverseTwo(true);
+        cSourceInner->setCreateJacobian(true);
+        cSourceInner->setCreateHessian(true);
         cSourceInner->setCreateSparseJacobian(true);
         cSourceInner->setCreateSparseHessian(true);
 
@@ -1119,8 +980,8 @@ protected:
         return _dynamicLib->model(_modelName);
     }
 
-    void compileInnerAndOuterModelWithAtomicsSameLib(const CppAD::vector<Base>& x,
-                                                     const CppAD::vector<Base>& par,
+    void compileInnerAndOuterModelWithAtomicsSameLib(const std::vector<Base>& x,
+                                                     const std::vector<Base>& par,
                                                      const std::vector<std::set<size_t> >& jacInner,
                                                      const std::vector<std::set<size_t> >& hessInner,
                                                      const std::vector<std::set<size_t> >& jacOuter,
@@ -1157,8 +1018,8 @@ protected:
     }
 
     std::unique_ptr<ModelCSourceGen<double>>
-    prepareOuterModelCompilationWithAtomicSameLib(const CppAD::vector<Base>& x,
-                                                  const CppAD::vector<Base>& par,
+    prepareOuterModelCompilationWithAtomicSameLib(const std::vector<Base>& x,
+                                                  const std::vector<Base>& par,
                                                   const std::vector<std::set<size_t> >& jacInner,
                                                   const std::vector<std::set<size_t> >& hessInner,
                                                   const std::vector<std::set<size_t> >& jacOuter,
@@ -1177,7 +1038,7 @@ protected:
         bool record_compare = true;
         CppAD::Independent(axOuter, abort_op_index, record_compare, ap2);
 
-        atomicFun.reset(new CGAtomicFunBridge<double>(_modelName, *_funInner, true));
+        atomicFun = std::make_unique<CGAtomicFunBridge<double>>(_modelName, *_funInner, true);
         if (!jacInner.empty()) {
             atomicFun->setCustomSparseJacobianElements(jacInner);
         }
@@ -1190,7 +1051,7 @@ protected:
         std::vector<ADCGD> ayOuter = modelOuter(ayInner, ap2);
 
         // create f: axOuter -> ayOuter
-        _funOuterAtom.reset(new ADFun<CGD>());
+        _funOuterAtom = std::make_unique<ADFun<CGD>>();
         _funOuterAtom->Dependent(ayOuter);
 
         std::unique_ptr<ModelCSourceGen<double>> cSourceOuter(
@@ -1214,8 +1075,8 @@ protected:
         return cSourceOuter;
     }
 
-    void normalizeIndependents(std::vector<ADCGD>& ax, const CppAD::vector<Base>& xNorm) const {
-        if (xNorm.size() == 0) {
+    static void normalizeIndependents(std::vector<ADCGD>& ax, const std::vector<Base>& xNorm) {
+        if (xNorm.empty()) {
             return;
         }
 
@@ -1225,8 +1086,8 @@ protected:
         }
     }
 
-    void normalizeDependents(std::vector<ADCGD>& ay, const CppAD::vector<Base>& eqNorm) {
-        if (eqNorm.size() == 0) {
+    static void normalizeDependents(std::vector<ADCGD>& ay, const std::vector<Base>& eqNorm) {
+        if (eqNorm.empty()) {
             return;
         }
         ASSERT_EQ(ay.size(), eqNorm.size());

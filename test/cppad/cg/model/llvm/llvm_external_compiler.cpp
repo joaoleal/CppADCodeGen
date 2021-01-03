@@ -28,7 +28,7 @@ public:
 
 
 TEST_F(LlvmModelExternalCompilerTest, ForwardZero) {
-    testForwardZeroResults(*model, *fun, x);
+    testForwardZeroResults(*model, *fun, nullptr, x);
 }
 
 TEST_F(LlvmModelExternalCompilerTest, DenseJacobian) {
@@ -40,9 +40,15 @@ TEST_F(LlvmModelExternalCompilerTest, DenseHessian) {
 }
 
 TEST_F(LlvmModelExternalCompilerTest, Jacobian) {
-    testJacobianResults(*llvmModelLib, *model, *fun, x, {}, false);
+    // sparse Jacobian again (make sure the second run is also OK)
+    size_t n_tests = llvmModelLib->getThreadNumber() > 1 ? 2 : 1;
+
+    testSparseJacobianResults(n_tests, *model, *fun, nullptr, x, {}, false);
 }
 
 TEST_F(LlvmModelExternalCompilerTest, Hessian) {
-    testHessianResults(*llvmModelLib, *model, *fun, x, {}, false);
+    // sparse Hessian again (make sure the second run is also OK)
+    size_t n_tests = llvmModelLib->getThreadNumber() > 1 ? 2 : 1;
+
+    testSparseHessianResults(n_tests, *model, *fun, nullptr, x, {}, false);
 }

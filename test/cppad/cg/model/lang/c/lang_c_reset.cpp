@@ -1,6 +1,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -13,63 +14,49 @@
  * Author: Joao Leal
  */
 
-#include <cppad/cg/cppadcg.hpp>
+#include "CppADCGTest.hpp"
 
-#include "gcc_load_dynamic.hpp"
+using namespace CppAD;
+using namespace CppAD::cg;
 
-namespace {
-
-bool HandlerReset1() {
+TEST_F(CppADCGTest, HandlerReset) {
     using namespace CppAD;
     using namespace std;
 
     CodeHandler<double> handler(20);
 
     // independent variables of CppAD
-    vector<CG<double> > u(3);
-    handler.makeVariables(u);
+    std::vector<CG<double> > x(3);
+    handler.makeVariables(x);
 
     // independent variables of CppAD
-    vector<AD<CG<double> > > U(3);
-    U[0] = u[0];
-    U[1] = u[1];
-    U[2] = u[2];
+    std::vector<AD<CG<double> > > ax(3);
+    ax[0] = x[0];
+    ax[1] = x[1];
+    ax[2] = x[2];
 
-    CppAD::Independent(U);
+    CppAD::Independent(ax);
 
     // dependent variable of CppAD
-    vector<AD<CG<double> > > w(3);
-    w[0] = u[0] + 2.0;
-    w[1] = u[1] + 3.0;
-    w[2] = u[2] * 4.0;
+    std::vector<AD<CG<double> > > ay(3);
+    ay[0] = x[0] + 2.0;
+    ay[1] = x[1] + 3.0;
+    ay[2] = x[2] * 4.0;
 
-    CppAD::ADFun<CG<double> > f(U, w);
+    CppAD::ADFun<CG<double> > f(ax, ay);
 
-    vector<CG<double> > dep = f.Forward(0, u);
+    std::vector<CG<double> > dep = f.Forward(0, x);
+
+    LanguageC<double> languageC("double");
+    LangCDefaultVariableNameGenerator<double> nameGen;
 
     ostringstream code;
-    handler.generateCode(code, dep);
+    handler.generateCode(code, languageC, dep, nameGen);
     string code1 = code.str();
 
     code.str("");
-    handler.generateCode(code, dep);
+    handler.generateCode(code, languageC, dep, nameGen);
     string code2 = code.str();
 
-    if (code1 == code2) {
-        return true;
-    } else {
-        cerr << "\n ############################\n\n" << code1
-                << "\n ############################\n\n" << code2
-                << "\n ############################\n\n";
-        return false;
-    }
-
-}
-
-}
-
-bool HandlerReset() {
-    bool ok = true;
-    ok &= HandlerReset1();
-    return ok;
+    ASSERT_EQ(code1, code2);
 }

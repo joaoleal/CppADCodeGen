@@ -37,6 +37,12 @@ protected:
 
 public:
 
+    LinuxDynamicLibModel(LinuxDynamicLibModel&& other) noexcept :
+            FunctorGenericModel<Base>(std::move(other)),
+            _dynLib(other._dynLib) {
+        other._dynLib = nullptr;
+    }
+
     virtual ~LinuxDynamicLibModel() {
         if (_dynLib != nullptr) {
             _dynLib->destroyed(this);

@@ -1,6 +1,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2014 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -14,7 +15,6 @@
  */
 
 #include <iostream>
-#include <fstream>
 
 #include <cppad/cg/cppadcg.hpp>
 #include <cppad/cg/lang/latex/latex.hpp>
@@ -23,7 +23,7 @@
 using namespace CppAD;
 using namespace CppAD::cg;
 
-TEST(CppADCGLatexTest, latex) {
+TEST(CppADCGLatexTest, latex) { // NOLINT(cert-err58-cpp)
     // use a special object for source code generation
     using CGD = CG<double>;
     using ADCG = AD<CGD>;
@@ -76,7 +76,7 @@ TEST(CppADCGLatexTest, latex) {
 }
 
 
-TEST(CppADCGLatexTest, latexJac) {
+TEST(CppADCGLatexTest, latexJac) { // NOLINT(cert-err58-cpp)
     // use a special object for source code generation
     using CGD = CG<double>;
     using ADCG = AD<CGD>;

@@ -1,8 +1,6 @@
-#ifndef CPPAD_CG_DYNAMICLIB_INCLUDED
-#define CPPAD_CG_DYNAMICLIB_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -15,29 +13,10 @@
  * Author: Joao Leal
  */
 
-namespace CppAD {
-namespace cg {
+#ifndef CPPADCG_MULTI_OBJECT_HPP
+#define CPPADCG_MULTI_OBJECT_HPP
 
-/**
- * Abstract class used to load compiled models in a dynamic library
- * 
- * @author Joao Leal
- */
-template<class Base>
-class DynamicLib : public FunctorModelLibrary<Base> {
-public:
+void callCodeGen1();
+void callCodeGen2();
 
-    inline DynamicLib() = default;
-
-    inline DynamicLib(DynamicLib&& other) noexcept:
-            FunctorModelLibrary<Base>(std::move(other)) {
-    }
-
-    inline virtual ~DynamicLib() = default;
-
-};
-
-} // END cg namespace
-} // END CppAD namespace
-
-#endif
+#endif //CPPADCG_MULTI_OBJECT_HPP

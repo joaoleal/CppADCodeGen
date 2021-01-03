@@ -99,9 +99,9 @@ TEST_F(SingleVarAtomicGenericModelTest, DynamicForRevNonlinearLinear) {
     using namespace std;
     using CppAD::vector;
 
-    vector<Base> x(n);
+    std::vector<Base> x(n);
     x[0] = 0.5;
-    vector<Base> par;
+    std::vector<Base> par;
 
     // simple wrap (no outer model used)
     this->testADFunAtomicLibSimple(x, par); // one compiled model used as an atomic function by an ADFun
@@ -122,11 +122,11 @@ TEST_F(CppADCGDynamicAtomicModel2Test, DynamicForRevNonlinearLinear) {
     using namespace std;
     using CppAD::vector;
 
-    vector<Base> x(n);
+    std::vector<Base> x(n);
     for (size_t j = 0; j < n; j++)
         x[j] = j + 2;
 
-    vector<Base> par;
+    std::vector<Base> par;
 
     // simple wrap (no outer model used)
     this->testADFunAtomicLibSimple(x, par); // one compiled model used as an atomic function by an ADFun

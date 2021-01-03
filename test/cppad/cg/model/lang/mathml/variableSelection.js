@@ -2,8 +2,8 @@ function contains(arr, o) {
     if (usages === null || usages === undefined) {
         return false;
     }
-    var l = arr.length;
-    for (var i = 0; i < l; i++) {
+    const l = arr.length;
+    for (let i = 0; i < l; i++) {
         if (arr[i] === o) {
             return true;
         }
@@ -14,7 +14,7 @@ function contains(arr, o) {
 function findEquation(el) {
     if (el.classList.contains('indep'))
         return null;
-    while (el != document) {
+    while (el !== document) {
         if (el.classList.contains('equation')) {
             return el;
         }
@@ -24,8 +24,8 @@ function findEquation(el) {
 }
 
 function isBranch(eq) {
-    var el = eq.parentNode;
-    while (el != document && el.id != 'algorithm') {
+    let el = eq.parentNode;
+    while (el !== document && el.id !== 'algorithm') {
         if (el.classList.contains('condBody')) {
             return true;
         }
@@ -35,9 +35,9 @@ function isBranch(eq) {
 }
 
 function showEquations(eqId, level) {
-    var el = document.getElementById('v' + eqId);
+    const el = document.getElementById('v' + eqId);
     if (el !== null) {
-        var eq = findEquation(el);
+        const eq = findEquation(el);
         if (eq !== null && eq !== undefined) {
             eq.classList.remove('faded');
             if (!eq.classList.contains('depEq')) {
@@ -50,30 +50,30 @@ function showEquations(eqId, level) {
         }
     }
 
-    var deps = var2dep[eqId];
+    const deps = var2dep[eqId];
     if (deps === undefined || deps === null) {
         return;
     }
-    for (var i = 0; i < deps.length; i++) {
-        var id = deps[i];
+    for (let i = 0; i < deps.length; i++) {
+        const id = deps[i];
         showEquations(id, level + 1);
     }
 }
 
 function hideEquationForIds(ids, visibleId) {
-    for (var co in ids) {
+    for (const co in ids) {
         if (visibleId === ids[co])
             continue;
-        var el = document.getElementById(ids[co]);
+        const el = document.getElementById(ids[co]);
         if (el !== null && el !== undefined) {
-            var eq = findEquation(el);
+            const eq = findEquation(el);
             if (eq !== null && eq !== undefined)
                 eq.classList.add('faded');
         }
     }
 }
 function clearAllClass(className) {
-    var list = document.getElementsByClassName(className);
+    const list = document.getElementsByClassName(className);
     if (list !== undefined) {
         while (list.length > 0) {
             list[0].classList.remove(className);
@@ -82,19 +82,19 @@ function clearAllClass(className) {
 }
 
 function clickHandler(e) {
-    var t = e.target;
+    let t = e.target;
 
     clearAllClass('selectedProp');
     clearAllClass('faded');
     clearAllClass('faded2');
     clearAllClass('depEq');
 
-    while (t != document) {
-        if (t.id !== null && t.id !== '' && t.id.charAt(0) == 'v') {
-            var baseId = t.id.split('_')[0];
-            var idval = baseId.substring(1);
-            var el = document.getElementById(baseId);
-            var n = 0;
+    while (t !== document) {
+        if (t.id !== null && t.id !== '' && t.id.charAt(0) === 'v') {
+            const baseId = t.id.split('_')[0];
+            const idval = baseId.substring(1);
+            let el = document.getElementById(baseId);
+            let n = 0;
             while (el !== null) {
                 el.classList.add('selectedProp');
                 n++;
@@ -103,15 +103,15 @@ function clickHandler(e) {
 
             // fade other equations which do not use this variable
             usages = dep2var[idval];
-            for (var i in var2dep) {
+            for (const i in var2dep) {
                 if (i === idval)
                     continue;
-                var vi = parseInt(i);
+                const vi = parseInt(i);
                 if (!contains(usages, vi)) {
-                    var el2 = document.getElementById('v' + i);
+                    let el2 = document.getElementById('v' + i);
                     n = 0;
                     while (el2 !== null) {
-                        var eq = findEquation(el2);
+                        const eq = findEquation(el2);
                         if (eq === null)
                             break;
                         eq.classList.add('faded');

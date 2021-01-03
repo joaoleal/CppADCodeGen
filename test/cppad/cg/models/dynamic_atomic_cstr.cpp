@@ -23,10 +23,10 @@ class CppADCGDynamicAtomicCstrTest : public CppADCGDynamicAtomicTest {
 protected:
     static const size_t n;
     static const size_t m;
-    CppAD::vector<Base> x;
-    CppAD::vector<Base> xNorm;
-    CppAD::vector<Base> par;
-    CppAD::vector<Base> eqNorm;
+    std::vector<Base> x;
+    std::vector<Base> xNorm;
+    std::vector<Base> par;
+    std::vector<Base> eqNorm;
     std::vector<std::set<size_t> > jacInner, hessInner;
     std::vector<std::set<size_t> > jacOuter, hessOuter;
 public:
