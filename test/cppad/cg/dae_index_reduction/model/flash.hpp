@@ -45,9 +45,9 @@ inline CppAD::ADFun<Base> Flash(std::vector<DaeVarInfo>& daeVar,
     ADB xFEthanol = U[9];
     ADB T_feed = U[10];
 
-    ADB D__nEthanol__Dt_1 = U[12];
-    ADB D__nWater__Dt_1 = U[13];
-    ADB D__T__Dt = U[14];
+    ADB D_nEthanol_Dt1 = U[12];
+    ADB D_nWater_Dt1 = U[13];
+    ADB D_T_Dt = U[14];
 
     daeVar.resize(U.size());
     daeVar[0] = DaeVarInfo("nEthanol");
@@ -62,9 +62,9 @@ inline CppAD::ADFun<Base> Flash(std::vector<DaeVarInfo>& daeVar,
     daeVar[9].makeConstant();
     daeVar[10].makeConstant();
     daeVar[11].makeIntegratedVariable();
-    daeVar[12] = 0;
-    daeVar[13] = 1;
-    daeVar[14] = 2;
+    daeVar[12] = DaeVarInfo(0);
+    daeVar[13] = DaeVarInfo(1);
+    daeVar[14] = DaeVarInfo(2);
 
     // dependent variable vector
     std::vector<ADB> res(6);
@@ -92,12 +92,12 @@ inline CppAD::ADFun<Base> Flash(std::vector<DaeVarInfo>& daeVar,
     ADB FNLEthanol = F_NL - FNLWater;
     ADB FNVWater = yWater * FV;
     ADB FNVEthanol = FV - FNVWater;
-    ADB D__nEthanol__Dt = FNEthanol - FNLEthanol - FNVEthanol;
-    res[0] = D__nEthanol__Dt_1 - (D__nEthanol__Dt * 0.001);
+    ADB D_nEthanol_Dt = FNEthanol - FNLEthanol - FNVEthanol;
+    res[0] = D_nEthanol_Dt1 - (D_nEthanol_Dt * 0.001);
 
     ADB FNFWater = F_feed - FNEthanol;
-    ADB D__nWater__Dt = FNFWater - FNLWater - FNVWater;
-    res[1] = D__nWater__Dt_1 - (D__nWater__Dt * 0.001);
+    ADB D_nWater_Dt = FNFWater - FNLWater - FNVWater;
+    res[1] = D_nWater_Dt1 - (D_nWater_Dt * 0.001);
 
     ADB FMFEthanol = FNEthanol * 0.04606844;
     ADB FMFWater = FNFWater * 0.0180152833;
@@ -111,7 +111,7 @@ inline CppAD::ADFun<Base> Flash(std::vector<DaeVarInfo>& daeVar,
     ADB dQ_vap = FV * dH_mVap;
     ADB Q_1 = Q * 1000.;
     ADB cp = wEthanol * 2898.42878374706 + w_Water * 4186.92536027523;
-    res[2] = D__T__Dt - (dQ_F - dQ_vap + Q_1) / (m * cp);
+    res[2] = D_T_Dt - (dQ_F - dQ_vap + Q_1) / (m * cp);
 
     ADB pVapWater = 100000. * pow(10., 4.6543 - 1435.264 / (T_aux - 64.848));
     ADB KWater = pVapWater / p_aux;

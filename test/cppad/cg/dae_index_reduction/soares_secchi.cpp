@@ -132,12 +132,12 @@ TEST_F(IndexReductionTest, SoaresSecchiPendulum3D) {
     ADFun<CGD> fun = Pendulum3D<CGD> ();
 
     std::vector<DaeVarInfo> daeVar(13);
-    daeVar[7] = 0;
-    daeVar[8] = 1;
-    daeVar[9] = 2;
-    daeVar[10] = 3;
-    daeVar[11] = 4;
-    daeVar[12] = 5;
+    daeVar[7] = DaeVarInfo(0);
+    daeVar[8] = DaeVarInfo(1);
+    daeVar[9] = DaeVarInfo(2);
+    daeVar[10] = DaeVarInfo(3);
+    daeVar[11] = DaeVarInfo(4);
+    daeVar[12] = DaeVarInfo(5);
 
     std::vector<double> x(13);
     x[0] = -1.0; // x

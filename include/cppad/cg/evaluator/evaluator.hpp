@@ -51,8 +51,8 @@ protected:
     const ActiveOut* indep_;
     const ActiveOut* parameters_;
     CodeHandlerVector<ScalarIn, std::unique_ptr<ActiveOut>> evals_;
-    std::map<size_t, std::vector<ActiveOut>* > evalsArrays_;
-    std::map<size_t, std::vector<ActiveOut>* > evalsSparseArrays_;
+    std::map<size_t, CppAD::vector<ActiveOut>* > evalsArrays_;
+    std::map<size_t, CppAD::vector<ActiveOut>* > evalsSparseArrays_;
     bool underEval_;
     size_t depth_;
     SourceCodePath path_;
@@ -286,7 +286,7 @@ protected:
     inline ActiveOut* saveEvaluation(const OperationNode<ScalarIn>& node,
                                      ActiveOut&& result) {
         std::unique_ptr<ActiveOut>& resultPtr = evals_[node];
-        CPPADCG_ASSERT_UNKNOWN(resultPtr == nullptr); // not supposed to override existing result
+        CPPADCG_ASSERT_UNKNOWN(resultPtr == nullptr) // not supposed to override existing result
         resultPtr.reset(new ActiveOut(std::move(result)));
 
         ActiveOut* resultPtr2 = resultPtr.get(); // do not use a reference (just in case evals_ is resized)
@@ -297,9 +297,9 @@ protected:
         return resultPtr2;
     }
 
-    inline std::vector<ActiveOut>& evalArrayCreationOperation(const OperationNode<ScalarIn>& node) {
+    inline CppAD::vector<ActiveOut>& evalArrayCreationOperation(const OperationNode<ScalarIn>& node) {
 
-        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::ArrayCreation, "Invalid array creation operation");
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::ArrayCreation, "Invalid array creation operation")
         CPPADCG_ASSERT_KNOWN(node.getHandlerPosition() < handler_.getManagedNodesCount(), "this node is not managed by the code handler")
 
         // check if this node was previously determined
@@ -309,7 +309,7 @@ protected:
         }
 
         const std::vector<Argument<ScalarIn> >& args = node.getArguments();
-        auto* resultArray = new std::vector<ActiveOut>(args.size());
+        auto* resultArray = new CppAD::vector<ActiveOut>(args.size());
 
         // save it for reuse
         evalsArrays_[node.getHandlerPosition()] = resultArray;
@@ -322,9 +322,9 @@ protected:
         return *resultArray;
     }
 
-    inline std::vector<ActiveOut>& evalSparseArrayCreationOperation(const OperationNode<ScalarIn>& node) {
+    inline CppAD::vector<ActiveOut>& evalSparseArrayCreationOperation(const OperationNode<ScalarIn>& node) {
 
-        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::SparseArrayCreation, "Invalid array creation operation");
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::SparseArrayCreation, "Invalid array creation operation")
         CPPADCG_ASSERT_KNOWN(node.getHandlerPosition() < handler_.getManagedNodesCount(), "this node is not managed by the code handler")
 
         // check if this node was previously determined
@@ -334,7 +334,7 @@ protected:
         }
 
         const std::vector<Argument<ScalarIn> >& args = node.getArguments();
-        auto* resultArray = new std::vector<ActiveOut>(args.size());
+        auto* resultArray = new CppAD::vector<ActiveOut>(args.size());
 
         // save it for reuse
         evalsSparseArrays_[node.getHandlerPosition()] = resultArray;
@@ -372,7 +372,7 @@ public:
     using NodeIn = OperationNode<ScalarIn>;
     using ArgIn = Argument<ScalarIn>;
 public:
-    inline EvaluatorOperations(CodeHandler<ScalarIn>& handler):
+    inline explicit EvaluatorOperations(CodeHandler<ScalarIn>& handler):
             Base(handler) {
     }
 
@@ -534,11 +534,11 @@ protected:
         const std::vector<ArgIn>& args = node.getArguments();
         const std::vector<size_t>& info = node.getInfo();
         CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for array element")
-        CPPADCG_ASSERT_KNOWN(args[0].getOperation() != nullptr, "Invalid argument for array element");
-        CPPADCG_ASSERT_KNOWN(args[1].getOperation() != nullptr, "Invalid argument for array element");
+        CPPADCG_ASSERT_KNOWN(args[0].getOperation() != nullptr, "Invalid argument for array element")
+        CPPADCG_ASSERT_KNOWN(args[1].getOperation() != nullptr, "Invalid argument for array element")
         CPPADCG_ASSERT_KNOWN(info.size() == 1, "Invalid number of information data for array element")
         size_t index = info[0];
-        std::vector<ActiveOut>& array = this->evalArrayCreationOperation(*args[0].getOperation()); // array creation
+        CppAD::vector<ActiveOut>& array = this->evalArrayCreationOperation(*args[0].getOperation()); // array creation
 
         auto& thisOps = static_cast<FinalEvaluatorType&>(*this);
         thisOps.evalAtomicOperation(*args[1].getOperation()); // atomic operation
@@ -723,7 +723,7 @@ public:
     using Base = EvaluatorOperations<ScalarIn, ScalarOut, ActiveOut, Evaluator<ScalarIn, ScalarOut, ActiveOut> >;
 public:
 
-    inline Evaluator(CodeHandler<ScalarIn>& handler) :
+    inline explicit Evaluator(CodeHandler<ScalarIn>& handler) :
             Base(handler) {
     }
 

@@ -1313,6 +1313,43 @@ protected:
 
     inline void finishedJob();
 
+private:
+    inline std::vector<CG<Base> > registerHandlerIndependents(CodeHandler<Base>& handler,
+                                                              const std::vector<Base>& x) {
+        // independent variables
+        std::vector<CGBase> indVars(_fun.Domain());
+
+        handler.makeVariables(indVars);
+
+        if (x.size() > 0) {
+            size_t n = indVars.size();
+            for (size_t i = 0; i < n; i++) {
+                indVars[i].setValue(x[i]);
+            }
+        }
+
+        return indVars;
+    }
+
+    inline std::vector<CG<Base> > registerHandlerParameters(CodeHandler<Base>& handler,
+                                                            const std::vector<Base>& xDynParams) {
+        // dynamic parameters
+        std::vector<CGBase> params(_fun.size_dyn_ind());
+
+        handler.makeParameters(params);
+
+        if (xDynParams.size() > 0) {
+            size_t np = params.size();
+            for (size_t i = 0; i < np; i++) {
+                params[i].setValue(xDynParams[i]);
+            }
+        }
+
+        _fun.new_dynamic(params);
+
+        return params;
+    }
+
     friend class
     ModelLibraryCSourceGen<Base>;
 

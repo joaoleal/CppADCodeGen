@@ -41,7 +41,7 @@ protected:
     using Super::evalArrayCreationOperation;
 protected:
     std::set<NodeIn*> evalsAtomic_;
-    std::map<size_t, CppAD::atomic_base<ScalarOut>* > atomicFunctions_;
+    std::map<size_t, CppAD::atomic_three<ScalarOut>* > atomicFunctions_;
     /**
      * Whether or not the nodes with an operation type 'Pri' are printed out
      * during the evaluation.
@@ -49,7 +49,7 @@ protected:
     bool printOutPriOperations_;
 public:
 
-    inline EvaluatorAD(CodeHandler<ScalarIn>& handler) :
+    inline explicit EvaluatorAD(CodeHandler<ScalarIn>& handler) :
         Super(handler),
         printOutPriOperations_(true) {
     }
@@ -80,15 +80,15 @@ public:
      * @return True if an atomic function with the same ID was already
      *         defined, false otherwise.
      */
-    virtual bool addAtomicFunction(size_t id, atomic_base<ScalarOut>& atomic) {
+    virtual bool addAtomicFunction(size_t id, atomic_three<ScalarOut>& atomic) {
         bool exists = atomicFunctions_.find(id) != atomicFunctions_.end();
         atomicFunctions_[id] = &atomic;
         return exists;
     }
 
-    virtual void addAtomicFunctions(const std::map<size_t, atomic_base<ScalarOut>* >& atomics) {
+    virtual void addAtomicFunctions(const std::map<size_t, atomic_three<ScalarOut>* >& atomics) {
         for (const auto& it : atomics) {
-            atomic_base<ScalarOut>* atomic = it.second;
+            atomic_three<ScalarOut>* atomic = it.second;
             if (atomic != nullptr) {
                 atomicFunctions_[it.first] = atomic;
             }
@@ -145,13 +145,8 @@ protected:
 
         // find the atomic function
         size_t id = info[0];
-        typename std::map<size_t, atomic_base<ScalarOut>* >::const_iterator itaf = atomicFunctions_.find(id);
-        atomic_base<ScalarOut>* atomicFunction = nullptr;
-        if (itaf != atomicFunctions_.end()) {
-            atomicFunction = itaf->second;
-        }
-
-        if (atomicFunction == nullptr) {
+        auto itAtomicFunc = atomicFunctions_.find(id);
+        if (itAtomicFunc == atomicFunctions_.end()) {
             std::stringstream ss;
             ss << "No atomic function defined in the evaluator for ";
             std::string atomName = handler_.getAtomicFunctionName(id);
@@ -162,19 +157,21 @@ protected:
             throw CGException(ss.str());
         }
 
-        size_t p = info[2];
-        if (p != 0) {
+        atomic_three<ScalarOut>& atomicFunction = *itAtomicFunc->second;
+
+        size_t order_up = info[2];
+        if (order_up != 0) {
             throw CGException("Evaluator can only handle zero forward mode for atomic functions");
         }
-        const std::vector<ActiveOut>& ax = evalArrayCreationOperation(*args[0].getOperation());
-        std::vector<ActiveOut>& ay = evalArrayCreationOperation(*args[1].getOperation());
-        const std::vector<ActiveOut>& ap = evalArrayCreationOperation(*args[2].getOperation());
+        const CppAD::vector<ActiveOut>& ax = evalArrayCreationOperation(*args[0].getOperation());
+        CppAD::vector<ActiveOut>& ay = evalArrayCreationOperation(*args[1].getOperation());
+        const CppAD::vector<ActiveOut>& ap = evalArrayCreationOperation(*args[2].getOperation());
 
         if (ap.size() != 0) {
-            throw CGException("Support for parameters in atomic functions not implemented yet!");
+            throw CGException("Support for parameters in atomic functions is not implemented yet!");
         }
 
-        (*atomicFunction)(ax, ay);
+        atomicFunction(ax, ay);
 
         evalsAtomic_.insert(&node);
     }

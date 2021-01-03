@@ -31,7 +31,9 @@ public:
 template<class Base>
 class DefaultPatternTestModel : public PatternTestModel<Base> {
 private:
-    std::vector<AD<Base> > (*model_)(const std::vector<AD<Base> >& x, const std::vector<AD<Base> >& par, size_t repeat);
+    std::vector<AD<Base> > (*model_)(const std::vector<AD<Base> >& x,
+                                     const std::vector<AD<Base> >& par,
+                                     size_t repeat);
 public:
 
     explicit DefaultPatternTestModel(std::vector<AD<Base> > (*model)(const std::vector<AD<Base> >& x, const std::vector<AD<Base> >& par, size_t repeat)) :
@@ -48,12 +50,18 @@ public:
 template<class Base>
 class PatternTestModelWithAtom : public PatternTestModel<Base> {
 private:
-    std::vector<AD<Base> > (*model_)(const std::vector<AD<Base> >& x, const std::vector<AD<Base> >& par, size_t repeat, atomic_base<Base>& atom);
-    atomic_base<Base>& atom_;
+    std::vector<AD<Base> > (*model_)(const std::vector<AD<Base> >& x,
+                                     const std::vector<AD<Base> >& par,
+                                     size_t repeat,
+                                     atomic_three<Base>& atom);
+    atomic_three<Base>& atom_;
 public:
 
-    explicit PatternTestModelWithAtom(std::vector<AD<Base> > (*model)(const std::vector<AD<Base> >& x, const std::vector<AD<Base> >& par, size_t repeat, atomic_base<Base>& atom),
-                                    atomic_base<Base>& atom) :
+    explicit PatternTestModelWithAtom(std::vector<AD<Base> > (*model)(const std::vector<AD<Base> >& x,
+                                                                      const std::vector<AD<Base> >& par,
+                                                                      size_t repeat,
+                                                                      atomic_three<Base>& atom),
+                                      atomic_three<Base>& atom) :
         model_(model),
         atom_(atom) {
     }

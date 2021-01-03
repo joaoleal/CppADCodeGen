@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -18,8 +19,58 @@
 namespace CppAD {
 namespace cg {
 
+template<class Base>
+inline sparse_rc<CppAD::vector<size_t>> jacobianForwardSparsity(ADFun<Base>& fun,
+                                                                bool internal_bool=true) {
+    bool transpose = false;
+    bool dependency = true;
+    size_t n = fun.Domain();
+
+    sparse_rc<CppAD::vector<size_t> > pattern_in;
+    pattern_in.resize(n, n, n);
+
+    for (size_t k = 0; k < n; ++k)
+        pattern_in.set(k, k, k);
+
+    sparse_rc<CppAD::vector<size_t> > jac_sparsity;
+
+    fun.for_jac_sparsity(pattern_in, transpose, dependency, internal_bool, jac_sparsity);
+
+    if (internal_bool)
+        fun.size_forward_bool(0);
+    else
+        fun.size_forward_set(0);
+
+    return jac_sparsity;
+}
+
+template<class Base>
+inline sparse_rc<CppAD::vector<size_t>> jacobianReverseSparsity(ADFun<Base>& fun,
+                                                                bool internal_bool=true) {
+    bool transpose = false;
+    bool dependency = true;
+    size_t m = fun.Range();
+
+    sparse_rc<CppAD::vector<size_t> > pattern_in;
+    pattern_in.resize(m, m, m);
+
+    for (size_t k = 0; k < m; ++k)
+        pattern_in.set(k, k, k);
+
+    sparse_rc<CppAD::vector<size_t> > jac_sparsity;
+
+    fun.rev_jac_sparsity(pattern_in, transpose, dependency, internal_bool, jac_sparsity);
+
+    if (internal_bool)
+        fun.size_forward_bool(0);
+    else
+        fun.size_forward_set(0);
+
+    return jac_sparsity;
+}
+
 template<class VectorBool, class Base>
-inline VectorBool jacobianForwardSparsity(ADFun<Base>& fun) {
+inline VectorBool jacobianForwardSparsityBool(ADFun<Base>& fun) {
     size_t n = fun.Domain();
 
     VectorBool r(n * n);
@@ -33,7 +84,7 @@ inline VectorBool jacobianForwardSparsity(ADFun<Base>& fun) {
 }
 
 template<class VectorBool, class Base>
-inline VectorBool jacobianReverseSparsity(ADFun<Base>& fun) {
+inline VectorBool jacobianReverseSparsityBool(ADFun<Base>& fun) {
     size_t m = fun.Range();
 
     VectorBool s(m * m);
@@ -74,16 +125,16 @@ inline VectorSet jacobianReverseSparsitySet(ADFun<Base>& fun) {
  * @return The Jacobian sparsity
  */
 template<class VectorBool, class Base>
-inline VectorBool jacobianSparsity(ADFun<Base>& fun) {
+inline VectorBool jacobianSparsityBool(ADFun<Base>& fun) {
     size_t m = fun.Range();
     size_t n = fun.Domain();
 
     if (n <= m) {
         // use forward mode 
-        return jacobianForwardSparsity<VectorBool, Base> (fun);
+        return jacobianForwardSparsityBool<VectorBool, Base> (fun);
     } else {
         // use reverse mode 
-        return jacobianReverseSparsity<VectorBool, Base> (fun);
+        return jacobianReverseSparsityBool<VectorBool, Base> (fun);
     }
 }
 
@@ -104,6 +155,21 @@ inline VectorSet jacobianSparsitySet(ADFun<Base>& fun) {
     } else {
         // use reverse mode 
         return jacobianReverseSparsitySet<VectorSet, Base> (fun);
+    }
+}
+
+template<class Base>
+inline sparse_rc<CppAD::vector<size_t>> jacobianSparsity(ADFun<Base>& fun,
+                                                         bool internal_bool=true) {
+    size_t n = fun.Domain();
+    size_t m = fun.Range();
+
+    if (n <= m) {
+        // use forward mode
+        return jacobianForwardSparsity(fun, internal_bool);
+    } else {
+        // use reverse mode
+        return jacobianReverseSparsity(fun, internal_bool);
     }
 }
 
@@ -132,8 +198,8 @@ inline bool estimateBestJacobianADMode(const std::vector<size_t>& jacRows,
  * @return The sum of the hessian sparsities
  */
 template<class VectorBool, class Base>
-inline VectorBool hessianSparsity(ADFun<Base>& fun,
-                                  bool transpose = false) {
+inline VectorBool hessianSparsityBool(ADFun<Base>& fun,
+                                      bool transpose = false) {
     size_t m = fun.Range();
     size_t n = fun.Domain();
 
@@ -175,7 +241,8 @@ inline VectorSet hessianSparsitySet(ADFun<Base>& fun,
 }
 
 template<class VectorSet, class Base>
-inline VectorSet hessianSparsitySet(ADFun<Base>& fun, bool transpose = false) {
+inline VectorSet hessianSparsitySet(ADFun<Base>& fun,
+                                    bool transpose = false) {
     size_t m = fun.Range();
 
     std::set<size_t> w;
@@ -194,9 +261,9 @@ inline VectorSet hessianSparsitySet(ADFun<Base>& fun, bool transpose = false) {
  * @return The hessian sparsity
  */
 template<class VectorBool, class Base>
-inline VectorBool hessianSparsity(ADFun<Base>& fun,
-                                  size_t i,
-                                  bool transpose = false) {
+inline VectorBool hessianSparsityBool(ADFun<Base>& fun,
+                                      size_t i,
+                                      bool transpose = false) {
     size_t m = fun.Range();
     size_t n = fun.Domain();
 
@@ -233,6 +300,48 @@ inline VectorSet hessianSparsitySet(ADFun<Base>& fun,
     s[0].insert(i);
 
     return fun.RevSparseHes(n, s, transpose);
+}
+
+template<class Base>
+inline sparse_rc<CppAD::vector<size_t>> hessianSparsity(ADFun<Base>& fun,
+                                                        bool internal_bool=true) {
+    size_t m = fun.Range();
+    size_t n = fun.Domain();
+
+    CppAD::vector<bool> select_y(m), select_x(n);
+
+    sparse_rc<CppAD::vector<size_t> > hes_sparsity;
+
+    for (size_t i = 0; i < m; ++i)
+        select_y[i] = true;
+
+    if (n <= m) {
+        for (size_t j = 0; j < n; ++j)
+            select_x[j] = true;
+        fun.for_hes_sparsity(select_x, select_y, internal_bool, hes_sparsity);
+    } else {
+
+        // sparsity pattern for the identity matrix
+        sparse_rc<CppAD::vector<size_t> > pattern_in(n, n, n);
+        for (size_t k = 0; k < n; k++) {
+            pattern_in.set(k, k, k);
+        }
+
+        // forward Jacobian sparsity is stored in fun
+        bool transpose = false;
+        bool dependency = false;
+        sparse_rc<CppAD::vector<size_t> > jac_pattern;
+        fun.for_jac_sparsity(pattern_in, transpose, dependency, internal_bool, jac_pattern);
+
+        fun.rev_hes_sparsity(select_y, transpose, internal_bool, hes_sparsity);
+    }
+
+    if (internal_bool)
+        fun.size_forward_bool(0);
+    else
+        fun.size_forward_set(0);
+
+    return hes_sparsity;
 }
 
 template<class VectorBool, class VectorSize>
@@ -305,6 +414,263 @@ inline void generateSparsitySet(const VectorSize& row,
     size_t nnz = row.size();
     for (size_t e = 0; e < nnz; e++) {
         sparsity[row[e]].insert(col[e]);
+    }
+}
+
+template<class VectorSet, class VectorSize>
+inline void generateSparsitySet(const sparse_rc<VectorSize>& from,
+                                VectorSet& to) {
+
+    to.resize(from.nr());
+    for (size_t k = 0; k < to.size(); ++k) {
+        to[k].clear();
+    }
+
+    size_t nnz = from.nnz();
+    const auto& row = from.row();
+    const auto& col = from.col();
+
+    for (size_t e = 0; e < nnz; e++) {
+        to[row[e]].insert(col[e]);
+    }
+}
+
+template<class VectorSet, class VectorSize>
+inline void generateSparsity(const VectorSet& from,
+                             size_t n,
+                             sparse_rc<VectorSize>& to) {
+
+    CPPADCG_ASSERT_KNOWN(to.nr() == from.size(), "Invalid sizes")
+
+    size_t m = from.size();
+
+    // determine total of non-zeros
+    size_t nnz = 0;
+    for (size_t i = 0; i < m; ++i)
+        nnz += from[i].size();
+
+    // reserve space
+    to.resize(m, n, nnz);
+
+    // copy indices
+    size_t k = 0;
+    for (size_t i = 0; i < m; ++i) {
+        for (size_t j: from[i]) {
+            to.set(k, i, j);
+            k++;
+        }
+    }
+}
+
+inline bool isAllTrue(ArrayView<const bool> select_x) noexcept {
+    for (bool i : select_x)
+        if (!i)
+            return false;
+    return true;
+}
+
+/**
+ * See atomic_three<Base>::for_type
+ */
+inline void for_type(const sparse_rc<CppAD::vector<size_t>>& jac_pattern,
+                     ArrayView<const ad_type_enum> type_x,
+                     ArrayView<ad_type_enum> type_y) {
+
+    size_t nr = jac_pattern.nr();
+    size_t nnz = jac_pattern.nnz();
+    const auto& row = jac_pattern.row();
+    const auto& col = jac_pattern.col();
+
+    CPPADCG_ASSERT_KNOWN(jac_pattern.nr() == type_y.size(), "Invalid type_y size")
+    CPPADCG_ASSERT_KNOWN(jac_pattern.nc() == type_x.size(), "Invalid type_x size")
+
+    // initialize type_y as constant_enum
+    for (size_t i = 0; i < nr; ++i)
+        type_y[i] = constant_enum;
+
+    // loop over entries in Dependency pattern
+    for (size_t k = 0; k < nnz; ++k) {
+        size_t i = row[k];
+        size_t j = col[k];
+        type_y[i] = std::max(type_y[i], type_x[j]);
+    }
+}
+
+/**
+ * See atomic_three<Base>::for_type
+ */
+template<class Base>
+void for_type(ADFun<Base>& fun,
+              ArrayView<const ad_type_enum> type_x,
+              ArrayView<ad_type_enum> type_y) {
+    const sparse_rc<CppAD::vector<size_t>>& jac_pattern = CppAD::cg::jacobianSparsity(fun);
+
+    for_type(jac_pattern, type_x, type_y);
+}
+
+/**
+ * See atomic_three<Base>::rev_depend
+ */
+inline void rev_depend(const sparse_rc<CppAD::vector<size_t>>& jac_pattern,
+                       ArrayView<const ad_type_enum> type_x,
+                       ArrayView<bool> depend_x,
+                       ArrayView<const bool> depend_y) {
+
+    size_t nc = jac_pattern.nc();
+    size_t nnz = jac_pattern.nnz();
+    const auto& row = jac_pattern.row();
+    const auto& col = jac_pattern.col();
+
+    CPPAD_ASSERT_UNKNOWN(jac_pattern.nr() == depend_y.size())
+    CPPAD_ASSERT_UNKNOWN(jac_pattern.nc() == depend_x.size())
+
+    // initialize depend_x as false
+    for (size_t j = 0; j < nc; ++j)
+        depend_x[j] = false;
+
+    // loop over entries in Dependency pattern
+    for (size_t k = 0; k < nnz; ++k) {
+        size_t i = row[k];
+        size_t j = col[k];
+        if (depend_y[i])
+            depend_x[j] = true;
+    }
+}
+
+template<class Base>
+void rev_depend(ADFun<Base>& fun,
+                ArrayView<const ad_type_enum> type_x,
+                ArrayView<bool> depend_x,
+                ArrayView<const bool> depend_y) {
+    const sparse_rc<CppAD::vector<size_t>>& jac_pattern = CppAD::cg::jacobianSparsity(fun);
+    rev_depend(jac_pattern, type_x, depend_x, depend_y);
+}
+
+inline void filter(const sparse_rc<CppAD::vector<size_t>>& from,
+                   ArrayView<const bool> select_y,
+                   ArrayView<const bool> select_x,
+                   sparse_rc<CppAD::vector<size_t>>& to) {
+
+    if (isAllTrue(select_x) && isAllTrue(select_y)) {
+        to = from;
+        return;
+    }
+
+    size_t fullNnz = from.nnz();
+    auto& row = from.row();
+    auto& col = from.col();
+
+    //sparse_rc<CppAD::vector<size_t>> filtered(sparsity.nr(), sparsity.nc(), fullNnz);
+    to.resize(from.nr(), from.nc(), fullNnz);
+
+    size_t nnz = 0;
+
+    for (size_t k = 0; k < fullNnz; ++k) {
+        size_t i = row[k];
+        size_t j = col[k];
+        if (select_y[i] && select_x[j]) {
+            to.set(nnz, i, j);
+            nnz++;
+        }
+    }
+
+    if (fullNnz != nnz) {
+        to.resize(to.nr(), to.nc(), nnz);
+    }
+}
+
+inline void filter(sparse_rc<CppAD::vector<size_t>>& sparsity,
+                   ArrayView<const bool> select_y,
+                   ArrayView<const bool> select_x) {
+
+    sparse_rc<CppAD::vector<size_t>> filtered;
+    filter(sparsity, select_y, select_x, filtered);
+
+
+    if (sparsity.nnz() != filtered.nnz()) {
+        sparsity = filtered;
+    }
+}
+
+inline void filter(const sparse_rc<CppAD::vector<size_t>>& from,
+                   ArrayView<const bool> select_x,
+                   sparse_rc<CppAD::vector<size_t>>& to) {
+
+    CPPADCG_ASSERT_UNKNOWN(from.nr() == from.nc())
+
+    if (isAllTrue(select_x)) {
+        to = from;
+        return;
+    }
+
+    size_t fullNnz = from.nnz();
+    auto& row = from.row();
+    auto& col = from.col();
+
+    to.resize(from.nr(), from.nc(), fullNnz);
+
+    size_t nnz = 0;
+    for (size_t k = 0; k < fullNnz; ++k) {
+        size_t i = row[k];
+        size_t j = col[k];
+        if (select_x[i] && select_x[j]) {
+            to.set(nnz, i, j);
+            nnz++;
+        }
+    }
+
+    if (fullNnz != nnz) {
+        to.resize(to.nr(), to.nc(), nnz);
+    }
+}
+
+inline void filter(sparse_rc<CppAD::vector<size_t>>& sparsity,
+                   ArrayView<const bool> select_x) {
+
+    sparse_rc<CppAD::vector<size_t>> filtered;
+    filter(sparsity, select_x, filtered);
+
+    if (sparsity.nnz() != filtered.nnz()) {
+        sparsity = filtered;
+    }
+}
+
+inline void filter(const std::vector<std::set<size_t> >& from,
+                   ArrayView<const bool> filter,
+                   sparse_rc<CppAD::vector<size_t>>& to) {
+
+    CPPADCG_ASSERT_UNKNOWN(to.nr() == to.nc())
+    CPPADCG_ASSERT_UNKNOWN(to.nr() == 0 || to.nr() == filter.size())
+    CPPADCG_ASSERT_UNKNOWN(from.size() == filter.size())
+    CPPADCG_ASSERT_UNKNOWN(to.nr() == from.size())
+
+    if (isAllTrue(filter)) {
+        generateSparsity(from, filter.size(), to);
+
+    } else {
+        size_t m = from.size();
+
+        size_t fullNnz = 0;
+        for (size_t i = 0; i < m; ++i)
+            fullNnz += from[i].size();
+
+        // reserve space
+        to.resize(m, m, fullNnz);
+
+        // copy indices
+        size_t nnz = 0;
+        for (size_t i = 0; i < m; ++i) {
+            if (filter[i]) {
+                for (size_t j: from[i]) {
+                    if (filter[j]) {
+                        to.set(nnz, i, j);
+                        nnz++;
+                    }
+                }
+            }
+        }
+
+        to.resize(m, m, nnz);
     }
 }
 

@@ -447,7 +447,7 @@ TEST_F(CppADCGPatternTest, DependentPatternMatcher5) {
 std::vector<ADCGD> modelAtomic(const std::vector<ADCGD>& x,
                                const std::vector<ADCGD>& par,
                                size_t repeat,
-                               atomic_base<CGD>& atomic) {
+                               atomic_three<CGD>& atomic) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -477,11 +477,12 @@ TEST_F(CppADCGPatternTest, Atomic) {
 
     size_t m = 2;
     size_t n = 2;
+    size_t npar = 0;
 
     // create atomic function
     std::vector<AD<double> > y(1), x(2);
-    checkpoint<double> atomicfun("atomicFunc", atomicFunction, x, y);
-    CGAtomicFun<double> cgatomicfun(atomicfun, x, true);
+    chkpoint_two<double> atomicfun(createChkpointTwo<double>("atomicFunc", atomicFunction, x, y));
+    CGAtomicFun<double> cgatomicfun(atomicfun, x, npar, true);
     PatternTestModelWithAtom<CGD> model(modelAtomic, cgatomicfun);
     setModel(model);
     this->atoms_.push_back(&atomicfun);
@@ -497,7 +498,7 @@ TEST_F(CppADCGPatternTest, Atomic) {
 std::vector<ADCGD> modelAtomic2(const std::vector<ADCGD>& x,
                                 const std::vector<ADCGD>& par,
                                 size_t repeat,
-                                atomic_base<CGD>& atomic) {
+                                atomic_three<CGD>& atomic) {
     size_t m = 1;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -522,11 +523,12 @@ TEST_F(CppADCGPatternTest, Atomic2) {
 
     size_t m = 1;
     size_t n = 2;
+    size_t npar = 0;
 
     // create atomic function
-    std::vector<AD<double> > y(1), x(2);
-    checkpoint<double> atomicfun("atomicFunc2", atomicFunction, x, y);
-    CGAtomicFun<double> cgatomicfun(atomicfun, x, true);
+    std::vector<AD<double> > y(m), x(n);
+    chkpoint_two<double> atomicfun(createChkpointTwo<double>("atomicFunc2", atomicFunction, x, y));
+    CGAtomicFun<double> cgatomicfun(atomicfun, x, npar, true);
     PatternTestModelWithAtom<CGD> model(modelAtomic2, cgatomicfun);
     setModel(model);
     this->atoms_.push_back(&atomicfun);

@@ -19,7 +19,8 @@ namespace CppAD {
 namespace cg {
 
 /**
- * 
+ * Use the same independent variable from the outer model for multiple independent variables of
+ * the inner/atomic model.
  */
 class CppADCGDynamicAtomicSmallerNestedTest : public CppADCGDynamicAtomicNestedTest {
 protected:
@@ -53,12 +54,13 @@ public:
             xNorm[j] = 1.0;
         }
 
-        for (size_t i = 0; i < eqNorm.size(); i++) {
-            eqNorm[i] = 1.0;
+        for (double & i : eqNorm) {
+            i = 1.0;
         }
 
-        for (size_t j = 0; j < xOuter.size(); j++)
-            xOuter[j] = 1.0;
+        for (double & j : xOuter) {
+            j = 1.0;
+        }
 
         jacOuter[0].insert(0);
         hessOuter[0].insert(0);
@@ -73,7 +75,7 @@ public:
 
     std::vector<ADCGD> modelOuter(const std::vector<ADCGD>& xOuter,
                                   const std::vector<ADCGD>& pOuter,
-                                  atomic_base<CGD>& atomicInnerModel,
+                                  atomic_three<CGD>& atomicInnerModel,
                                   size_t xInnerSize,
                                   size_t pInnerSize,
                                   size_t yInnerSize) override {

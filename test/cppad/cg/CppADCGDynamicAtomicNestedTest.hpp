@@ -31,7 +31,7 @@ protected:
     const std::string _modelName;
     ADFun<CGD>* _fun;
     ADFun<CGD>* _fun2;
-    checkpoint<CGD>* _atomicInnerModel;
+    chkpoint_two<CGD>* _atomicInnerModel;
     std::unique_ptr<DynamicLib<Base>> _dynamicLib;
     std::unique_ptr<DynamicLib<Base>> _dynamicLib2;
     std::unique_ptr<GenericModel<Base>> _modelLib;
@@ -40,11 +40,11 @@ protected:
     bool reverseTwo = true;
 public:
 
-    inline CppADCGDynamicAtomicNestedTest(const std::string& modelName,
-                                          bool verbose = false,
-                                          bool printValues = false) :
+    inline explicit CppADCGDynamicAtomicNestedTest(std::string modelName,
+                                                   bool verbose = false,
+                                                   bool printValues = false) :
         CppADCGTest(verbose, printValues),
-        _modelName(modelName),
+        _modelName(std::move(modelName)),
         _fun(nullptr),
         _fun2(nullptr),
         _atomicInnerModel(nullptr),
@@ -59,7 +59,7 @@ public:
 
     virtual std::vector<ADCGD> modelOuter(const std::vector<ADCGD>& xOuter,
                                           const std::vector<ADCGD>& pOuter,
-                                          atomic_base<CGD>& atomicInnerModel,
+                                          atomic_three<CGD>& atomicInnerModel,
                                           size_t xInnerSize,
                                           size_t pInnerSize,
                                           size_t yInnerSize) {
@@ -328,7 +328,7 @@ private:
         /**
          * Jacobian sparsity
          */
-        const std::vector<bool> jacSparsityOrig = jacobianSparsity<std::vector<bool>, CGD> (*_fun2);
+        const std::vector<bool> jacSparsityOrig = jacobianSparsityBool<std::vector<bool>, CGD> (*_fun2);
         const std::vector<bool> jacSparsityOuter = modelLibOuter->JacobianSparsityBool();
 
         compareBoolValues(jacSparsityOrig, jacSparsityOuter);
@@ -354,7 +354,7 @@ private:
         /**
          * Hessian sparsity
          */
-        const std::vector<bool> hessSparsityOrig = hessianSparsity<std::vector<bool>, CGD> (*_fun2);
+        const std::vector<bool> hessSparsityOrig = hessianSparsityBool<std::vector<bool>, CGD> (*_fun2);
         const std::vector<bool> hessSparsityOuter = modelLibOuter->HessianSparsityBool();
 
         compareBoolValues(hessSparsityOrig, hessSparsityOuter);
@@ -404,7 +404,7 @@ private:
         /**
          * Jacobian sparsity
          */
-        const std::vector<bool> jacSparsityOrig = jacobianSparsity < std::vector<bool>, CGD > (*_fun2);
+        const std::vector<bool> jacSparsityOrig = jacobianSparsityBool<std::vector<bool>, CGD> (*_fun2);
 
         /**
          * Sparse jacobian
@@ -425,7 +425,7 @@ private:
         /**
          * Hessian sparsity
          */
-        const std::vector<bool> hessSparsityOrig = hessianSparsity<std::vector<bool>, CGD> (*_fun2);
+        const std::vector<bool> hessSparsityOrig = hessianSparsityBool<std::vector<bool>, CGD> (*_fun2);
 
         /**
          * Sparse Hessian
@@ -460,13 +460,9 @@ private:
         const size_t m = eqInnerNorm.size();
 
         // independent variables
-        std::vector<ADCGD> axInner(n);
-        for (size_t j = 0; j < n; j++)
-            axInner[j] = xInner[j];
+        std::vector<ADCGD> axInner = makeADCGVector(xInner);
 
-        std::vector<ADCGD> apInner(pInner.size());
-        for (size_t j = 0; j < pInner.size(); j++)
-            apInner[j] = pInner[j];
+        std::vector<ADCGD> apInner = makeADCGVector(pInner);
 
         // use a special object for source code generation
         // declare independent variables, dynamic parameters, starting recording
@@ -518,29 +514,24 @@ private:
          * Second compiled model
          */
         // independent variables
-        const size_t n2 = xOuter.size();
-        std::vector<ADCGD> axOuter(n2);
-        for (size_t j = 0; j < n2; j++)
-            axOuter[j] = xOuter[j];
+        std::vector<ADCGD> axOuter = makeADCGVector(xOuter);
 
-        std::vector<ADCGD> apOuter(pOuter.size());
-        for (size_t j = 0; j < apOuter.size(); j++)
-            apOuter[j] = pOuter[j];
+        std::vector<ADCGD> apOuter= makeADCGVector(pOuter);
 
         // use a special object for source code generation
         // declare independent variables, dynamic parameters, starting recording
         CppAD::Independent(axOuter, abort_op_index, record_compare, apOuter);
 
         CGAtomicGenericModel<Base>& innerAtomicFun = _modelLib->asAtomic();
-        CGAtomicFun<Base> cgInnerAtomicFun(innerAtomicFun, std::vector<double>(n), true); // required for taping
+        CGAtomicFun<Base> cgInnerAtomicFun(innerAtomicFun, std::vector<double>(n), _modelLib->Parameters(), true); // required for taping
 
         std::vector<ADCGD> Z2 = modelOuter(axOuter, apOuter, cgInnerAtomicFun, n, pInner.size(), m);
 
         // create f: U2 -> Z2
-        ADFun<CGD> fun2;
-        fun2.Dependent(Z2);
+        ADFun<CGD> funOuter;
+        funOuter.Dependent(Z2);
 
-        ModelCSourceGen<double> compHelp2(fun2, _modelName + "_outer");
+        ModelCSourceGen<double> compHelp2(funOuter, _modelName + "_outer");
         compHelp2.setCreateForwardZero(true);
         compHelp2.setCreateForwardOne(forwardOne);
         compHelp2.setCreateReverseOne(reverseOne);
@@ -760,28 +751,22 @@ private:
         const size_t m = eqInnerNorm.size();
 
         // independent variables
-        std::vector<ADCGD> axInner(n);
-        for (size_t j = 0; j < n; j++)
-            axInner[j] = xInner[j];
+        std::vector<ADCGD> axInner = makeADCGVector(xInner);
 
         // dependent
         std::vector<ADCGD> ayInner(eqInnerNorm.size());
 
         //atomic inner model
         struct InnerModelStruct innerModel(*this, xInnerNorm, eqInnerNorm);
-        _atomicInnerModel = new checkpoint<CGD>("", innerModel, axInner, ayInner);
+
+        _atomicInnerModel = new chkpoint_two<CGD>(createChkpointTwo<CGD>("inner", innerModel, axInner, ayInner));
 
         /**
          * create the CppAD tape as usual
          */
-        size_t n2 = xOuter.size();
-        std::vector<ADCGD> axOuter(n2);
-        for (size_t j = 0; j < n2; j++)
-            axOuter[j] = xOuter[j];
+        std::vector<ADCGD> axOuter = makeADCGVector(xOuter);
 
-        std::vector<ADCGD> apOuter(pOuter.size());
-        for (size_t j = 0; j < apOuter.size(); j++)
-            apOuter[j] = pOuter[j];
+        std::vector<ADCGD> apOuter = makeADCGVector(pOuter);
 
         // use a special object for source code generation
         // declare independent variables, dynamic parameters, starting recording

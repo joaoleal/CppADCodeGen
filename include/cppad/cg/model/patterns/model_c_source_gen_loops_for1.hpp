@@ -62,7 +62,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
     std::vector<size_t> locations(nnz);
 
     size_t p = 0;
-    for (const pair<size_t, std::vector<size_t> >& itJ : elements) {//loop variables
+    for (const auto& itJ : elements) {//loop variables
         size_t j = itJ.first;
         const std::vector<size_t>& r = itJ.second;
 
@@ -145,7 +145,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
                     // (dy_i/dx_v) elements from equations outside loops
                     const set<size_t>& locations = noLoopEvalLocations[inl][j];
 
-                    CPPADCG_ASSERT_UNKNOWN(locations.size() == 1); // one Jacobian element should not be placed in several locations
+                    CPPADCG_ASSERT_UNKNOWN(locations.size() == 1) // one Jacobian element should not be placed in several locations
                     size_t e = *locations.begin();
 
                     col[e] = itiv.second * dx;
@@ -180,8 +180,8 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
         const std::vector<JacobianWithLoopsRowInfo>& info = itl2Eq->second;
         ADFun<CGBase>& fun = lModel.getTape();
 
-        //size_t nIndexed = lModel.getIndexedIndepIndexes().size();
-        //size_t nNonIndexed = lModel.getNonIndexedIndepIndexes().size();
+        //size_t nIndexed = loopModel.getIndexedIndepIndexes().size();
+        //size_t nNonIndexed = loopModel.getNonIndexedIndepIndexes().size();
 
         _cache.str("");
         _cache << "model (forward one, loop " << lModel.getLoopId() << ")";
@@ -258,7 +258,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
              */
             std::unique_ptr<IndexPattern> itPattern(Plane2DIndexPattern::detectPlane2D(jcol2localIt2ModelIt));
 
-            if (itPattern.get() == nullptr) {
+            if (itPattern == nullptr) {
                 // did not match!
                 itPattern.reset(new Random2DIndexPattern(jcol2localIt2ModelIt));
             }
@@ -281,11 +281,11 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
 
                 indexLocalItCountPattern.reset(IndexPattern::detect(jcol2litCount));
 
-                if (IndexPattern::isConstant(*indexLocalItCountPattern.get())) {
+                if (IndexPattern::isConstant(*indexLocalItCountPattern)) {
                     size_t itCount = group.jCol2Iterations.begin()->second.size();
                     loopStart = handler.makeLoopStartNode(indexLocalItDcl, itCount);
                 } else {
-                    itCountAssignOp = handler.makeIndexAssignNode(indexLocalItCountDcl, *indexLocalItCountPattern.get(), jcolIndexOp);
+                    itCountAssignOp = handler.makeIndexAssignNode(indexLocalItCountDcl, *indexLocalItCountPattern, jcolIndexOp);
                     localIterCountIndexOp = handler.makeIndexNode(*itCountAssignOp);
                     loopStart = handler.makeLoopStartNode(indexLocalItDcl, *localIterCountIndexOp);
                 }
@@ -294,7 +294,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
             }
 
 
-            auto* iterationIndexPatternOp = handler.makeIndexAssignNode(indexIterationDcl, *itPattern.get(), &jcolIndexOp, localIterIndexOp);
+            auto* iterationIndexPatternOp = handler.makeIndexAssignNode(indexIterationDcl, *itPattern, &jcolIndexOp, localIterIndexOp);
             iterationIndexOp.makeAssigmentDependent(*iterationIndexPatternOp);
 
             map<size_t, set<size_t> > jcol2CompressedLoc;
@@ -454,13 +454,12 @@ struct Forward1Jcol2Iter {
     size_t jcol;
     std::set<size_t> iterations;
 
-    inline Forward1Jcol2Iter() {
-    }
+    inline Forward1Jcol2Iter() = default;
 
     inline Forward1Jcol2Iter(size_t col,
-                             const std::set<size_t>& iters) :
+                             std::set<size_t> iters) :
         jcol(col),
-        iterations(iters) {
+        iterations(std::move(iters)) {
     }
 };
 
@@ -585,11 +584,9 @@ std::map<JacobianTermContrib<Base>, std::set<size_t> > groupForOneByContrib(cons
 
     const std::vector<std::vector<LoopPosition> >& indexedIndepIndexes = lModel.getIndexedIndepIndexes();
 
-    for (size_t i = 0; i < loopEqInfo.size(); i++) {
-        const JacobianWithLoopsRowInfo& row = loopEqInfo[i];
-
+    for (const auto& row : loopEqInfo) {
         // indexed
-        for (const pair<size_t, std::vector<size_t> >& it : row.indexedPositions) {
+        for (const auto& it : row.indexedPositions) {
             size_t tapeJ = it.first;
             const std::vector<size_t>& positions = it.second;
             map<size_t, set<size_t> >& jcol2Iter = indexed2jcol2Iter[tapeJ];
@@ -606,7 +603,7 @@ std::map<JacobianTermContrib<Base>, std::set<size_t> > groupForOneByContrib(cons
         }
 
         // non-indexed
-        for (const pair<size_t, std::vector<size_t> >& it : row.nonIndexedPositions) {
+        for (const auto& it : row.nonIndexedPositions) {
             size_t j = it.first;
             const std::vector<size_t>& positions = it.second;
             set<size_t>& jcol2Iter = nonIndexed2Iter[j];
@@ -690,7 +687,7 @@ inline void subgroupForOneByContrib(const std::vector<JacobianWithLoopsRowInfo>&
             sg->jCol2Iterations[jcol2Iters.jcol] = jcol2Iters.iterations;
             sg->iterations.insert(jcol2Iters.iterations.begin(), jcol2Iters.iterations.end());
         } else {
-            JacobianColGroup<Base>* sg = new JacobianColGroup<Base>(hc, jcol2Iters);
+            auto* sg = new JacobianColGroup<Base>(hc, jcol2Iters);
             subGroups.push_back(sg);
             c2subgroups[hc] = sg;
         }
@@ -699,7 +696,7 @@ inline void subgroupForOneByContrib(const std::vector<JacobianWithLoopsRowInfo>&
 
 template<class Base>
 std::vector<std::pair<CG<Base>, IndexPattern*> > generateForwardOneGroupOps(CodeHandler<Base>& handler,
-                                                                            const LoopModel<Base>& lModel,
+                                                                            const LoopModel<Base>& loopModel,
                                                                             const std::vector<JacobianWithLoopsRowInfo>& info,
                                                                             JacobianColGroup<Base>& group,
                                                                             IndexOperationNode<Base>& iterationIndexOp,
@@ -712,7 +709,7 @@ std::vector<std::pair<CG<Base>, IndexPattern*> > generateForwardOneGroupOps(Code
 
     using CGBase = CG<Base>;
 
-    const std::vector<std::vector<LoopPosition> >& indexedIndepIndexes = lModel.getIndexedIndepIndexes();
+    const std::vector<std::vector<LoopPosition> >& indexedIndepIndexes = loopModel.getIndexedIndepIndexes();
 
     size_t jacElSize = group.size();
 
@@ -724,13 +721,13 @@ std::vector<std::pair<CG<Base>, IndexPattern*> > generateForwardOneGroupOps(Code
     for (size_t tapeI = 0; tapeI < info.size(); tapeI++) {
         const JacobianWithLoopsRowInfo& jlrw = info[tapeI];
 
-        /**
+        /*
          * indexed variable contributions
          */
         // tape J index -> {locationIt0, locationIt1, ...}
         for (size_t tapeJ : group.indexed) {
 
-            map<size_t, std::vector<size_t> >::const_iterator itPos = jlrw.indexedPositions.find(tapeJ);
+            auto itPos = jlrw.indexedPositions.find(tapeJ);
             if (itPos != jlrw.indexedPositions.end()) {
                 const std::vector<size_t>& positions = itPos->second; // compressed positions
 
@@ -738,7 +735,7 @@ std::vector<std::pair<CG<Base>, IndexPattern*> > generateForwardOneGroupOps(Code
                 iter2jcols.clear();
                 for (size_t iter : group.iterations) {
                     if (positions[iter] != (std::numeric_limits<size_t>::max)()) { // the element must have been requested
-                        CPPADCG_ASSERT_UNKNOWN(tapeJPos[iter].original != (std::numeric_limits<size_t>::max)()); // the equation must exist for this iteration
+                        CPPADCG_ASSERT_UNKNOWN(tapeJPos[iter].original != (std::numeric_limits<size_t>::max)()) // the equation must exist for this iteration
                         iter2jcols[iter] = tapeJPos[iter].original;
                     }
                 }
@@ -752,13 +749,13 @@ std::vector<std::pair<CG<Base>, IndexPattern*> > generateForwardOneGroupOps(Code
         }
 
 
-        /**
+        /*
          * non-indexed variable contributions
          */
         // original J index -> {locationIt0, locationIt1, ...}
         for (size_t j : group.nonIndexed) {
 
-            map<size_t, std::vector<size_t> >::const_iterator itPos = jlrw.nonIndexedPositions.find(j);
+            auto itPos = jlrw.nonIndexedPositions.find(j);
             if (itPos == jlrw.nonIndexedPositions.end()) {
                 continue;
             }
@@ -767,7 +764,7 @@ std::vector<std::pair<CG<Base>, IndexPattern*> > generateForwardOneGroupOps(Code
             iter2jcols.clear();
             for (size_t iter : group.iterations) {
                 if (positions[iter] != (std::numeric_limits<size_t>::max)()) {// the element must have been requested
-                    CPPADCG_ASSERT_UNKNOWN(lModel.getDependentIndexes()[tapeI][iter].original != (std::numeric_limits<size_t>::max)()); // the equation must exist for this iteration
+                    CPPADCG_ASSERT_UNKNOWN(loopModel.getDependentIndexes()[tapeI][iter].original != (std::numeric_limits<size_t>::max)()) // the equation must exist for this iteration
                     iter2jcols[iter] = j;
                 }
             }
@@ -776,7 +773,7 @@ std::vector<std::pair<CG<Base>, IndexPattern*> > generateForwardOneGroupOps(Code
                 CGBase jacVal = Base(0);
 
                 // non-indexed variables used directly
-                const LoopPosition* pos = lModel.getNonIndexedIndepIndexes(j);
+                const LoopPosition* pos = loopModel.getNonIndexedIndepIndexes(j);
                 if (pos != nullptr) {
                     size_t tapeJ = pos->tape;
 
@@ -788,11 +785,11 @@ std::vector<std::pair<CG<Base>, IndexPattern*> > generateForwardOneGroupOps(Code
                 }
 
                 // non-indexed variables used through temporary variables
-                map<size_t, set<size_t> >::const_iterator itks = jlrw.tmpEvals.find(j);
+                auto itks = jlrw.tmpEvals.find(j);
                 if (itks != jlrw.tmpEvals.end()) {
                     const set<size_t>& ks = itks->second;
                     for (size_t k : ks) {
-                        size_t tapeJ = lModel.getTempIndepIndexes(k)->tape;
+                        size_t tapeJ = loopModel.getTempIndepIndexes(k)->tape;
 
                         jacVal += dyiDxtapeT.at(tapeJ).at(tapeI) * dzDx.at(k).at(j);
                     }
@@ -825,7 +822,7 @@ std::pair<CG<Base>, IndexPattern*> createForwardOneElement(CodeHandler<Base>& ha
      */
     map<size_t, size_t> locationsIter2Pos;
 
-    for (const std::pair<size_t, size_t>& itIt : iter2jcols) {
+    for (const auto& itIt : iter2jcols) {
         size_t iter = itIt.first;
         size_t jcol = itIt.second;
         CPPADCG_ASSERT_UNKNOWN(positions[iter] != (std::numeric_limits<size_t>::max)())
@@ -861,7 +858,7 @@ std::map<size_t, std::map<size_t, CG<Base> > > ModelCSourceGen<Base>::generateLo
         std::vector<size_t> row, col;
         generateSparsityIndexes(evalSparsity, row, col);
 
-        if (row.size() == 0)
+        if (row.empty())
             return dyDxT; // nothing to do
 
         std::vector<CGBase> jacLoop(row.size());

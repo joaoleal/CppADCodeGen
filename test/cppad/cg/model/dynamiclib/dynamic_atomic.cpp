@@ -20,7 +20,7 @@ namespace cg {
 
 /**
  * Nonlinear inner model with a single equation and an outer model which
- * performs linear operations with the result of the inner model
+ * just returns the result of the inner model.
  */
 class SingleVarAtomicGenericModelTest : public CppADCGDynamicAtomicTest {
 protected:
@@ -56,7 +56,7 @@ public:
 
 /**
  * Nonlinear inner model and an outer model which performs linear
- * operations with the result of the inner model
+ * operations with the result of the inner model.
  */
 class CppADCGDynamicAtomicModel2Test : public CppADCGDynamicAtomicTest {
 protected:
@@ -92,8 +92,8 @@ using namespace CppAD::cg;
 using namespace std;
 
 /**
- * @test Nonlinear inner model and an outer model which performs linear
- *       operations with the result of the inner model
+ * @test Nonlinear inner model and an outer model which
+ *       just returns the result of the inner model
  */
 TEST_F(SingleVarAtomicGenericModelTest, DynamicForRevNonlinearLinear) {
     using namespace std;

@@ -2,8 +2,8 @@
 #define CPPAD_CG_EVALUATOR_CG_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2016 Ciengis
- *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -170,8 +170,8 @@ protected:
         const std::vector<Argument<ScalarIn> >& inArgs = node.getArguments();
 
         CPPADCG_ASSERT_KNOWN(info.size() == 3, "Invalid number of information data for atomic operation")
-        size_t p = info[2];
-        size_t p1 = p + 1;
+        size_t order_up = info[2];
+        size_t p1 = order_up + 1;
 
         CPPADCG_ASSERT_KNOWN(inArgs.size() == 2 * p1 + 1, "Invalid number of information data for atomic operation")
 
@@ -197,7 +197,7 @@ protected:
         if (valuesDefined) {
             const std::map<size_t, CGAbstractAtomicFun<ScalarIn>*>& afun = this->handler_.getAtomicFunctions();
             size_t id = info[0];
-            size_t q = info[1];
+            size_t order_low = info[1];
             if (op == CGOpCode::AtomicForward) {
                 auto itAFun = afun.find(id);
                 if (itAFun == afun.end()) {
@@ -208,27 +208,40 @@ protected:
                 }
                 auto& atomic = *itAFun->second;
 
-                CppAD::vector<bool> vx, vy;
-                CppAD::vector<ActiveOut> tx(outVals[0].size()), ty(outVals[1].size()), par(outVals[2].size());
-                for (size_t i = 0; i < tx.size(); ++i)
-                    tx[i] = ActiveIn(outVals[0][i]);
-                for (size_t i = 0; i < ty.size(); ++i)
-                    ty[i] = ActiveIn(outVals[1][i]);
-                for (size_t i = 0; i < par.size(); ++i)
-                    par[i] = ActiveIn(outVals[2][i]);
+                //size_t m = outVals[1].size() / (order_up + 1);
+                size_t n = outVals[0].size() / (order_up + 1);
+                size_t npar = outVals[2].size();
+                size_t ndyn = n + npar;
 
-                if (par.size() != 0) {
-                    throw CGException("Support for parameters in atomic functions not implemented yet!");
-                }
+                CppAD::vector<ActiveOut> taylor_x(ndyn * (order_up + 1));
+                CppAD::vector<ActiveOut> taylor_y(outVals[1].size());
+                CppAD::vector<ActiveOut> par_x(ndyn);
 
-                atomic.forward(q, p, vx, vy, tx, ty);
+                for (size_t i = 0; i < npar; ++i)
+                    par_x[n + i] = ActiveIn(outVals[2][i]);
+
+                CppAD::vector<ad_type_enum> type_x(n);
+                std::fill(type_x.data(), type_x.data() + n, ad_type_enum::variable_enum);
+                std::fill(type_x.data() + n, type_x.data() + ndyn, ad_type_enum::dynamic_enum);
+
+                auto need_y = size_t(ad_type_enum::variable_enum);
+
+                for (size_t j = 0; j < outVals[0].size(); ++j)
+                    taylor_x[j] = ActiveIn(outVals[0][j]);
+                for (size_t j = 0; j < npar; ++j)
+                    taylor_x[(n + j) * (order_up + 1)] = par_x[n+j];
+
+                for (size_t i = 0; i < taylor_y.size(); ++i)
+                    taylor_y[i] = ActiveIn(outVals[1][i]);
+
+                atomic.forward(par_x, type_x, need_y, order_low, order_up, taylor_x, taylor_y);
 
                 std::vector<ScalarOut*>& yOut = atomicEvalResults_[&node];
                 assert(yOut.empty());
-                yOut.resize(ty.size());
-                for (size_t i = 0; i < ty.size(); ++i) {
-                    if (ty[i].isValueDefined())
-                        yOut[i] = new ScalarOut(ty[i].getValue());
+                yOut.resize(taylor_y.size());
+                for (size_t i = 0; i < taylor_y.size(); ++i) {
+                    if (taylor_y[i].isValueDefined())
+                        yOut[i] = new ScalarOut(taylor_y[i].getValue());
                 }
             }
         }
@@ -284,7 +297,7 @@ protected:
                                std::vector<ScalarOut>& values,
                                bool& valuesDefined,
                                bool& allParameters) {
-        const std::vector<ActiveOut>* arrayActiveOut;
+        const CppAD::vector<ActiveOut>* arrayActiveOut;
         ActiveOut result;
 
         if (node.getOperationType() == CGOpCode::ArrayCreation) {
@@ -314,7 +327,7 @@ protected:
         }
 
         // values
-        const std::vector<ActiveOut>& array = this->evalArrayCreationOperation(node);
+        const CppAD::vector<ActiveOut>& array = this->evalArrayCreationOperation(node);
 
         // makeDenseArray() never called directly by EvaluatorOperations
         return *this->saveEvaluation(node, ActiveOut(*outHandler_->makeNode(CGOpCode::ArrayCreation, {}, asArguments(array))));
@@ -334,13 +347,13 @@ protected:
         }
 
         // values
-        const std::vector<ActiveOut>& array = this->evalSparseArrayCreationOperation(node);
+        const CppAD::vector<ActiveOut>& array = this->evalSparseArrayCreationOperation(node);
 
         // makeSparseArray() never called directly by EvaluatorOperations
         return *this->saveEvaluation(node, ActiveOut(*outHandler_->makeNode(CGOpCode::SparseArrayCreation, node.getInfo(), asArguments(array))));
     }
 
-    static inline void processArray(const std::vector<ActiveOut>& array,
+    static inline void processArray(const CppAD::vector<ActiveOut>& array,
                                     std::vector<ScalarOut>& values,
                                     bool& valuesDefined,
                                     bool& allParameters) {

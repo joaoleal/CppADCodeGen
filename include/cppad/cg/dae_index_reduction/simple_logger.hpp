@@ -37,8 +37,7 @@ public:
             log_(&std::cout) {
     }
 
-    inline virtual ~SimpleLogger() {
-    }
+    inline virtual ~SimpleLogger() = default;
 
     inline std::ostream& log() const {
         return *log_;

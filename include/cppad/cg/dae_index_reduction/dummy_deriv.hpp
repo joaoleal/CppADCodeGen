@@ -142,8 +142,7 @@ public:
         }
     }
 
-    inline virtual ~DummyDerivatives() {
-    }
+    inline virtual ~DummyDerivatives() = default;
 
     /**
      * Whether or not to avoid converting algebraic variables to differential
@@ -436,7 +435,6 @@ protected:
         using namespace std;
         using std::vector;
         using std::map;
-        using std::map;
 
         auto& graph = idxIdentify_->getGraph();
         //auto& vnodes = graph.variables();
@@ -499,7 +497,7 @@ protected:
             /**
              * Determine which equation to use to eliminate the dummy derivative
              */
-            map<int, int>::const_iterator ita = assignedVar2Eq.find(dummy->tapeIndex());
+            auto ita = assignedVar2Eq.find(dummy->tapeIndex());
             if (ita == assignedVar2Eq.end()) {
                 if (this->verbosity_ >= Verbosity::High)
                     log() << "unable to solve for variable " << dummy->name() << "." << std::endl;
@@ -695,11 +693,10 @@ protected:
             }
         }
 
-        for (size_t i = 0; i < newEqInfo.size(); ++i) {
-            const DaeEquationInfo& ii = newEqInfo[i];
-            int j = ii.getAssignedVarIndex();
+        for (auto& eq : newEqInfo) {
+            int j = eq.getAssignedVarIndex();
             if (j >= 0)
-                newEqInfo[i].setAssignedVarIndex(varIndexOld2New[j]);
+                eq.setAssignedVarIndex(varIndexOld2New[j]);
         }
 
         /**
@@ -712,8 +709,8 @@ protected:
                 newVarInfo.erase(newVarInfo.begin() + j);
             }
         }
-        for (size_t j = 0; j < newVarInfo.size(); j++) {
-            newVarInfo[j].setDerivative(-1); // no derivatives in tape
+        for (auto& j : newVarInfo) {
+            j.setDerivative(-1); // no derivatives in tape
         }
 
         /**
@@ -750,7 +747,7 @@ protected:
 
         vector<CGBase> res0 = graph.forward0(*reducedFun_, indep0);
 
-        vector<bool> jacSparsity = jacobianSparsity<vector<bool> >(*reducedFun_);
+        vector<bool> jacSparsity = jacobianSparsityBool<vector<bool> >(*reducedFun_);
 
         vector<Vnode<Base>*> diffVariables;
         vector<Vnode<Base>*> dummyVariables;
@@ -1024,8 +1021,8 @@ protected:
             if (equations[e] != &i && localJacSparsity[n * e + j.tapeIndex()]) {
                 localJacSparsity[n * e + j.tapeIndex()] = false; // eliminated by substitution
                 affected.insert(equations[e]);
-                for (size_t p = 0; p < nnzs.size(); ++p) {
-                    localJacSparsity[n * e + nnzs[p]] = true;
+                for (auto nnz : nnzs) {
+                    localJacSparsity[n * e + nnz] = true;
                 }
             }
         }
@@ -1079,7 +1076,7 @@ protected:
 
             if (!ok) {
                 handler.undoSubstituteIndependent(*indep.getOperationNode());
-                if (indepName.size() > 0) {
+                if (!indepName.empty()) {
                     indep.getOperationNode()->setName(indepName);
                 }
                 return false;
@@ -1136,9 +1133,9 @@ protected:
          * Determine the variables that have derivatives in the model
          */
         std::set<size_t> oldVarWithDerivatives; // indexes of old variables (before reordering) with derivatives
-        for (size_t i = 0; i < eqInfo.size(); i++) {
-            if (eqInfo[i].isExplicit() && eqInfo[i].getAssignedVarIndex() >= 0) {
-                oldVarWithDerivatives.insert(eqInfo[i].getAssignedVarIndex());
+        for (const auto& i : eqInfo) {
+            if (i.isExplicit() && i.getAssignedVarIndex() >= 0) {
+                oldVarWithDerivatives.insert(i.getAssignedVarIndex());
             }
         }
 
@@ -1197,10 +1194,10 @@ protected:
          * reorder equations
          */
         newEqInfo = eqInfo; //copy
-        for (size_t i = 0; i < newEqInfo.size(); i++) {
-            int oldVIndex = newEqInfo[i].getAssignedVarIndex();
+        for (auto& i : newEqInfo) {
+            int oldVIndex = i.getAssignedVarIndex();
             if (oldVIndex >= 0) {
-                newEqInfo[i].setAssignedVarIndex(varIndexOld2New[oldVIndex]);
+                i.setAssignedVarIndex(varIndexOld2New[oldVIndex]);
             }
         }
 
@@ -1286,14 +1283,14 @@ protected:
          * of independent variables in the handler
          */
         std::set<size_t> newIds;
-        for (size_t j = 0; j < newVarInfo.size(); j++) {
-            newIds.insert(newVarInfo[j].getId());
+        for (const auto& j : newVarInfo) {
+            newIds.insert(j.getId());
         }
 
         std::map<size_t, size_t> varId2HandlerIndex;
         size_t handlerIndex = 0; // start the variable count again since some variable might have been removed
-        for (size_t j = 0; j < varInfo.size(); j++) {
-            int id = varInfo[j].getId();
+        for (const auto& j : varInfo) {
+            int id = j.getId();
             if (newIds.find(id) != newIds.end()) {
                 varId2HandlerIndex[id] = handlerIndex++; // not removed from model
             }
@@ -1340,7 +1337,7 @@ protected:
         auto& vnodes = graph.variables();
         auto& enodes = graph.equations();
 
-        jacSparsity_ = jacobianReverseSparsity<vector<bool>, CGBase>(*reducedFun_); // in the original variable order
+        jacSparsity_ = jacobianReverseSparsityBool<vector<bool>, CGBase>(*reducedFun_); // in the original variable order
 
         vector<size_t> row, col;
         row.reserve((vnodes.size() - diffVarStart_) * (m - diffEqStart_));

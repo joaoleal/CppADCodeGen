@@ -176,7 +176,7 @@ FUNCTION(add_cppadcg_test source_file)
         add_test_cppcheck(${test_target_name} STYLE MISSING_INCLUDE)
     ENDIF()
 
-    IF(VALGRIND_FOUND)
+    IF(Valgrind_FOUND)
         ADD_TEST(NAME ${test_target_name}_memcheck
                  COMMAND ${GTEST_MEMORYCHECK_COMMAND}
                          --read-var-info=yes
@@ -210,7 +210,7 @@ OPTION(USE_VALGRIND "Use valgrind in tests" ON)
 IF(${USE_VALGRIND})
     FIND_PACKAGE(Valgrind)
 
-    IF(${VALGRIND_FOUND})
+    IF(${Valgrind_FOUND})
         SET(GTEST_MEMORYCHECK_COMMAND "${VALGRIND_EXECUTABLE}")
         MESSAGE(STATUS "Valgrind found")
     ELSE()

@@ -29,14 +29,16 @@ void testModel(const std::vector<AD<double> >& x,
 TEST_F(CppADCGEvaluatorTest, Atomic) {
     using ADCG = AD<CGD>;
 
+    size_t npar = 0;
+
     std::vector<AD<double>> ax(2);
     std::vector<AD<double>> ay(3);
     for (size_t j = 0; j < ax.size(); j++) {
         ax[j] = j + 2;
     }
 
-    checkpoint<double> atomicFun("func", testModel, ax, ay); // the normal atomic function
-    CGAtomicFun<double> atomic(atomicFun, ax); // a wrapper used to tape with CG<Base>
+    chkpoint_two<double> atomicFun(createChkpointTwo<double>("func", testModel, ax, ay)); // the normal atomic function
+    CGAtomicFun<double> atomic(atomicFun, ax, npar); // a wrapper used to tape with CG<Base>
 
     ModelType model = [&](const std::vector<CGD>& x,
                           const std::vector<CGD>& p) {

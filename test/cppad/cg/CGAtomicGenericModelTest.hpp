@@ -94,7 +94,7 @@ protected:
         /**
         * Inner model
         */
-        tapeInnerModel(_x, _par, _xNorm, _eqNorm);
+        _funInner = tapeInnerModel(_x, _par, _xNorm, _eqNorm);
 
         _m = _funInner->Range();
         _n = _funInner->Domain();

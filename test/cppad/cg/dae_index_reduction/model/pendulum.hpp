@@ -50,10 +50,10 @@ inline CppAD::ADFun<Base> Pendulum2D(std::vector<DaeVarInfo>& daeVar) {
     daeVar[5] = DaeVarInfo("l");
     daeVar[5].makeConstant();
     daeVar[6].makeIntegratedVariable();
-    daeVar[7] = 0;
-    daeVar[8] = 1;
-    daeVar[9] = 2;
-    daeVar[10] = 3;
+    daeVar[7] = DaeVarInfo(0);
+    daeVar[8] = DaeVarInfo(1);
+    daeVar[9] = DaeVarInfo(2);
+    daeVar[10] = DaeVarInfo(3);
 
     double g = 9.80665; // gravity constant
 

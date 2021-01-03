@@ -608,7 +608,7 @@ void generateHessianRowGroups(const LoopModel<Base>& lModel,
 
 template<class Base>
 std::vector<std::pair<CG<Base>, IndexPattern*> > generateReverseTwoGroupOps(CodeHandler<Base>& handler,
-                                                                            const LoopModel<Base>& lModel,
+                                                                            const LoopModel<Base>& loopModel,
                                                                             const HessianWithLoopsInfo<Base>& info,
                                                                             HessianRowGroup<Base>& group,
                                                                             const CG<Base>& tx1,
@@ -688,7 +688,7 @@ std::vector<std::pair<CG<Base>, IndexPattern*> > generateReverseTwoGroupOps(Code
 
                 CGBase val = Base(0);
                 for (size_t k : ks) {
-                    size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
+                    size_t tapeK = loopModel.getTempIndepIndexes(k)->tape;
                     val += infog.hess.at(tapeJ1).at(tapeK) * dzDx.at(k).at(j2);
                 }
 
@@ -737,7 +737,7 @@ std::vector<std::pair<CG<Base>, IndexPattern*> > generateReverseTwoGroupOps(Code
 
                 CGBase val = Base(0);
                 for (size_t k : ks) {
-                    size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
+                    size_t tapeK = loopModel.getTempIndepIndexes(k)->tape;
                     val += infog.hess.at(tapeK).at(tapeJ2) * dzDx.at(k).at(j1);
                 }
 
@@ -758,8 +758,8 @@ std::vector<std::pair<CG<Base>, IndexPattern*> > generateReverseTwoGroupOps(Code
 
         size_t j1 = orig.first;
         size_t j2 = orig.second;
-        const LoopPosition* posJ1 = lModel.getNonIndexedIndepIndexes(j1);
-        const LoopPosition* posJ2 = lModel.getNonIndexedIndepIndexes(j2);
+        const LoopPosition* posJ1 = loopModel.getNonIndexedIndepIndexes(j1);
+        const LoopPosition* posJ2 = loopModel.getNonIndexedIndepIndexes(j2);
 
         // location
         LinearIndexPattern* pattern = new LinearIndexPattern(0, 0, 0, e);
@@ -774,7 +774,7 @@ std::vector<std::pair<CG<Base>, IndexPattern*> > generateReverseTwoGroupOps(Code
          * loop the groups of equations present at the same iterations
          */
         for (size_t g = 0; g < info.equationGroups.size(); g++) {
-            const IterEquationGroup<Base>& eqGroup = lModel.getEquationsGroups()[g];
+            const IterEquationGroup<Base>& eqGroup = loopModel.getEquationsGroups()[g];
             set<size_t> iterations;
             set_intersection(group.iterations.begin(), group.iterations.end(),
                              eqGroup.iterations.begin(), eqGroup.iterations.end(),
@@ -795,7 +795,7 @@ std::vector<std::pair<CG<Base>, IndexPattern*> > generateReverseTwoGroupOps(Code
                 const set<size_t>& ks = itNT->second;
 
                 for (size_t k : ks) {
-                    size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
+                    size_t tapeK = loopModel.getTempIndepIndexes(k)->tape;
                     gHessVal += infog.hess.at(posJ1->tape).at(tapeK) * dzDx.at(k).at(j2);
                 }
             }
@@ -811,7 +811,7 @@ std::vector<std::pair<CG<Base>, IndexPattern*> > generateReverseTwoGroupOps(Code
                 const set<size_t>& ks = itTN->second;
 
                 for (size_t k1 : ks) {
-                    size_t tapeK = lModel.getTempIndepIndexes(k1)->tape;
+                    size_t tapeK = loopModel.getTempIndepIndexes(k1)->tape;
                     gHessVal += infog.hess.at(tapeK).at(posJ2->tape) * dzDx.at(k1).at(j1);
                 }
             }
@@ -828,11 +828,11 @@ std::vector<std::pair<CG<Base>, IndexPattern*> > generateReverseTwoGroupOps(Code
                 for (const auto& itzz : k1k2) {
                     size_t k1 = itzz.first;
                     const set<size_t>& k2s = itzz.second;
-                    size_t tapeK1 = lModel.getTempIndepIndexes(k1)->tape;
+                    size_t tapeK1 = loopModel.getTempIndepIndexes(k1)->tape;
 
                     CGBase tmp = Base(0);
                     for (size_t k2 : k2s) {
-                        size_t tapeK2 = lModel.getTempIndepIndexes(k2)->tape;
+                        size_t tapeK2 = loopModel.getTempIndepIndexes(k2)->tape;
 
                         tmp += infog.hess.at(tapeK1).at(tapeK2) * dzDx.at(k2).at(j2);
                     }

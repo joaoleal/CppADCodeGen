@@ -58,6 +58,7 @@ public:
     virtual std::vector<bool> JacobianSparsityBool() = 0;
     virtual void JacobianSparsity(std::vector<size_t>& equations,
                                   std::vector<size_t>& variables) = 0;
+    virtual void JacobianSparsity(sparse_rc<CppAD::vector<size_t>>& sparsity) = 0;
 
     /**
      * Determines whether or not the sparsity pattern for the weighted sum of
@@ -78,6 +79,7 @@ public:
     virtual std::vector<bool> HessianSparsityBool() = 0;
     virtual void HessianSparsity(std::vector<size_t>& rows,
                                  std::vector<size_t>& cols) = 0;
+    virtual void HessianSparsity(sparse_rc<CppAD::vector<size_t>>& sparsity) = 0;
 
     /**
      * Determines whether or not the sparsity pattern for the Hessian
@@ -99,6 +101,8 @@ public:
     virtual void HessianSparsity(size_t i,
                                  std::vector<size_t>& rows,
                                  std::vector<size_t>& cols) = 0;
+    virtual void HessianSparsity(size_t i,
+                                 sparse_rc<CppAD::vector<size_t>>& sparsity) = 0;
 
     /**
      * Provides the number of independent variables.
@@ -141,7 +145,7 @@ public:
      * @return true if the atomic function is required by the model, false
      *         if it will never be used.
      */
-    virtual bool addAtomicFunction(atomic_base<Base>& atomic) = 0;
+    virtual bool addAtomicFunction(atomic_three<Base>& atomic) = 0;
 
     /**
      * Defines a generic model to be used as an external function by the

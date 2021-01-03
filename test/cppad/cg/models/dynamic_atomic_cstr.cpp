@@ -86,39 +86,17 @@ public:
         /**
          * Elements for the custom Jacobian/Hessian tests
          */
-        jacInner[0].insert(0);
-        jacInner[0].insert(1);
-        jacInner[0].insert(2);
-        jacInner[0].insert(3);
-        jacInner[0].insert(5);
-        jacInner[1].insert(0);
-        jacInner[1].insert(1);
-        jacInner[1].insert(2);
-        jacInner[1].insert(3);
-        jacInner[1].insert(5);
-        jacInner[2].insert(0);
-        jacInner[2].insert(1);
-        jacInner[2].insert(2);
-        jacInner[2].insert(3);
-        jacInner[3].insert(0);
-        jacInner[3].insert(2);
-        jacInner[3].insert(3);
-        jacInner[3].insert(4);
+        jacInner[0] = {0, 1, 2, 3, 5};
+        jacInner[1] = {0, 1, 2, 3, 5};
+        jacInner[2] = {0, 1, 2, 3};
+        jacInner[3] = {0, 2, 3, 4};
 
-        hessInner[0].insert(0); // lower left side (with 1 exception)
-        hessInner[0].insert(1);
-        hessInner[0].insert(2);
-        hessInner[0].insert(3);
-        hessInner[0].insert(5);
-        hessInner[1].insert(1);
-        hessInner[1].insert(2);
-        hessInner[1].insert(3);
-        hessInner[1].insert(5);
-        hessInner[2].insert(2);
-        hessInner[2].insert(3);
-        hessInner[2].insert(5);
-        hessInner[3].insert(3);
-        hessInner[4].insert(3); // flipped
+        // lower left side (with 1 exception)
+        hessInner[0] = {0, 1, 2, 3, 5};
+        hessInner[1] = {1, 2, 3, 5};
+        hessInner[2] = {2, 3, 5};
+        hessInner[3] = {3};
+        hessInner[4] = {3}; // flipped
 
         jacOuter[0] = jacInner[0];
         jacOuter[1] = jacInner[1];

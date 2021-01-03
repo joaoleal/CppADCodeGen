@@ -2,7 +2,7 @@
 #define CPPAD_CG_BASE_ABSTRACT_ATOMIC_FUN_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2019 Joao Leal
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -20,12 +20,12 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Contains some utility methods for atomic functions for the type CG
- * 
+ * Contains some utility methods for atomic functions for the type CG.
+ *
  * @author Joao Leal
  */
 template <class Base>
-class BaseAbstractAtomicFun : public atomic_base<CppAD::cg::CG<Base> > {
+class BaseAbstractAtomicFun : public atomic_three<CppAD::cg::CG<Base> > {
 public:
     using CGB = CppAD::cg::CG<Base>;
     using Arg = Argument<Base>;
@@ -34,22 +34,17 @@ protected:
     /**
      * Creates a new atomic function that is responsible for defining the
      * dependencies to calls of a user atomic function.
-     * 
+     *
      * @param name The atomic function name.
      */
     explicit BaseAbstractAtomicFun(const std::string& name) :
-            atomic_base<CGB>(name) {
+        atomic_three<CGB>(name) {
         CPPADCG_ASSERT_KNOWN(!name.empty(), "The atomic function name cannot be empty")
     }
 
 public:
 
-    template <class ADVector>
-    void operator()(const ADVector& ax,
-                    ADVector& ay,
-                    size_t id = 0) {
-        this->atomic_base<CGB>::operator()(ax, ay, id);
-    }
+    using atomic_three<CGB>::operator();
 
     virtual ~BaseAbstractAtomicFun() = default;
 
@@ -69,7 +64,7 @@ protected:
     }
 
     static inline OperationNode<Base>* makeArray(CodeHandler<Base>& handler,
-                                                 const CppAD::vector<CGB>& tx) {
+                                                 ArrayView<const CGB> tx) {
         std::vector<Arg> arrayArgs = asArguments(tx);
         std::vector<size_t> info; // empty
 
@@ -77,7 +72,7 @@ protected:
     }
 
     static inline OperationNode<Base>* makeArray(CodeHandler<Base>& handler,
-                                                 const CppAD::vector<CGB>& tx,
+                                                 ArrayView<const CGB> tx,
                                                  size_t p,
                                                  size_t k) {
         CPPADCG_ASSERT_UNKNOWN(k <= p)
@@ -104,7 +99,7 @@ protected:
     }
 
     static inline OperationNode<Base>* makeSparseArray(CodeHandler<Base>& handler,
-                                                       const CppAD::vector<CGB>& py,
+                                                       ArrayView<const CGB> py,
                                                        size_t p,
                                                        size_t k) {
         size_t p1 = p + 1;

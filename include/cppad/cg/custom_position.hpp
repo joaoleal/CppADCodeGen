@@ -3,7 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
- *    Copyright (C) 2020 Joao Leal
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -20,7 +20,7 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Useful class for storing matrix indexes
+ * Useful class for storing sparsity patterns
  */
 class CustomPosition {
 private:
@@ -28,7 +28,7 @@ private:
     /// allowed elements
     std::vector<std::vector<bool> > elFilter_;
     bool fullDefined_;
-    std::vector<std::set<size_t> > elements_;
+    sparse_rc<CppAD::vector<size_t>> elements_;
 public:
 
     inline CustomPosition() :
@@ -38,27 +38,27 @@ public:
 
     template<class VectorSize>
     inline CustomPosition(size_t m, size_t n,
-                          const VectorSize& rows,
-                          const VectorSize& cols) :
+                          const VectorSize& filterRows,
+                          const VectorSize& filterCols) :
         filterDefined_(true),
         elFilter_(m, std::vector<bool>(n, false)),
         fullDefined_(false) {
-        CPPADCG_ASSERT_KNOWN(rows.size() == cols.size(), "The number of row indexes must be the same as the number of column indexes.")
-        for (size_t i = 0; i < rows.size(); i++) {
-            elFilter_[rows[i]][cols[i]] = true;
+        CPPADCG_ASSERT_KNOWN(filterRows.size() == filterCols.size(), "The number of row indexes must be the same as the number of column indexes.")
+        for (size_t i = 0; i < filterRows.size(); i++) {
+            elFilter_[filterRows[i]][filterCols[i]] = true;
         }
     }
 
     template<class VectorSet>
     inline CustomPosition(size_t m, size_t n,
-                          const VectorSet& elements) :
+                          const VectorSet& filter) :
         filterDefined_(true),
         elFilter_(m, std::vector<bool>(n, false)),
         fullDefined_(false) {
-        CPPADCG_ASSERT_KNOWN(elements.size() <= m, "Invalid number of rows.")
+        CPPADCG_ASSERT_KNOWN(filter.size() <= m, "Invalid number of rows.")
 
-        for (size_t i = 0; i < elements.size(); i++) {
-            for (size_t it : elements[i]) {
+        for (size_t i = 0; i < filter.size(); i++) {
+            for (size_t it : filter[i]) {
                 elFilter_[i][it] = true;
             }
         }
@@ -72,41 +72,39 @@ public:
         return fullDefined_;
     }
 
-    inline void setFullElements(const std::vector<std::set<size_t> >& elements) {
+    inline void setFullElements(const sparse_rc<CppAD::vector<size_t>>& elements) {
         elements_ = elements;
         filter(elements_);
         fullDefined_ = true;
     }
 
-    inline const std::vector<std::set<size_t> >& getFullElements()const {
+    inline const sparse_rc<CppAD::vector<size_t>>& getFullElements()const {
         return elements_;
     }
 
-    inline void filter(CppAD::vector<std::set<size_t> >& sparsity) const {
-        ArrayView<std::set<size_t> > s(sparsity);
-        filter(s);
-    }
-
-    inline void filter(std::vector<std::set<size_t> >& sparsity) const {
-        ArrayView<std::set<size_t> > s(sparsity);
-        filter(s);
-    }
-
-    inline void filter(ArrayView<std::set<size_t> >& sparsity) const {
+    inline void filter(sparse_rc<CppAD::vector<size_t>>& sparsity) const {
         if (!filterDefined_)
             return; // nothing to do
 
-        std::set<size_t>::iterator it, currentIt;
+        size_t nnz = sparsity.nnz();
+        auto& row = sparsity.row();
+        auto& col = sparsity.col();
 
-        for (size_t i = 0; i < sparsity.size(); i++) {
-            it = sparsity[i].begin();
-            while (it != sparsity[i].end()) {
-                // copy the current iterator then increment it
-                currentIt = it++;
-                if (!elFilter_[i][*currentIt]) {
-                    sparsity[i].erase(currentIt); // not in allowed elements
-                }
+        sparse_rc<CppAD::vector<size_t>> filtered(sparsity.nr(), sparsity.nc(), nnz);
+
+        size_t e = 0;
+        for (size_t k = 0; k < nnz; ++k) {
+            size_t i = row[k];
+            size_t j = col[k];
+            if (elFilter_[i][j]) {
+                filtered.set(e, i,j);
+                e++;
             }
+        }
+
+        if (nnz != e) {
+            filtered.resize(sparsity.nr(), sparsity.nc(), e);
+            sparsity = filtered;
         }
     }
 

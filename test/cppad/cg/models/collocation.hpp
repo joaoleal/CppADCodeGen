@@ -37,7 +37,7 @@ protected:
 
     std::unique_ptr<DynamicLib<double> > atomicDynamicLib_;
     std::unique_ptr<GenericModel<double> > atomicModel_;
-    std::vector<atomic_base<T>*> atoms_;
+    std::vector<atomic_three<T>*> atoms_;
     bool ignoreParameters_;
     bool verbose_;
 private:
@@ -144,7 +144,7 @@ public:
     std::vector<AD<T> > evaluateModel(const std::vector<AD<T> >& x,
                                       const std::vector<AD<T> >& par,
                                       size_t repeat) {
-        atomic_base<T>& atomModel = createAtomic();
+        atomic_three<T>& atomModel = createAtomic();
         return evaluateModel<T>(x, par, repeat, atomModel);
     }
 
@@ -152,7 +152,7 @@ public:
     std::vector<AD<T2> > evaluateModel(const std::vector<AD<T2> >& x,
                                        const std::vector<AD<T2> >& par,
                                        size_t repeat,
-                                       atomic_base<T2>& atomModel) {
+                                       atomic_three<T2>& atomModel) {
 
         size_t m2 = repeat * K_ * ns_;
 
@@ -333,18 +333,18 @@ protected:
 
     virtual std::string getAtomicLibName() = 0;
 
-    atomic_base<T>& createAtomic();
+    atomic_three<T>& createAtomic();
 };
 
 template<>
-atomic_base<CG<double> >& CollocationModel<CG<double> >::createAtomic() {
+atomic_three<CG<double> >& CollocationModel<CG<double> >::createAtomic() {
     size_t n = atomicModel_->Domain();
-    atomModel_.reset(new CGAtomicFun<double>(atomicModel_->asAtomic(), std::vector<double>(n), true));
+    atomModel_.reset(new CGAtomicFun<double>(atomicModel_->asAtomic(), std::vector<double>(n), atomicModel_->Parameters(), true));
     return *atomModel_;
 }
 
 template<>
-atomic_base<double>& CollocationModel<double>::createAtomic() {
+atomic_three<double>& CollocationModel<double>::createAtomic() {
     return atomicModel_->asAtomic();
 }
 

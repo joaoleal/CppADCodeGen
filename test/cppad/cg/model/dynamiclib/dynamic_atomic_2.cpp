@@ -27,23 +27,25 @@ void testModel(const std::vector<AD<double> >& ax, std::vector<AD<double> >& ay)
 }
 
 /**
- * Test class
+ * Test a nonlinear inner model and an outer model which performs linear operations with the result.
+ * The inner model is used by the outer model as an atomic function that encapsulates a CppAD tape.
  */
 class CppADCGDynamicAtomic2Test : public CppADCGTest {
 protected:
     const static std::string MODEL_NAME;
     const static size_t m;
     const static size_t n;
+    const static size_t npar;
     std::vector<double> x;
-    checkpoint<double>* _atomicFun;
+    chkpoint_two<double>* _atomicFun;
     CGAtomicFun<double>* _cgAtomicFun;
     ADFun<CGD>* _fun;
     std::unique_ptr<DynamicLib<double>> _dynamicLib;
     std::unique_ptr<GenericModel<double>> _model;
 public:
 
-    inline CppADCGDynamicAtomic2Test(bool verbose = false,
-                                     bool printValues = false) :
+    inline explicit CppADCGDynamicAtomic2Test(bool verbose = false,
+                                              bool printValues = false) :
         CppADCGTest(verbose, printValues),
         x(n),
         _atomicFun(nullptr),
@@ -77,8 +79,8 @@ public:
         // dependent variable vector
         std::vector<ADCG> Z(m);
 
-        _atomicFun = new checkpoint<double>("func", testModel, ax, ay); // the normal atomic function
-        _cgAtomicFun = new CGAtomicFun<double>(*_atomicFun, x, true); // a wrapper used to tape with CG<Base>
+        _atomicFun = new chkpoint_two<double>(createChkpointTwo<double>("func", testModel, ax, ay)); // the normal atomic function
+        _cgAtomicFun = new CGAtomicFun<double>(*_atomicFun, x, npar, true); // a wrapper used to tape with CG<Base>
 
         (*_cgAtomicFun)(u, Z);
 
@@ -132,6 +134,7 @@ public:
 const std::string CppADCGDynamicAtomic2Test::MODEL_NAME = "dynamicAtomic2";
 const size_t CppADCGDynamicAtomic2Test::n = 3;
 const size_t CppADCGDynamicAtomic2Test::m = 4;
+const size_t CppADCGDynamicAtomic2Test::npar = 0;
 
 } // END cg namespace
 } // END CppAD namespace
@@ -284,7 +287,7 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
     /**
      * Jacobian sparsity
      */
-    const std::vector<bool> jacSparsityOrig = jacobianForwardSparsity < std::vector<bool>, CGD > (*_fun);
+    const std::vector<bool> jacSparsityOrig = jacobianForwardSparsityBool<std::vector<bool>, CGD> (*_fun);
     const std::vector<bool> jacSparsityOuter = _model->JacobianSparsityBool();
 
     compareBoolValues(jacSparsityOrig, jacSparsityOuter);

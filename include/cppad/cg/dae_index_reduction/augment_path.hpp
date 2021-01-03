@@ -40,8 +40,7 @@ public:
             logger_(&defaultLogger_) {
     }
 
-    inline virtual ~AugmentPath() {
-    }
+    inline virtual ~AugmentPath() = default;
 
     /**
      *

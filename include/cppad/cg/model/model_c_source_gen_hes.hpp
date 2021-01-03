@@ -33,25 +33,11 @@ void ModelCSourceGen<Base>::generateHessianSource() {
     size_t m = _fun.Range();
     size_t n = _fun.Domain();
 
-
     // independent variables
-    vector<CGBase> indVars(n);
-    handler.makeVariables(indVars);
-    if (_x.size() > 0) {
-        for (size_t i = 0; i < n; i++) {
-            indVars[i].setValue(_x[i]);
-        }
-    }
+    std::vector<CGBase> indVars = registerHandlerIndependents(handler, _x);
 
     // parameters
-    std::vector<CGBase> params(_fun.size_dyn_ind());
-    handler.makeParameters(params);
-    if (_xDynParams.size() > 0) {
-        for (size_t i = 0; i < params.size(); i++) {
-            params[i].setValue(_xDynParams[i]);
-        }
-    }
-    _fun.new_dynamic(params);
+    std::vector<CGBase> params = registerHandlerParameters(handler, _xDynParams);
 
     // multipliers
     vector<CGBase> w(m);
@@ -175,23 +161,10 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceDirectly() {
     handler.setJobTimer(_jobTimer);
 
     // independent variables
-    vector<CGBase> indVars(n);
-    handler.makeVariables(indVars);
-    if (_x.size() > 0) {
-        for (size_t i = 0; i < n; i++) {
-            indVars[i].setValue(_x[i]);
-        }
-    }
+    std::vector<CGBase> indVars = registerHandlerIndependents(handler, _x);
 
     // parameters
-    std::vector<CGBase> params(_fun.size_dyn_ind());
-    handler.makeParameters(params);
-    if (_xDynParams.size() > 0) {
-        for (size_t i = 0; i < params.size(); i++) {
-            params[i].setValue(_xDynParams[i]);
-        }
-    }
-    _fun.new_dynamic(params);
+    std::vector<CGBase> params = registerHandlerParameters(handler, _xDynParams);
 
     // multipliers
     vector<CGBase> w(m);

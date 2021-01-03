@@ -41,12 +41,11 @@ public:
      * 
      * @param fun The original model (potentially high index)
      */
-    DaeIndexReduction(ADFun<CG<Base> >& fun) :
+    explicit DaeIndexReduction(ADFun<CG<Base> >& fun) :
         fun_(&fun) {
     }
 
-    inline virtual ~DaeIndexReduction() {
-    }
+    inline ~DaeIndexReduction() override = default;
 
     /**
      * Provides the original model with a representation of an implicit DAE

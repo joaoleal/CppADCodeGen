@@ -20,15 +20,17 @@ namespace CppAD {
 namespace cg {
 
 /**
- * An atomic function that uses a compiled model
+ * An atomic function that uses a compiled model created by CppADCodeGen.
+ *
+ * When the compiled models contains dynamic parameters, they must be
+ * provided at the end of the independent variable vector.
  *
  * @author Joao Leal
  */
 template <class Base>
-class CGAtomicGenericModel : public atomic_base<Base> {
+class CGAtomicGenericModel : public atomic_three<Base> {
 protected:
     GenericModel<Base>& model_;
-    std::vector<Base> params_;
 public:
 
     /**
@@ -37,173 +39,225 @@ public:
      *
      * @param model The compiled model.
      */
-    CGAtomicGenericModel(GenericModel<Base>& model) :
-        atomic_base<Base>(model.getName()),
+    explicit CGAtomicGenericModel(GenericModel<Base>& model) :
+        atomic_three<Base>(model.getName()),
         model_(model) {
-        this->option(CppAD::atomic_base<Base>::set_sparsity_enum);
+
     }
 
     virtual ~CGAtomicGenericModel() = default;
 
-    inline void setParameters(const CppAD::vector<Base>& params) {
-        params_ = params;
-    }
-
     template <class ADVector>
-    void operator()(const ADVector& ax, ADVector& ay, size_t id = 0) {
-        this->atomic_base<Base>::operator()(ax, ay, id);
+    void operator()(const ADVector& ax, ADVector& ay) {
+        this->atomic_three<Base>::operator()(ax, ay);
     }
 
-    bool forward(size_t q,
-                 size_t p,
-                 const CppAD::vector<bool>& vx,
-                 CppAD::vector<bool>& vy,
-                 const CppAD::vector<Base>& tx,
-                 CppAD::vector<Base>& ty) override {
-        if (p == 0) {
-            model_.ForwardZero(vx, vy, tx, params_, ty);
+    bool for_type(const CppAD::vector<Base>& parameter_x,
+                  const CppAD::vector<ad_type_enum>& type_x,
+                  CppAD::vector<ad_type_enum>& type_y) override {
+
+        if (!model_.isJacobianSparsityAvailable())
+            return false;
+
+        CPPADCG_ASSERT_KNOWN(type_x.size() == parameter_x.size(), "type_x must have the same size as parameter_x")
+        CPPADCG_ASSERT_KNOWN(type_x.size() == model_.Domain() + model_.Parameters(), "type_x has the wrong size")
+        validateTypeX(type_x);
+
+        CppAD::sparse_rc<CppAD::vector<size_t>> jac_pattern;
+        model_.JacobianSparsity(jac_pattern);
+
+        //size_t m = model_.Range();
+        size_t n = model_.Domain();
+        //size_t ndyn = type_x.size();
+
+        ArrayView<const ad_type_enum> type_x_local(type_x.data(), n);
+
+        CppAD::cg::for_type(jac_pattern, type_x_local, type_y);
+
+        return true;
+    }
+
+    bool rev_depend(const CppAD::vector<Base>& parameter_x,
+                    const CppAD::vector<ad_type_enum>& type_x,
+                    CppAD::vector<bool>& depend_x,
+                    const CppAD::vector<bool>& depend_y) override {
+
+        if (!model_.isJacobianSparsityAvailable())
+            return false;
+
+        CPPADCG_ASSERT_KNOWN(type_x.size() == parameter_x.size(), "type_x must have the same size as parameter_x")
+        CPPADCG_ASSERT_KNOWN(type_x.size() == model_.Domain() + model_.Parameters(), "type_x has the wrong size")
+        validateTypeX(type_x);
+
+        CppAD::sparse_rc<CppAD::vector<size_t>> jac_pattern;
+        model_.JacobianSparsity(jac_pattern);
+
+        //size_t m = model_.Range();
+        size_t n = model_.Domain();
+        size_t ndyn = type_x.size();
+
+        ArrayView<const ad_type_enum> type_x_local(type_x.data(), n);
+        ArrayView<bool> depend_x_local(depend_x.data(), n);
+
+        CppAD::cg::rev_depend(jac_pattern, type_x_local, depend_x, depend_y);
+
+        // model_ does not contain the parameters as independent variables
+        for (size_t j = n; j < ndyn; ++j)
+            depend_x[j] = false;
+
+        return true;
+    }
+
+    bool forward(const CppAD::vector<Base>& parameter_x,
+                 const CppAD::vector<ad_type_enum>& type_x,
+                 size_t need_y,
+                 size_t order_low,
+                 size_t order_up,
+                 const CppAD::vector<Base>& taylor_x,
+                 CppAD::vector<Base>& taylor_y) override {
+
+        CPPADCG_ASSERT_KNOWN(type_x.size() == parameter_x.size(), "type_x must have the same size as parameter_x")
+        CPPADCG_ASSERT_KNOWN(type_x.size() == model_.Domain() + model_.Parameters(), "type_x has the wrong size")
+        validateTypeX(type_x);
+
+        size_t n = model_.Domain();
+        size_t np = model_.Parameters();
+
+        ArrayView<const Base> par(parameter_x.data() + n, np);
+
+        if (order_up == 0) {
+            ArrayView<const Base> x(taylor_x.data(), n);
+
+            model_.ForwardZero(x, par, taylor_y);
             return true;
-        } else if (p == 1) {
-            model_.ForwardOne(tx, params_, ty);
+
+        } else if (order_up == 1) {
+            ArrayView<const Base> tx(taylor_x.data(), 2 * n);
+
+            model_.ForwardOne(tx, par, taylor_y);
             return true;
         }
 
         return false;
     }
 
-    bool reverse(size_t p,
-                 const CppAD::vector<Base>& tx,
-                 const CppAD::vector<Base>& ty,
-                 CppAD::vector<Base>& px,
-                 const CppAD::vector<Base>& py) override {
-        if (p == 0) {
-            model_.ReverseOne(tx, params_, ty, px, py);
+    bool reverse(const CppAD::vector<Base>& parameter_x,
+                 const CppAD::vector<ad_type_enum>& type_x,
+                 size_t order_up,
+                 const CppAD::vector<Base>& taylor_x,
+                 const CppAD::vector<Base>& taylor_y,
+                 CppAD::vector<Base>& partial_x,
+                 const CppAD::vector<Base>& partial_y) override {
+
+        CPPADCG_ASSERT_KNOWN(type_x.size() == parameter_x.size(), "type_x must have the same size as parameter_x")
+        CPPADCG_ASSERT_KNOWN(type_x.size() == model_.Domain() + model_.Parameters(), "type_x has the wrong size")
+        validateTypeX(type_x);
+
+        size_t n = model_.Domain();
+        size_t np = model_.Parameters();
+
+        ArrayView<const Base> par(parameter_x.data() + n, np);
+        ArrayView<const Base> ty(taylor_y);
+        ArrayView<const Base> py(partial_y);
+
+        if (order_up == 0) {
+            ArrayView<const Base> x(taylor_x.data(), n);
+            ArrayView<Base> px(partial_x.data(), n);
+
+            model_.ReverseOne(x, par, ty, px, py);
+
+            std::fill(px.data() + n, px.data() + px.size(), Base(0));
+
             return true;
-        } else if (p == 1) {
-            model_.ReverseTwo(tx, params_, ty, px, py);
+
+        } else if (order_up == 1) {
+            ArrayView<const Base> tx(taylor_x.data(), 2 * n);
+            ArrayView<Base> px(partial_x.data(), 2 * n);
+
+            model_.ReverseTwo(tx, par, ty, px, py);
+
+            std::fill(px.data() + 2 * n, px.data() + px.size(), Base(0));
+
             return true;
         }
 
         return false;
     }
 
-    bool for_sparse_jac(size_t q,
-                        const CppAD::vector<std::set<size_t> >& r,
-                        CppAD::vector<std::set<size_t> >& s,
-                        const CppAD::vector<Base>& x) override {
-        return for_sparse_jac(q, r, s);
-    }
+    bool jac_sparsity(const CppAD::vector<Base>& parameter_x,
+                      const CppAD::vector<ad_type_enum>& type_x,
+                      bool dependency,
+                      const CppAD::vector<bool>& select_x,
+                      const CppAD::vector<bool>& select_y,
+                      sparse_rc<CppAD::vector<size_t>>& pattern_out) override {
 
-    bool for_sparse_jac(size_t q,
-                        const CppAD::vector<std::set<size_t> >& r,
-                        CppAD::vector<std::set<size_t> >& s) override {
+        CPPADCG_ASSERT_KNOWN(type_x.size() == parameter_x.size(), "type_x must have the same size as parameter_x")
+        CPPADCG_ASSERT_KNOWN(type_x.size() == model_.Domain() + model_.Parameters(), "type_x has the wrong size")
+        validateTypeX(type_x);
+
+        model_.JacobianSparsity(pattern_out);
+
         size_t n = model_.Domain();
         size_t m = model_.Range();
-        for (size_t i = 0; i < m; i++) {
-            s[i].clear();
-        }
+        size_t ndyn = type_x.size();
 
-        const std::vector<std::set<size_t> > jacSparsity = model_.JacobianSparsitySet();
+        ArrayView<const bool> select_x_local(select_x.data(), n);
 
-        // S(x) =  f'(x) * R
-        CppAD::cg::multMatrixMatrixSparsity(jacSparsity, r, s, m, n, q);
+        filter(pattern_out, select_y, select_x_local);
+
+        // model_ does not contain the parameters as independent variables
+        pattern_out.resize(m, ndyn, pattern_out.nnz());
 
         return true;
     }
 
-    bool rev_sparse_jac(size_t q,
-                        const CppAD::vector<std::set<size_t> >& rT,
-                        CppAD::vector<std::set<size_t> >& sT,
-                        const CppAD::vector<Base>& x) override {
-        return rev_sparse_jac(q, rT, sT);
-    }
+    bool hes_sparsity(const CppAD::vector<Base>& parameter_x,
+                      const CppAD::vector<ad_type_enum>& type_x,
+                      const CppAD::vector<bool>& select_x,
+                      const CppAD::vector<bool>& select_y,
+                      sparse_rc<CppAD::vector<size_t>>& pattern_out) override {
 
-    bool rev_sparse_jac(size_t q,
-                        const CppAD::vector<std::set<size_t> >& rT,
-                        CppAD::vector<std::set<size_t> >& sT) override {
+        CPPADCG_ASSERT_KNOWN(type_x.size() == parameter_x.size(), "type_x must have the same size as parameter_x")
+        CPPADCG_ASSERT_KNOWN(type_x.size() == model_.Domain() + model_.Parameters(), "type_x has the wrong size")
+        validateTypeX(type_x);
+
         size_t n = model_.Domain();
         size_t m = model_.Range();
-        for (size_t i = 0; i < n; i++) {
-            sT[i].clear();
-        }
+        size_t ndyn = type_x.size();
 
-        const std::vector<std::set<size_t> > jacSparsity = model_.JacobianSparsitySet();
+        ArrayView<const bool> select_x_local(select_x.data(), n);
 
-        // S(x)^T = ( R * f'(x) )^T = f'(x)^T * R^T
-        CppAD::cg::multMatrixTransMatrixSparsity(jacSparsity, rT, sT, m, n, q);
+        if (isAllTrue(select_y)) {
+            model_.HessianSparsity(pattern_out);
+            filter(pattern_out, select_x_local);
 
-        return true;
-    }
-
-    bool rev_sparse_hes(const CppAD::vector<bool>& vx,
-                        const CppAD::vector<bool>& s,
-                        CppAD::vector<bool>& t,
-                        size_t q,
-                        const CppAD::vector<std::set<size_t> >& r,
-                        const CppAD::vector<std::set<size_t> >& u,
-                        CppAD::vector<std::set<size_t> >& v,
-                        const CppAD::vector<Base>& x) override {
-        return rev_sparse_hes(vx, s, t, q, r, u, v);
-    }
-
-    bool rev_sparse_hes(const CppAD::vector<bool>& vx,
-                        const CppAD::vector<bool>& s,
-                        CppAD::vector<bool>& t,
-                        size_t q,
-                        const CppAD::vector<std::set<size_t> >& r,
-                        const CppAD::vector<std::set<size_t> >& u,
-                        CppAD::vector<std::set<size_t> >& v) override {
-        size_t n = model_.Domain();
-        size_t m = model_.Range();
-
-        for (size_t i = 0; i < n; i++) {
-            v[i].clear();
-        }
-
-        const std::vector<std::set<size_t> > jacSparsity = model_.JacobianSparsitySet();
-
-        /**
-         *  V(x)  =  f'^T(x) U(x)  +  Sum(  s(x)i  f''(x)  R   )
-         */
-        // f'^T(x) U(x)
-        CppAD::cg::multMatrixTransMatrixSparsity(jacSparsity, u, v, m, n, q);
-
-        // Sum(  s(x)i  f''(x)  R   )
-        bool allSelected = true;
-        for (size_t i = 0; i < m; i++) {
-            if (!s[i]) {
-                allSelected = false;
-                break;
-            }
-        }
-
-        if (allSelected) {
-            // TODO: use reverseTwo sparsity instead of the HessianSparsity (they can be different!!!)
-            std::vector<std::set<size_t> > sparsitySF2R = model_.HessianSparsitySet(); // f''(x)
-            sparsitySF2R.resize(n);
-            CppAD::cg::multMatrixMatrixSparsity(sparsitySF2R, r, v, n, n, q); // f''(x) * R
         } else {
             std::vector<std::set<size_t> > sparsitySF2R(n);
             for (size_t i = 0; i < m; i++) {
-                if (s[i]) {
-                    CppAD::cg::addMatrixSparsity(model_.HessianSparsitySet(i), sparsitySF2R); // f''_i(x)
+                if (select_y[i]) {
+                    CppAD::cg::multMatrixSparsity(model_.HessianSparsitySet(i), select_x_local, sparsitySF2R); // f''_i(x)
                 }
             }
-            CppAD::cg::multMatrixMatrixSparsity(sparsitySF2R, r, v, n, n, q); // f''(x) * R
+
+            // filter(sparsitySF2R, select_x, pattern_out);
         }
 
-        /**
-         * S(x) * f'(x)
-         */
-        for (size_t i = 0; i < m; i++) {
-            if (s[i]) {
-                for (size_t j : jacSparsity[i]) {
-                    t[j] = true;
-                }
-            }
-        }
+        // model_ does not contain the parameters as independent variables
+        pattern_out.resize(ndyn, ndyn, pattern_out.nnz());
 
         return true;
+    }
+
+private:
+
+    inline void validateTypeX(const CppAD::vector<ad_type_enum>& type_x) const {
+        size_t ndyn = type_x.size();
+        size_t n = model_.Domain();
+        for (size_t j = n; j < ndyn; ++j) {
+            if (type_x[j] != ad_type_enum::constant_enum && type_x[j] != ad_type_enum::dynamic_enum) {
+                throw CGException("Wrong variable type at ", j, ". Expected either constant_enum or dynamic_enum.");
+            }
+        }
     }
 
 };

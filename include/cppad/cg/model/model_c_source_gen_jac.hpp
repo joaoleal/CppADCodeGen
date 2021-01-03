@@ -30,23 +30,11 @@ void ModelCSourceGen<Base>::generateJacobianSource() {
     CodeHandler<Base> handler;
     handler.setJobTimer(_jobTimer);
 
-    vector<CGBase> indVars(_fun.Domain());
-    handler.makeVariables(indVars);
-    if (_x.size() > 0) {
-        for (size_t i = 0; i < indVars.size(); i++) {
-            indVars[i].setValue(_x[i]);
-        }
-    }
+    // independent variables
+    std::vector<CGBase> indVars = registerHandlerIndependents(handler, _x);
 
     // parameters
-    std::vector<CGBase> params(_fun.size_dyn_ind());
-    handler.makeParameters(params);
-    if (_xDynParams.size() > 0) {
-        for (size_t i = 0; i < params.size(); i++) {
-            params[i].setValue(_xDynParams[i]);
-        }
-    }
-    _fun.new_dynamic(params);
+    std::vector<CGBase> params = registerHandlerParameters(handler, _xDynParams);
 
     size_t m = _fun.Range();
     size_t n = _fun.Domain();
@@ -115,30 +103,18 @@ void ModelCSourceGen<Base>::generateSparseJacobianSource(bool forward) {
     const std::string jobName = "sparse Jacobian";
 
     //size_t m = _fun.Range();
-    size_t n = _fun.Domain();
+    //size_t n = _fun.Domain();
 
     startingJob("'" + jobName + "'", JobTimer::GRAPH);
 
     CodeHandler<Base> handler;
     handler.setJobTimer(_jobTimer);
 
-    vector<CGBase> indVars(n);
-    handler.makeVariables(indVars);
-    if (_x.size() > 0) {
-        for (size_t i = 0; i < n; i++) {
-            indVars[i].setValue(_x[i]);
-        }
-    }
+    // independent variables
+    std::vector<CGBase> indVars = registerHandlerIndependents(handler, _x);
 
     // parameters
-    std::vector<CGBase> params(_fun.size_dyn_ind());
-    handler.makeParameters(params);
-    if (_xDynParams.size() > 0) {
-        for (size_t i = 0; i < params.size(); i++) {
-            params[i].setValue(_xDynParams[i]);
-        }
-    }
-    _fun.new_dynamic(params);
+    std::vector<CGBase> params = registerHandlerParameters(handler, _xDynParams);
 
     vector<CGBase> jac(_jacSparsity.rows.size());
     if (_loopTapes.empty()) {
@@ -214,7 +190,7 @@ void ModelCSourceGen<Base>::generateSparseJacobianForRevSource(bool forward,
         const std::vector<size_t>& els = it.second.indexes;
         const std::vector<set<size_t> >& location = it.second.locations;
         CPPADCG_ASSERT_UNKNOWN(els.size() == location.size())
-        CPPADCG_ASSERT_UNKNOWN(els.size() > 0)
+        CPPADCG_ASSERT_UNKNOWN(!els.empty())
 
         bool passed = true;
         size_t jacArrayStart = *location[0].begin();

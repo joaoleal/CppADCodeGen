@@ -2,8 +2,8 @@
 #define CPPAD_CG_FUNCTOR_GENERIC_MODEL_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2012 Ciengis
  *    Copyright (C) 2018 Joao Leal
+ *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -36,8 +36,11 @@ protected:
     bool _isLibraryReady;
     /// the model name
     const std::string _name;
+    /// Range (number of equations/dependent variables)
     size_t _m;
+    /// Domain (number of independent variables)
     size_t _n;
+    /// number of parameters
     size_t _p;
     std::vector<const Base*> _in;
     std::vector<const Base*> _inHess;
@@ -46,7 +49,10 @@ protected:
     std::vector<std::string> _atomicNames; // names of the atomic/external functions required by this model
     std::vector<ExternalFunctionWrapper<Base>* > _atomic;
     size_t _missingAtomicFunctions;
+    /// temporary vectors used in the evaluations
     CppAD::vector<Base> _tx, _ty, _px, _py;
+    CppAD::vector<Base>_par_x;
+    CppAD::vector<ad_type_enum> _type_x;
     // original model function
     void (*_zero)(Base const*const*, Base * const*, LangCAtomicFun);
     // first order forward mode
@@ -109,8 +115,8 @@ public:
         return _atomicNames;
     }
 
-    bool addAtomicFunction(atomic_base<Base>& atomic) override {
-        return addExternalFunction<atomic_base<Base>, AtomicExternalFunctionWrapper<Base> >
+    bool addAtomicFunction(atomic_three<Base>& atomic) override {
+        return addExternalFunction<atomic_three<Base>, AtomicExternalFunctionWrapper<Base> >
                 (atomic, atomic.atomic_name());
     }
 
@@ -172,6 +178,21 @@ public:
         std::copy(col, col + nnz, variables.begin());
     }
 
+    void JacobianSparsity(CppAD::sparse_rc<CppAD::vector<size_t>>& sparsity) override {
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_jacobianSparsity != nullptr, "No Jacobian sparsity function defined in the dynamic library")
+
+        unsigned long const* row, * col;
+        unsigned long nnz;
+        (*_jacobianSparsity)(&row, &col, &nnz);
+
+        sparsity.resize(_m, _n, nnz);
+
+        for (size_t k = 0; k < nnz; ++k)
+            sparsity.set(k, row[k], col[k]);
+
+    }
+
     // Hessian sparsity
     bool isHessianSparsityAvailable() override {
         return _hessianSparsity != nullptr;
@@ -225,6 +246,21 @@ public:
         std::copy(col, col + nnz, cols.begin());
     }
 
+    void HessianSparsity(CppAD::sparse_rc<CppAD::vector<size_t>>& sparsity) override {
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_hessianSparsity != nullptr, "No Hessian sparsity function defined in the dynamic library")
+
+        unsigned long const* row, *col;
+        unsigned long nnz;
+        (*_hessianSparsity)(&row, &col, &nnz);
+
+        sparsity.resize(_n, _n, nnz);
+
+        for (size_t k = 0; k < nnz; ++k)
+            sparsity.set(k, row[k], col[k]);
+
+    }
+
     bool isEquationHessianSparsityAvailable() override {
         return _hessianSparsity2 != nullptr;
     }
@@ -261,7 +297,8 @@ public:
         return s;
     }
 
-    void HessianSparsity(size_t i, std::vector<size_t>& rows,
+    void HessianSparsity(size_t i,
+                         std::vector<size_t>& rows,
                          std::vector<size_t>& cols) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
         CPPADCG_ASSERT_KNOWN(_hessianSparsity2 != nullptr, "No Hessian sparsity function defined in the dynamic library")
@@ -275,6 +312,21 @@ public:
 
         std::copy(row, row + nnz, rows.begin());
         std::copy(col, col + nnz, cols.begin());
+    }
+
+    void HessianSparsity(size_t i,
+                         sparse_rc<CppAD::vector<size_t>>& sparsity) override {
+        CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)")
+        CPPADCG_ASSERT_KNOWN(_hessianSparsity2 != nullptr, "No Hessian sparsity function defined in the dynamic library")
+
+        unsigned long const* row, *col;
+        unsigned long nnz;
+        (*_hessianSparsity2)(i, &row, &col, &nnz);
+
+        sparsity.resize(_n, _n, nnz);
+
+        for (size_t k = 0; k < nnz; ++k)
+            sparsity.set(k, row[k], col[k]);
     }
 
     size_t Domain() const override {

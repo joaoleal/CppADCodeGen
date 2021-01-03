@@ -15,10 +15,11 @@
  * Author: Joao Leal
  */
 
-#include <assert.h>
+#include <cassert>
 #include <algorithm>
 #include <iostream>
 #include <sstream>
+#include <utility>
 #include <vector>
 
 namespace CppAD {
@@ -34,7 +35,7 @@ protected:
     bool colored_; // node visited
 public:
 
-    inline BiPGraphNode(size_t index) :
+    inline explicit BiPGraphNode(size_t index) :
         index_(index),
         colored_(false) {
     }
@@ -67,8 +68,7 @@ public:
 
     virtual std::string nodeType() = 0;
 
-    inline virtual ~BiPGraphNode() {
-    }
+    inline virtual ~BiPGraphNode() = default;
 };
 
 template<class Base>
@@ -110,9 +110,9 @@ protected:
     std::string name_;
 public:
 
-    inline Enode(size_t index,
-                 const std::string& name = "") :
-        BiPGraphNode<Base>(index),
+    inline explicit Enode(size_t index,
+                          const std::string& name = "") :
+            BiPGraphNode<Base>(index),
         differentiation_(nullptr),
         differentiationOf_(nullptr),
         assign_(nullptr),
@@ -129,8 +129,7 @@ public:
         differentiationOf_->setDerivative(this);
     }
 
-    inline virtual ~Enode() {
-    }
+    inline virtual ~Enode() = default;
 
     inline const std::vector<Vnode<Base>*>& variables() const {
         return vnodes_;
@@ -257,7 +256,7 @@ public:
 
     inline Vnode(size_t index,
                  int tapeIndex, 
-                 const std::string& name) :
+                 std::string name) :
         BiPGraphNode<Base>(index),
         deleted_(false),
         parameter_(false),
@@ -265,7 +264,7 @@ public:
         derivative_(nullptr),
         antiDerivative_(nullptr),
         tapeIndex_(tapeIndex),
-        name_(name) {
+        name_(std::move(name)) {
 
     }
 
@@ -286,8 +285,7 @@ public:
         antiDerivative_->setDerivative(this);
     }
 
-    inline virtual ~Vnode() {
-    }
+    inline virtual ~Vnode() = default;
 
     inline virtual const std::string& name() const {
         return name_;

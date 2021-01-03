@@ -157,12 +157,12 @@ TEST_F(IndexReductionTest, DummyDerivPendulum3D) {
     x[12] = 0.0; // dvzdt
 
     std::vector<DaeVarInfo> daeVar(13);
-    daeVar[7] = 0;
-    daeVar[8] = 1;
-    daeVar[9] = 2;
-    daeVar[10] = 3;
-    daeVar[11] = 4;
-    daeVar[12] = 5;
+    daeVar[7] = DaeVarInfo(0);
+    daeVar[8] = DaeVarInfo(1);
+    daeVar[9] = DaeVarInfo(2);
+    daeVar[10] = DaeVarInfo(3);
+    daeVar[11] = DaeVarInfo(4);
+    daeVar[12] = DaeVarInfo(5);
 
     std::vector<std::string> eqName; // empty
 

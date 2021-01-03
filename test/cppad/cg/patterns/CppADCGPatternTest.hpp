@@ -34,7 +34,7 @@ protected:
     bool testHessian_;
     std::vector<Base> xNorm_;
     std::vector<Base> eqNorm_;
-    std::vector<atomic_base<Base>*> atoms_;
+    std::vector<atomic_three<Base>*> atoms_;
     Base epsilonA_;
     Base epsilonR_;
     Base hessianEpsilonA_;
@@ -100,16 +100,11 @@ public:
         //size_t m2 = repeat * m;
         size_t n2 = repeat * n;
 
-        /**
+        /*
          * Tape model
          */
-        std::vector<Base> xb(n2);
-        for (size_t j = 0; j < n2; j++)
-            xb[j] = 0.5;
-
-        std::vector<Base> par(p);
-        for (size_t j = 0; j < p; j++)
-            par[j] = 1.5;
+        std::vector<Base> xb(n2, 0.5);
+        std::vector<Base> par(p, 1.5);
 
         testPatternDetection(m, xb, par, repeat, loops, commonVars);
     }
@@ -135,7 +130,7 @@ public:
 
         assert(model_ != nullptr);
 
-        /**
+        /*
          * Tape model
          */
         std::unique_ptr<ADFun<CGD> > fun(tapeModel(repeat, xb, par));
@@ -153,12 +148,12 @@ public:
         size_t n2 = repeat * n;
         std::vector<Base> x(n2);
         for (size_t j = 0; j < n2; j++)
-            x[j] = 0.5 * (j + 1);
+            x[j] = 0.5 * Base(j + 1);
 
         // parameters
         std::vector<Base> par(p);
         for (size_t j = 0; j < p; j++)
-            par[j] = 1.5 * (j + 1);
+            par[j] = 1.5 * Base(j + 1);
 
         testLibCreation(libName, m, repeat, x, par);
     }
@@ -211,14 +206,10 @@ public:
          * Tape model
          */
         // independent
-        std::vector<ADCGD> x(xb.size());
-        for (size_t j = 0; j < x.size(); j++)
-            x[j] = xb[j];
+        std::vector<ADCGD> x = makeADCGVector(xb);
 
         // parameters
-        std::vector<ADCGD> ap(par.size());
-        for (size_t j = 0; j < ap.size(); j++)
-            ap[j] = par[j];
+        std::vector<ADCGD> ap = makeADCGVector(par);
 
         size_t abort_op_index = 0;
         bool record_compare = true;
@@ -275,7 +266,7 @@ public:
          */
         CodeHandler<double> h;
         size_t n2 = fun.Domain();
-        size_t np = fun.size_dyn_par();
+        size_t np = fun.size_dyn_ind();
 
         std::vector<CGD> xx(n2);
         h.makeVariables(xx);
@@ -336,33 +327,36 @@ public:
         bool defined = false;
         map<size_t, map<size_t, set<size_t> > > orderedExpectedLoops;
         for (const auto& eqPatterns : loops) {
-            if (!eqPatterns.empty()) {
-                defined = true;
-                /**
-                 * check every equation
-                 */
-                size_t minDep = (std::numeric_limits<size_t>::max)();
-
-                map<size_t, set<size_t> > dependents;
-                for (const auto& eqPattern : eqPatterns) {
-                    size_t minEqDep = *eqPattern.begin();
-                    minDep = std::min<size_t>(minDep, *eqPattern.begin());
-                    dependents[minEqDep] = eqPattern;
-                }
-                orderedExpectedLoops[minDep] = dependents;
+            if (eqPatterns.empty()) {
+                break;
             }
+
+            defined = true;
+            /*
+             * check every equation
+             */
+            size_t minDep = (std::numeric_limits<size_t>::max)();
+
+            map<size_t, set<size_t> > dependents;
+            for (const auto& eqPattern : eqPatterns) {
+                size_t minEqDep = *eqPattern.begin();
+                minDep = std::min<size_t>(minDep, *eqPattern.begin());
+                dependents[minEqDep] = eqPattern;
+            }
+            orderedExpectedLoops[minDep] = dependents;
+
         }
 
         if (defined) {
-            auto itLexp = orderedExpectedLoops.begin();
-            auto itLcalc = orderedCalcLoops.begin();
-            for (; itLexp != orderedExpectedLoops.end(); ++itLexp, ++itLcalc) {
-                ASSERT_EQ(itLexp->first, itLcalc->first);
-                ASSERT_EQ(itLexp->second.size(), itLcalc->second.size());
+            auto itLoopExp = orderedExpectedLoops.begin();
+            auto itLoopCalc = orderedCalcLoops.begin();
+            for (; itLoopExp != orderedExpectedLoops.end(); ++itLoopExp, ++itLoopCalc) {
+                ASSERT_EQ(itLoopExp->first, itLoopCalc->first);
+                ASSERT_EQ(itLoopExp->second.size(), itLoopCalc->second.size());
 
-                auto itEexp = itLexp->second.begin();
-                auto itEcalc = itLcalc->second.begin();
-                for (; itEexp != itLexp->second.end(); ++itEexp, ++itEcalc) {
+                auto itEexp = itLoopExp->second.begin();
+                auto itEcalc = itLoopCalc->second.begin();
+                for (; itEexp != itLoopExp->second.end(); ++itEexp, ++itEcalc) {
                     ASSERT_EQ(itEexp->first, itEcalc->first);
                     ASSERT_TRUE(itEexp->second == itEcalc->second);
                 }
@@ -455,12 +449,12 @@ public:
 
         DynamicModelLibraryProcessor<double> p(compDynHelpL, libBaseName + "Loops");
         std::unique_ptr<DynamicLib<double> > dynamicLibL = p.createDynamicLibrary(compiler);
-        std::unique_ptr<GenericModel<double> > modelL;
+        std::unique_ptr<GenericModel<double> > modelWithLoops;
         if (loadModels) {
-            modelL = dynamicLibL->model(libBaseName + "Loops");
-            ASSERT_TRUE(modelL != nullptr);
+            modelWithLoops = dynamicLibL->model(libBaseName + "Loops");
+            ASSERT_TRUE(modelWithLoops != nullptr);
             for (auto* atom : atoms_)
-                modelL->addAtomicFunction(*atom);
+                modelWithLoops->addAtomicFunction(*atom);
         }
         /**
          * Without the loops
@@ -509,26 +503,26 @@ public:
         /**
          * Compare results
          */
-        ASSERT_EQ(modelL->Domain(), model->Domain());
-        ASSERT_EQ(modelL->Range(), model->Range());
+        ASSERT_EQ(modelWithLoops->Domain(), model->Domain());
+        ASSERT_EQ(modelWithLoops->Range(), model->Range());
 
-        std::vector<double> x = xTypical;
+        const std::vector<double>& x = xTypical;
 
         // test model (zero-order)
         if (compHelp.isCreateForwardZero()) {
-            std::vector<double> yl = modelL->ForwardZero(x);
+            std::vector<double> yl = modelWithLoops->ForwardZero(x);
             std::vector<double> y = model->ForwardZero(x);
             ASSERT_TRUE(compareValues(yl, y, epsilonR_, epsilonA_));
         }
 
         // test Jacobian
         if (compHelp.isCreateSparseJacobian()) {
-            compareVectorSetValues(modelL->JacobianSparsitySet(),
+            compareVectorSetValues(modelWithLoops->JacobianSparsitySet(),
                                    model->JacobianSparsitySet());
 
             std::vector<double> jacl, jac;
             std::vector<size_t> rowsl, colsl, rows, cols;
-            modelL->SparseJacobian(x, par, jacl, rowsl, colsl);
+            modelWithLoops->SparseJacobian(x, par, jacl, rowsl, colsl);
             model->SparseJacobian(x, par, jac, rows, cols);
 
             ASSERT_TRUE(compareValues(jacl, jac, epsilonR_, epsilonA_));
@@ -536,7 +530,7 @@ public:
 
         // test Hessian
         if (compHelp.isCreateSparseHessian()) {
-            compareVectorSetValues(modelL->HessianSparsitySet(),
+            compareVectorSetValues(modelWithLoops->HessianSparsitySet(),
                                    model->HessianSparsitySet());
 
             std::vector<double> w(fun.Range());
@@ -545,7 +539,7 @@ public:
             }
             std::vector<double> hessl, hess;
             std::vector<size_t> rowsl, colsl, rows, cols;
-            modelL->SparseHessian(x, par, w, hessl, rowsl, colsl);
+            modelWithLoops->SparseHessian(x, par, w, hessl, rowsl, colsl);
             model->SparseHessian(x, par, w, hess, rows, cols);
 
             ASSERT_TRUE(compareValues(hessl, hess, hessianEpsilonR_, hessianEpsilonA_));

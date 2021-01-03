@@ -28,7 +28,7 @@ using ADCGD = CppAD::AD<CGD>;
 std::vector<ADCGD> modelAtomic(const std::vector<ADCGD>& x,
                                const std::vector<ADCGD>& par,
                                size_t repeat,
-                               atomic_base<CGD>& atomic) {
+                               atomic_three<CGD>& atomic) {
     size_t m = 3;
     size_t n = 4;
     size_t m2 = repeat * m;
@@ -66,12 +66,13 @@ TEST_F(CppADCGPatternTest, SimpleAtomic2) {
 
     size_t m = 3;
     size_t n = 4;
+    size_t npar = 0;
     size_t repeat = 6;
 
     // create atomic function
     std::vector<AD<double> > y(2), x(n);
-    checkpoint<double> atomicfun("atomicFunc2", atomicFunction, x, y);
-    CGAtomicFun<double> cgatomicfun(atomicfun, x, true);
+    chkpoint_two<double> atomicfun(createChkpointTwo<double>("atomicFunc2", atomicFunction, x, y));
+    CGAtomicFun<double> cgatomicfun(atomicfun, x, npar, true);
     PatternTestModelWithAtom<CGD> model(modelAtomic, cgatomicfun);
     setModel(model);
     this->atoms_.push_back(&atomicfun);

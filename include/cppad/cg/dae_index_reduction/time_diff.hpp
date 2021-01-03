@@ -30,7 +30,7 @@ bool time_diff_forward(size_t id,
                        CppAD::vector<bool>& vzy,
                        const CppAD::vector<CG<Base> >& tx,
                        CppAD::vector<CG<Base> >& tzy) {
-    CPPADCG_ASSERT_UNKNOWN(n == 3); // [x, dxdt, t]
+    CPPADCG_ASSERT_UNKNOWN(n == 3) // [x, dxdt, t]
     CPPADCG_ASSERT_UNKNOWN(m == 1)
     CPPADCG_ASSERT_UNKNOWN(tx.size() >= (order + 1) * n)
     CPPADCG_ASSERT_UNKNOWN(tzy.size() >= (order + 1) * m)
@@ -82,7 +82,7 @@ bool time_diff_reverse(size_t id,
                        CppAD::vector<CG<Base> >& px,
                        const CppAD::vector<CG<Base> >& pzy) {
 
-    CPPADCG_ASSERT_UNKNOWN(n == 3); // [x, dxdt, t]
+    CPPADCG_ASSERT_UNKNOWN(n == 3) // [x, dxdt, t]
     CPPADCG_ASSERT_UNKNOWN(m == 1)
     CPPADCG_ASSERT_UNKNOWN(tx.size() >= (order + 1) * n)
     CPPADCG_ASSERT_UNKNOWN(tzy.size() >= (order + 1) * m)

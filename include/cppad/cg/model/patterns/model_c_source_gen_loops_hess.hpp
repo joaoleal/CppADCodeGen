@@ -567,7 +567,7 @@ std::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Code
 
     handler.setZeroDependents(true);
 
-    size_t nonIndexdedEqSize = _funNoLoops != nullptr ? _funNoLoops->getOrigDependentIndexes().size() : 0;
+    size_t nonIndexedEqSize = _funNoLoops != nullptr ? _funNoLoops->getOrigDependentIndexes().size() : 0;
 
     size_t maxLoc = _hessSparsity.rows.size();
     std::vector<CGBase> hess(maxLoc);
@@ -599,7 +599,7 @@ std::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Code
     if (_funNoLoops != nullptr) {
         ADFun<CGBase>& fun = _funNoLoops->getTape();
 
-        tmpsAlias.resize(fun.Range() - nonIndexdedEqSize);
+        tmpsAlias.resize(fun.Range() - nonIndexedEqSize);
         for (size_t k = 0; k < tmpsAlias.size(); k++) {
             // to be defined later
             tmpsAlias[k] = CG<Base>(*handler.makeNode(CGOpCode::Alias));
@@ -611,13 +611,13 @@ std::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Code
      */
     typename map<LoopModel<Base>*, HessianWithLoopsInfo<Base> >::iterator itLoop2Info;
     for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
-        LoopModel<Base>& lModel = *itLoop2Info->first;
+        LoopModel<Base>& loopModel = *itLoop2Info->first;
         HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
 
         /**
          * make the loop start
          */
-        info.loopStart = handler.makeLoopStartNode(*iterationIndexDcl, lModel.getIterationCount());
+        info.loopStart = handler.makeLoopStartNode(*iterationIndexDcl, loopModel.getIterationCount());
 
         info.iterationIndexOp = handler.makeIndexNode(*info.loopStart);
         set<IndexOperationNode<Base>*> indexesOps;
@@ -626,10 +626,10 @@ std::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Code
         /**
          * make the loop's indexed variables
          */
-        std::vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, *info.iterationIndexOp);
-        info.x = createLoopIndependentVector(handler, lModel, indexedIndeps, x, tmpsAlias);
+        std::vector<CGBase> indexedIndeps = createIndexedIndependents(handler, loopModel, *info.iterationIndexOp);
+        info.x = createLoopIndependentVector(handler, loopModel, indexedIndeps, x, tmpsAlias);
 
-        info.w = createLoopDependentVector(handler, lModel, *info.iterationIndexOp);
+        info.w = createLoopDependentVector(handler, loopModel, *info.iterationIndexOp);
     }
 
     /**
@@ -639,16 +639,16 @@ std::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Code
      * Loops - evaluate Jacobian and Hessian
      */
     for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
-        LoopModel<Base>& lModel = *itLoop2Info->first;
+        LoopModel<Base>& loopModel = *itLoop2Info->first;
         HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
 
         _cache.str("");
-        _cache << "model (Jacobian + Hessian, loop " << lModel.getLoopId() << ")";
+        _cache << "model (Jacobian + Hessian, loop " << loopModel.getLoopId() << ")";
         std::string jobName = _cache.str();
         _cache.str("");
         startingJob("'" + jobName + "'", JobTimer::GRAPH);
 
-        bool individualColoring = lModel.isContainsAtomics();
+        bool individualColoring = loopModel.isContainsAtomics();
         info.evalLoopModelJacobianHessian(individualColoring);
 
         finishedJob();
@@ -677,7 +677,7 @@ std::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Code
         finishedJob();
 
         for (size_t i = 0; i < tmpsAlias.size(); i++)
-            tmpsAlias[i].getOperationNode()->getArguments().push_back(asArgument(yNL[nonIndexdedEqSize + i]));
+            tmpsAlias[i].getOperationNode()->getArguments().push_back(asArgument(yNL[nonIndexedEqSize + i]));
 
         for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
             HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
@@ -697,8 +697,8 @@ std::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Code
      * Loops - Hessian
      */
     for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
-        LoopModel<Base>& lModel = *itLoop2Info->first;
-        size_t nIterations = lModel.getIterationCount();
+        LoopModel<Base>& loopModel = *itLoop2Info->first;
+        size_t nIterations = loopModel.getIterationCount();
         HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
 
         // store results in indexedLoopResults
@@ -765,7 +765,7 @@ std::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Code
 
                         CGBase hessVal = Base(0);
                         for (size_t k : ks) {
-                            size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
+                            size_t tapeK = loopModel.getTempIndepIndexes(k)->tape;
                             hessVal += infog.hess[tapeJ1].at(tapeK) * dzDx[k][j2];
                         }
 
@@ -808,7 +808,7 @@ std::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Code
                         const std::vector<HessianElement>& positions = itPos->second;
                         CGBase hessVal = Base(0);
                         for (size_t k : ks) {
-                            size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
+                            size_t tapeK = loopModel.getTempIndepIndexes(k)->tape;
                             hessVal += infog.hess[tapeK].at(tapeJ2) * dzDx[k][j1];
                         }
 
@@ -830,8 +830,8 @@ std::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Code
 
             size_t j1 = orig.first;
             size_t j2 = orig.second;
-            const LoopPosition* posJ1 = lModel.getNonIndexedIndepIndexes(j1);
-            const LoopPosition* posJ2 = lModel.getNonIndexedIndepIndexes(j2);
+            const LoopPosition* posJ1 = loopModel.getNonIndexedIndepIndexes(j1);
+            const LoopPosition* posJ2 = loopModel.getNonIndexedIndepIndexes(j2);
 
             // location
             LinearIndexPattern* pattern = new LinearIndexPattern(0, 0, 0, e);
@@ -846,7 +846,7 @@ std::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Code
              * loop the groups of equations present at the same iterations
              */
             for (size_t g = 0; g < info.equationGroups.size(); g++) {
-                const IterEquationGroup<Base>& group = lModel.getEquationsGroups()[g];
+                const IterEquationGroup<Base>& group = loopModel.getEquationsGroups()[g];
 
                 CGBase gHessVal = Base(0);
                 HessianWithLoopsEquationGroupInfo<Base>& infog = info.equationGroups[g];
@@ -863,7 +863,7 @@ std::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Code
                     const set<size_t>& ks = itNT->second;
 
                     for (size_t k : ks) {
-                        size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
+                        size_t tapeK = loopModel.getTempIndepIndexes(k)->tape;
                         gHessVal += infog.hess[posJ1->tape].at(tapeK) * dzDx[k][j2];
                     }
                 }
@@ -879,7 +879,7 @@ std::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Code
                     const set<size_t>& ks = itTN->second;
 
                     for (size_t k1 : ks) {
-                        size_t tapeK = lModel.getTempIndepIndexes(k1)->tape;
+                        size_t tapeK = loopModel.getTempIndepIndexes(k1)->tape;
                         gHessVal += infog.hess[tapeK].at(posJ2->tape) * dzDx[k1][j1];
                     }
                 }
@@ -896,11 +896,11 @@ std::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Code
                     for (const auto& itzz : k1k2) {
                         size_t k1 = itzz.first;
                         const set<size_t>& k2s = itzz.second;
-                        size_t tapeK1 = lModel.getTempIndepIndexes(k1)->tape;
+                        size_t tapeK1 = loopModel.getTempIndepIndexes(k1)->tape;
 
                         CGBase tmp = Base(0);
                         for (size_t k2 : k2s) {
-                            size_t tapeK2 = lModel.getTempIndepIndexes(k2)->tape;
+                            size_t tapeK2 = loopModel.getTempIndepIndexes(k2)->tape;
 
                             tmp += infog.hess[tapeK1].at(tapeK2) * dzDx[k2][j2];
                         }

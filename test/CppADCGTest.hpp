@@ -53,6 +53,31 @@ public:
 
 protected:
 
+
+    template<class T>
+    static inline void printVector(const std::string& name,
+                                   const std::vector<T>& x) {
+        std::cout << name << "[" << x.size() << "] = {";
+        for (size_t j = 0; j < x.size(); j++) {
+            if (j > 0)
+                std::cout << ", ";
+            std::cout << x[j];
+        }
+        std::cout << "}" << std::endl;
+    }
+
+    template<class T>
+    static inline void printVector(const std::string& name,
+                                   const CppAD::vector<T>& x) {
+        std::cout << name << "[" << x.size() << "] = {";
+        for (size_t j = 0; j < x.size(); j++) {
+            if (j > 0)
+                std::cout << ", ";
+            std::cout << x[j];
+        }
+        std::cout << "}" << std::endl;
+    }
+
     template<class T>
     static inline ::testing::AssertionResult compareValues(const std::vector<std::vector<T> >& depCGen,
                                                            const std::vector<std::vector<T> >& dep,
@@ -262,6 +287,29 @@ protected:
         }
 
         return ::testing::AssertionSuccess();
+    }
+
+    template<class Base2, class Algo, class VectorBase2>
+    static chkpoint_two<Base2> createChkpointTwo(const std::string& name,
+                                                 Algo model,
+                                                 VectorBase2& ax,
+                                                 VectorBase2& ay) {
+
+        CppAD::Independent(ax);
+
+        model(ax, ay);
+
+        bool internal_bool = false;
+        bool use_hes_sparsity = true;
+        bool use_base2ad = false;
+        bool use_in_parallel = false;
+
+        return chkpoint_two<Base2>(ADFun<Base2>(ax, ay),
+                                   name,
+                                   internal_bool,
+                                   use_hes_sparsity,
+                                   use_base2ad,
+                                   use_in_parallel);
     }
 
     static CppAD::vector<AD<Base> > makeADVector(const CppAD::vector<Base>& x) {

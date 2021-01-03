@@ -25,7 +25,7 @@ public:
     // provides an independent variable for each loop iteration
     const std::vector<const OperationNode<Base>*> order;
 
-    inline IndependentOrder(std::vector<const OperationNode<Base>*> myOrder) :
+    inline explicit IndependentOrder(std::vector<const OperationNode<Base>*> myOrder) :
         order(std::move(myOrder)) {
     }
 };
@@ -159,7 +159,7 @@ private:
     size_t idCounter_;
 public:
 
-    inline Loop(EquationPattern<Base>& eq) :
+    inline explicit Loop(EquationPattern<Base>& eq) :
         handlerOrig_(eq.depRef.getCodeHandler()),
         varId_(handlerOrig_ != nullptr ? new CodeHandlerVector<Base, size_t>(*handlerOrig_): nullptr),
         varIndexed_(handlerOrig_ != nullptr ? new CodeHandlerVector<Base, bool>(*handlerOrig_): nullptr),
@@ -284,15 +284,14 @@ public:
                          std::map<OperationNode<Base>*, size_t>& origTemp2Index) {
 
         CPPADCG_ASSERT_UNKNOWN(dep2Iteration_.empty())
-        for (size_t iter = 0; iter < iterationCount_; iter++) {
-            const std::set<size_t>& deps = iterationDependents_[iter];
 
-            for (size_t d : deps) {
+        for (size_t iter = 0; iter < iterationCount_; iter++) {
+            for (size_t d : iterationDependents_[iter]) {
                 dep2Iteration_[d] = iter;
             }
         }
 
-        if(varIndexed_ != nullptr) {
+        if (varIndexed_ != nullptr) {
             varIndexed_->adjustSize();
             varIndexed_->fill(false);
         }
@@ -315,7 +314,6 @@ public:
             }
 #endif
         }
-
 
         for (size_t g = 0; g < eqGroups_.size(); g++) {
             const EquationGroup<Base>& group = eqGroups_[g];
@@ -862,7 +860,7 @@ private:
 
         // load any atomic function used in the original model
         const std::map<size_t, CGAbstractAtomicFun<Base>* >& atomicsOrig = origHandler.getAtomicFunctions();
-        std::map<size_t, atomic_base<CGB>* > atomics;
+        std::map<size_t, atomic_three<CGB>* > atomics;
         atomics.insert(atomicsOrig.begin(), atomicsOrig.end());
         evaluator1stIt.addAtomicFunctions(atomics);
 
@@ -870,7 +868,7 @@ private:
 
         bool containsAtoms = evaluator1stIt.getNumberOfEvaluatedAtomics() > 0;
 
-        std::unique_ptr<ADFun<CGB> >funIndexed(new ADFun<CGB>());
+        std::unique_ptr<ADFun<CGB> > funIndexed(new ADFun<CGB>());
         funIndexed->Dependent(newDeps);
 
         /*******************************************************************
@@ -1182,7 +1180,8 @@ private:
     struct IndexedIndepSorter {
         const std::map<const OperationNode<Base>*, const IndependentOrder<Base>*>& clone2indexedIndep;
 
-        IndexedIndepSorter(const std::map<const OperationNode<Base>*, const IndependentOrder<Base>*>& clone2indexedIndep) :
+        IndexedIndepSorter(const std::map<const OperationNode<Base>*,
+                           const IndependentOrder<Base>*>& clone2indexedIndep) :
             clone2indexedIndep(clone2indexedIndep) {
         }
 

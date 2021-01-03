@@ -209,11 +209,10 @@ TEST_F(CppADCGPatternCstrTest, AtomicAllVarsCppAD) {
         ax[i] = axTypical[i];
     }
 
-    checkpoint<double> atomic("cstr",
-                              atomicFunction,
-                              ax,
-                              ay,
-                              atomic_base<double>::set_sparsity_enum);
+    chkpoint_two<double> atomic = createChkpointTwo<double>("cstr",
+                                                            atomicFunction,
+                                                            ax,
+                                                            ay);
 
     // independent variables
     std::vector<double> xTypical = colModel_->getTypicalValues(repeat);

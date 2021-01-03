@@ -19,36 +19,42 @@ using namespace CppAD;
 using namespace CppAD::cg;
 
 TEST_F(CppADCGOperationTest, PowTestOne) {
+    this->verbose_ = true;
     std::vector<double> u{0.5, 2.0}; // domain space vector
 
     test0nJac("PowTestOne", &PowTestOneFunc<double >, &PowTestOneFunc<CG<double> >, u);
 }
 
 TEST_F(CppADCGOperationTest, PowTestTwo) {
+    this->verbose_ = true;
     std::vector<double> u{2., 3.}; // domain space vector
 
     test0nJac("PowTestTwo", &PowTestTwoFunc<double >, &PowTestTwoFunc<CG<double> >, u);
 }
 
 TEST_F(CppADCGOperationTest, PowTestThree) {
+    this->verbose_ = true;
     std::vector<double> u{2.0}; // domain space vector
 
     test0nJac("PowTestThree", &PowTestThreeFunc<double >, &PowTestThreeFunc<CG<double> >, u);
 }
 
 TEST_F(CppADCGOperationTest, PowTestFour) {
+    this->verbose_ = true;
     std::vector<double> u{-2}; // domain space vector
 
     test0nJac("PowTestFour", &PowTestFourFunc<double >, &PowTestFourFunc<CG<double> >, u);
 }
 
 TEST_F(CppADCGOperationTest, PowTestFive) {
+    this->verbose_ = true;
     std::vector<double> u{-1}; // domain space vector
 
     test0nJac("PowTestFive", &PowTestFiveFunc<double >, &PowTestFiveFunc<CG<double> >, u);
 }
 
 TEST_F(CppADCGOperationTest, PowTestSix) {
+    this->verbose_ = true;
     std::vector<double> u{1.5}; // domain space vector
 
     test0nJac("PowTestSix", &PowTestSixFunc<double >, &PowTestSixFunc<CG<double> >, u);

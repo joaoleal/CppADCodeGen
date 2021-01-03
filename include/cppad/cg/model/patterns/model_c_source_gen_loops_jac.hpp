@@ -308,16 +308,16 @@ std::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseJacobianWithLoops(Cod
     // loop loops :)
     typename map<LoopModel<Base>*, std::vector<JacobianWithLoopsRowInfo> >::iterator itl2Eq;
     for (itl2Eq = loopEqInfo.begin(); itl2Eq != loopEqInfo.end(); ++itl2Eq) {
-        LoopModel<Base>& lModel = *itl2Eq->first;
+        LoopModel<Base>& loopModel = *itl2Eq->first;
         std::vector<JacobianWithLoopsRowInfo>& eqs = itl2Eq->second;
-        ADFun<CGBase>& fun = lModel.getTape();
+        ADFun<CGBase>& fun = loopModel.getTape();
 
         std::vector<IfElseInfo<Base> > ifElses;
 
         /**
          * make the loop start
          */
-        LoopStartOperationNode<Base>* loopStart = handler.makeLoopStartNode(*iterationIndexDcl, lModel.getIterationCount());
+        LoopStartOperationNode<Base>* loopStart = handler.makeLoopStartNode(*iterationIndexDcl, loopModel.getIterationCount());
 
         IndexOperationNode<Base>* iterationIndexOp = handler.makeIndexNode(*loopStart);
         std::set<IndexOperationNode<Base>*> indexesOps;
@@ -326,11 +326,11 @@ std::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseJacobianWithLoops(Cod
         /**
          * evaluate loop model Jacobian
          */
-        std::vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, *iterationIndexOp);
-        std::vector<CGBase> xl = createLoopIndependentVector(handler, lModel, indexedIndeps, x, tmps);
+        std::vector<CGBase> indexedIndeps = createIndexedIndependents(handler, loopModel, *iterationIndexOp);
+        std::vector<CGBase> xl = createLoopIndependentVector(handler, loopModel, indexedIndeps, x, tmps);
 
         std::vector<size_t> row, col;
-        generateSparsityIndexes(loopsEvalSparsities[&lModel], row, col);
+        generateSparsityIndexes(loopsEvalSparsities[&loopModel], row, col);
         jacLoop.resize(row.size());
 
         if (row.size() == 0) {
@@ -339,13 +339,13 @@ std::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseJacobianWithLoops(Cod
 
         CppAD::sparse_jacobian_work work; // temporary structure for CppAD
         if (forward) {
-            fun.SparseJacobianForward(xl, lModel.getJacobianSparsity(), row, col, jacLoop, work);
+            fun.SparseJacobianForward(xl, loopModel.getJacobianSparsity(), row, col, jacLoop, work);
         } else {
-            fun.SparseJacobianReverse(xl, lModel.getJacobianSparsity(), row, col, jacLoop, work);
+            fun.SparseJacobianReverse(xl, loopModel.getJacobianSparsity(), row, col, jacLoop, work);
         }
 
         // organize results
-        std::vector<std::map<size_t, CGBase> > dyiDxtape(lModel.getTapeDependentCount());
+        std::vector<std::map<size_t, CGBase> > dyiDxtape(loopModel.getTapeDependentCount());
         for (size_t el = 0; el < jacLoop.size(); el++) {
             size_t tapeI = row[el];
             size_t tapeJ = col[el];
@@ -370,7 +370,7 @@ std::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseJacobianWithLoops(Cod
         for (size_t tapeI = 0; tapeI < eqs.size(); tapeI++) {
             JacobianWithLoopsRowInfo& rowInfo = eqs[tapeI];
 
-            prepareSparseJacobianRowWithLoops(handler, lModel,
+            prepareSparseJacobianRowWithLoops(handler, loopModel,
                                               tapeI, rowInfo,
                                               dyiDxtape, dzDx,
                                               CGBase(1),
@@ -402,7 +402,7 @@ std::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseJacobianWithLoops(Cod
 
 template<class Base>
 void ModelCSourceGen<Base>::prepareSparseJacobianRowWithLoops(CodeHandler<Base>& handler,
-                                                              LoopModel<Base>& lModel,
+                                                              LoopModel<Base>& loopModel,
                                                               size_t tapeI,
                                                               const loops::JacobianWithLoopsRowInfo& rowInfo,
                                                               const std::vector<std::map<size_t, CGBase> >& dyiDxtape,
@@ -442,7 +442,7 @@ void ModelCSourceGen<Base>::prepareSparseJacobianRowWithLoops(CodeHandler<Base>&
         CGBase jacVal = Base(0);
 
         // non-indexed variables used directly
-        const LoopPosition* pos = lModel.getNonIndexedIndepIndexes(j);
+        const LoopPosition* pos = loopModel.getNonIndexedIndepIndexes(j);
         if (pos != nullptr) {
             size_t tapeJ = pos->tape;
             const auto itVal = dyiDxtape[tapeI].find(tapeJ);
@@ -456,7 +456,7 @@ void ModelCSourceGen<Base>::prepareSparseJacobianRowWithLoops(CodeHandler<Base>&
         if (itks != rowInfo.tmpEvals.end()) {
             const std::set<size_t>& ks = itks->second;
             for (size_t k : ks) {
-                size_t tapeJ = lModel.getTempIndepIndexes(k)->tape;
+                size_t tapeJ = loopModel.getTempIndepIndexes(k)->tape;
 
                 jacVal += dyiDxtape[tapeI].at(tapeJ) * dzDx[k].at(j);
             }

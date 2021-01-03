@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2020 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -38,7 +39,7 @@ std::vector<CG<Base> > prepareGraphForward0WithLoops(CodeHandler<Base>& handler,
     // temporaries
     std::vector<CGBase> tmps;
 
-    /**
+    /*
      * original equations outside the loops 
      */
     if (funNoLoops != nullptr) {
@@ -56,44 +57,43 @@ std::vector<CG<Base> > prepareGraphForward0WithLoops(CodeHandler<Base>& handler,
             tmps[i - origEq.size()] = depNL[i];
     }
 
-    /**
+    /*
      * equations in loops
      */
     OperationNode<Base>* iterationIndexDcl = handler.makeIndexDclrNode(LoopModel<Base>::ITERATION_INDEX_NAME);
 
     for (LoopModel<Base>* itl : loopTapes) {
-        LoopModel<Base>& lModel = *itl;
-        size_t nIterations = lModel.getIterationCount();
-        const std::vector<std::vector<LoopPosition> >& dependents = lModel.getDependentIndexes();
+        LoopModel<Base>& loopModel = *itl;
+        size_t nIterations = loopModel.getIterationCount();
+        const std::vector<std::vector<LoopPosition> >& dependents = loopModel.getDependentIndexes();
 
-        /**
+        /*
          * make the loop start
          */
         LoopStartOperationNode<Base>* loopStart = handler.makeLoopStartNode(*iterationIndexDcl, nIterations);
 
         IndexOperationNode<Base>* iterationIndexOp = handler.makeIndexNode(*loopStart);
-        std::set<IndexOperationNode<Base>*> indexesOps;
-        indexesOps.insert(iterationIndexOp);
+        std::set<IndexOperationNode<Base>*> indexesOps {iterationIndexOp};
 
         std::vector<IfElseInfo<Base> > ifElses;
 
-        /**
+        /*
          * evaluate the loop body
          */
-        std::vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, *iterationIndexOp);
-        std::vector<CGBase> xl = createLoopIndependentVector(handler, lModel, indexedIndeps, x, tmps);
+        std::vector<CGBase> indexedIndeps = createIndexedIndependents(handler, loopModel, *iterationIndexOp);
+        std::vector<CGBase> xl = createLoopIndependentVector(handler, loopModel, indexedIndeps, x, tmps);
         if (xl.size() == 0) {
             xl.resize(1); // does not depend on any variable but CppAD requires at least one
             xl[0] = Base(0);
         }
-        std::vector<CGBase> yl = lModel.getTape().Forward(0, xl);
+        std::vector<CGBase> yl = loopModel.getTape().Forward(0, xl);
 
-        /**
+        /*
          * make the loop end
          */
         size_t assignOrAdd = 0;
 
-        const std::vector<IndexPattern*>& depPatterns = lModel.getDependentIndexPatterns();
+        const std::vector<IndexPattern*>& depPatterns = loopModel.getDependentIndexPatterns();
         std::vector<std::pair<CGBase, IndexPattern*> > indexedLoopResults(yl.size());
         for (size_t i = 0; i < yl.size(); i++) {
             std::map<size_t, size_t> locationsIter2Pos;
@@ -111,17 +111,17 @@ std::vector<CG<Base> > prepareGraphForward0WithLoops(CodeHandler<Base>& handler,
 
         LoopEndOperationNode<Base>* loopEnd = createLoopEnd(handler, *loopStart, indexedLoopResults, indexesOps, assignOrAdd);
 
-        for (size_t i = 0; i < dependents.size(); i++) {
+        for (const auto& dependent : dependents) {
             for (size_t it = 0; it < nIterations; it++) {
                 // an additional alias variable is required so that each dependent variable can have its own ID
-                size_t e = dependents[i][it].original;
+                size_t e = dependent[it].original;
                 if (e < m) { // some equations are not present in all iteration
                     y[e] = handler.createCG(*handler.makeNode(CGOpCode::DependentRefRhs,{e}, {*loopEnd}));
                 }
             }
         }
 
-        /**
+        /*
          * move non-indexed expressions outside loop
          */
         moveNonIndexedOutsideLoop(handler, *loopStart, *loopEnd);

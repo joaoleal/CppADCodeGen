@@ -19,12 +19,16 @@ using namespace CppAD;
 using namespace CppAD::cg;
 
 TEST_F(CppADCGOperationTest, atan1) {
+    //this->verbose_ = true;
+
     std::vector<double> u{1}; // independent variable vector
 
     test0nJac("AtanTestOne", &AtanTestOneFunc<double >, &AtanTestOneFunc<CG<double> >, u);
 }
 
 TEST_F(CppADCGOperationTest, atan2) {
+    //this->verbose_ = true;
+
     std::vector<double> u{1}; // independent variable vector
 
     test0nJac("AtanTestTwo", &AtanTestTwoFunc<double >, &AtanTestTwoFunc<CG<double> >, u);

@@ -78,32 +78,34 @@ public:
      *             automatically generated name)
      * @param id A unique identifier for this variable (used internally)
      */
-    inline DaeVarInfo(const std::string& name = "",
-                      size_t id = 0) :
+    inline explicit DaeVarInfo(std::string name = "",
+                               size_t id = 0) :
         id_(id),
         antiDerivative_(-1),
         derivative_(-1),
         integratedDependent_(true),
         integratedVariable_(false),
-        name_(name),
+        name_(std::move(name)),
         originalIndex_(-1),
         order_(0),
         originalAntiDerivative_(-1) {
     }
 
-    inline DaeVarInfo(int derivativeOf,
-                      const std::string& name = "",
-                      size_t id = 0) :
+    inline explicit DaeVarInfo(int derivativeOf,
+                               std::string name = "",
+                               size_t id = 0) :
         id_(id),
         antiDerivative_(derivativeOf),
         derivative_(-1),
         integratedDependent_(true),
         integratedVariable_(false),
-        name_(name),
+        name_(std::move(name)),
         originalIndex_(-1),
         order_(0),
         originalAntiDerivative_(-1) {
     }
+
+    inline virtual ~DaeVarInfo() = default;
 
     /**
      * Provides a unique identifier for the variable.
@@ -314,8 +316,6 @@ public:
         out.flush();
     }
 
-    inline virtual ~DaeVarInfo() {
-    }
 };
 
 } // END cg namespace

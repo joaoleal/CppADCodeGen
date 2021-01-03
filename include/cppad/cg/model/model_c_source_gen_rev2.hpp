@@ -90,23 +90,11 @@ void ModelCSourceGen<Base>::generateSparseReverseTwoSourcesWithAtomics(const std
         CodeHandler<Base> handler;
         handler.setJobTimer(_jobTimer);
 
-        vector<CGBase> tx0(n);
-        handler.makeVariables(tx0);
-        if (_x.size() > 0) {
-            for (size_t i = 0; i < n; i++) {
-                tx0[i].setValue(_x[i]);
-            }
-        }
+        // independent variables
+        std::vector<CGBase> tx0 = registerHandlerIndependents(handler, _x);
 
         // parameters
-        std::vector<CGBase> params(_fun.size_dyn_ind());
-        handler.makeParameters(params);
-        if (_xDynParams.size() > 0) {
-            for (size_t i = 0; i < params.size(); i++) {
-                params[i].setValue(_xDynParams[i]);
-            }
-        }
-        _fun.new_dynamic(params);
+        std::vector<CGBase> params = registerHandlerParameters(handler, _xDynParams);
 
         CGBase tx1;
         handler.makeVariable(tx1);
@@ -179,23 +167,11 @@ void ModelCSourceGen<Base>::generateSparseReverseTwoSourcesNoAtomics(const std::
     CodeHandler<Base> handler;
     handler.setJobTimer(_jobTimer);
 
-    vector<CGBase> tx0(n);
-    handler.makeVariables(tx0);
-    if (_x.size() > 0) {
-        for (size_t i = 0; i < n; i++) {
-            tx0[i].setValue(_x[i]);
-        }
-    }
+    // independent variables
+    std::vector<CGBase> tx0 = registerHandlerIndependents(handler, _x);
 
     // parameters
-    std::vector<CGBase> params(_fun.size_dyn_ind());
-    handler.makeParameters(params);
-    if (_xDynParams.size() > 0) {
-        for (size_t i = 0; i < params.size(); i++) {
-            params[i].setValue(_xDynParams[i]);
-        }
-    }
-    _fun.new_dynamic(params);
+    std::vector<CGBase> params = registerHandlerParameters(handler, _xDynParams);
 
     CGBase tx1;
     handler.makeVariable(tx1);

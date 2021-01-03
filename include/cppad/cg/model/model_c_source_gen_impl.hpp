@@ -170,23 +170,11 @@ void ModelCSourceGen<Base>::generateLoops() {
     CodeHandler<Base> handler;
     handler.setJobTimer(_jobTimer);
 
-    std::vector<CGBase> xx(_fun.Domain());
-    handler.makeVariables(xx);
-    if (_x.size() > 0) {
-        for (size_t i = 0; i < xx.size(); i++) {
-            xx[i].setValue(_x[i]);
-        }
-    }
+    // independent variables
+    std::vector<CGBase> xx = registerHandlerIndependents(handler, _x);
 
     // parameters
-    std::vector<CGBase> params(_fun.size_dyn_ind());
-    handler.makeParameters(params);
-    if (_xDynParams.size() > 0) {
-        for (size_t i = 0; i < params.size(); i++) {
-            params[i].setValue(_xDynParams[i]);
-        }
-    }
-    _fun.new_dynamic(params);
+    std::vector<CGBase> params = registerHandlerParameters(handler, _xDynParams);
 
     std::vector<CGBase> yy = _fun.Forward(0, xx);
 

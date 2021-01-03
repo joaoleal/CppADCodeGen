@@ -27,24 +27,13 @@ void ModelCSourceGen<Base>::generateZeroSource() {
     CodeHandler<Base> handler;
     handler.setJobTimer(_jobTimer);
 
-    std::vector<CGBase> indVars(_fun.Domain());
-    handler.makeVariables(indVars);
-    if (_x.size() > 0) {
-        for (size_t i = 0; i < indVars.size(); i++) {
-            indVars[i].setValue(_x[i]);
-        }
-    }
+    // independent variables
+    std::vector<CGBase> indVars = registerHandlerIndependents(handler, _x);
 
     // parameters
-    std::vector<CGBase> params(_fun.size_dyn_ind());
-    handler.makeParameters(params);
-    if (_xDynParams.size() > 0) {
-        for (size_t i = 0; i < params.size(); i++) {
-            params[i].setValue(_xDynParams[i]);
-        }
-    }
-    _fun.new_dynamic(params);
+    std::vector<CGBase> params = registerHandlerParameters(handler, _xDynParams);
 
+    // dependent variables
     std::vector<CGBase> dep;
 
     if (_loopTapes.empty()) {

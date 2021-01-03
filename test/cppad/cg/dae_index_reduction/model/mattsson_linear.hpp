@@ -50,13 +50,13 @@ inline CppAD::ADFun<Base> MattssonLinear(std::vector<DaeVarInfo>& daeVar,
     daeVar[9].makeConstant();
     daeVar[10].makeConstant();
     daeVar[11].makeIntegratedVariable();
-    daeVar[12] = 0;  // dx1dt
-    daeVar[13] = 1; // dx2dt
-    daeVar[14] = 2; // dx3dt
-    daeVar[15] = 3; // dx4dt
-    daeVar[16] = 4; // d(dx1dt)dt
-    daeVar[17] = 5; // d(dx2dt)dt
-    daeVar[18] = 6; // d(dx3dt)dt
+    daeVar[12] = DaeVarInfo(0);  // dx1dt
+    daeVar[13] = DaeVarInfo(1); // dx2dt
+    daeVar[14] = DaeVarInfo(2); // dx3dt
+    daeVar[15] = DaeVarInfo(3); // dx4dt
+    daeVar[16] = DaeVarInfo(4); // d(dx1dt)dt
+    daeVar[17] = DaeVarInfo(5); // d(dx2dt)dt
+    daeVar[18] = DaeVarInfo(6); // d(dx3dt)dt
 
     /**
      * Values

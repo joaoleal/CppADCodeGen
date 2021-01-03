@@ -34,7 +34,7 @@ protected:
     using ADCG = CppAD::AD<CGBase>;
 public:
 
-    bool augmentPath(Enode<Base>& i) override final {
+    bool augmentPath(Enode<Base>& i) final {
         i.color(this->logger_->log(), this->logger_->getVerbosity()); // avoids infinite recursion
 
         const std::vector<Vnode<Base>*>& vars = i.variables();

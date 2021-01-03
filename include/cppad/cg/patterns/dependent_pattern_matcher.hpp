@@ -163,11 +163,10 @@ public:
 
         findLoops();
 
-        nonLoopTape = createNewTape();
+        nonLoopTape = createNonLoopTape();
 
         loopTapes.clear();
-        for (size_t l = 0; l < loops_.size(); l++) {
-            Loop<Base>* loop = loops_[l];
+        for (Loop<Base>* loop : loops_) {
             loopTapes.insert(loop->releaseLoopModel());
         }
     }
@@ -183,10 +182,71 @@ private:
     /**
      * Attempts to detect common patterns in the equations and generate
      * loops from these patterns.
-     *
-     * @return information about the detected loops
      */
-    virtual std::vector<Loop<Base>*> findLoops() {
+    void findLoops() {
+        using namespace std;
+
+        replaceDirectIndependentVarAssignmentWithAlias();
+
+        varId_.adjustSize();
+        varId_.fill(0);
+
+        // assign a unique Id to each node
+        assignIds();
+        id2Deps.resize(idCounter_ + 1);
+
+        /*
+         * Determine the equation patterns
+         */
+        findRelatedVariables();
+
+        for (EquationPattern<Base>* eq : equations_) {
+            for (size_t depIt : eq->dependents) {
+                dep2Equation_[depIt] = eq;
+            }
+        }
+
+        /*
+         * Combine related equations in the same loops
+         * (equations that share temporary variables)
+         */
+         combineRelatedEquationsInSameLoop();
+
+        /*
+         * Determine the number of iterations in each loop
+         */
+        for (size_t l = 0; l < loops_.size(); l++) {
+            loops_[l]->generateDependentLoopIndexes(dep2Equation_);
+        }
+
+        /*
+         * Attempt to combine unrelated loops to reduce the total number
+         * of loops
+         */
+        combineUnrelatedEquationsInExistingLoops();
+
+        size_t l_size = loops_.size();
+
+        /*
+         * assign indexes (k) to temporary variables (non-indexed) used by loops
+         */
+        for (size_t l = 0; l < l_size; l++) {
+            Loop<Base>* loop = loops_[l];
+
+            //Generate a local model for the loop
+            loop->createLoopModel(dependents_, independents_, parameters_, dep2Equation_, origTemp2Index_);
+        }
+
+        /*
+         * clean-up evaluation order
+         */
+        resetHandlerCounters();
+    }
+
+    /**
+     * Replaces direct assignments of independent variables to dependent variables with alias.
+     */
+    void replaceDirectIndependentVarAssignmentWithAlias() {
         using namespace std;
 
         size_t rSize = relatedDepCandidates_.size();
@@ -208,39 +268,45 @@ private:
                 }
             }
         }
+    }
 
-        varId_.adjustSize();
-        varId_.fill(0);
-
-        // assign a unique Id to each node
-        assignIds();
-        id2Deps.resize(idCounter_ + 1);
-
-        /**
-         * Determine the equation patterns
-         */
-        findRelatedVariables();
-
-        for (EquationPattern<Base>* eq : equations_) {
-            for (size_t depIt : eq->dependents) {
-                dep2Equation_[depIt] = eq;
-            }
-        }
+    /**
+     * Combine related equations in the same loops
+     * (equations that share temporary variables).
+     */
+    void combineRelatedEquationsInSameLoop() {
+        using namespace std;
 
         const size_t eq_size = equations_.size();
         loops_.reserve(eq_size);
 
-        SmartSetPointer<set<size_t> > dependentRelations;
-        std::vector<set<size_t>*> dep2Relations(dependents_.size(), nullptr);
-        map<size_t, set<size_t> > dependentBlackListRelations;
+        findAndOrganizeRelationshipsBetweenLoops();
 
         /*******************************************************************
-         * Combine related equations in the same loops
-         * (equations that share temporary variables)
+         * Attempt to combine loops with shared variables
          ******************************************************************/
-        /**
-         * Find and organize relationships
+        MaxOps2eq2totalOps2validDepsType maxOps2Eq2totalOps2validDeps;
+        Eq2totalOps2validDepsType eq2totalOps2validDeps;
+
+        /*
+         * First organize pairs of equation patterns with shared variables
+         * by the maximum number of shared operations among two dependent
+         * variables.
          */
+        SmartListPointer<TotalOps2validDepsType> totalOps2validDepsMem;
+
+        matchEqPatternsWithSharedVariables(totalOps2validDepsMem, maxOps2Eq2totalOps2validDeps, eq2totalOps2validDeps);
+
+        /*
+         * Try to merge loops with shared variables
+         */
+        mergeLoopsWithSharedVariables(maxOps2Eq2totalOps2validDeps, eq2totalOps2validDeps);
+    }
+
+
+    void findAndOrganizeRelationshipsBetweenLoops() {
+        const size_t eq_size = equations_.size();
+
         varIndexed_.adjustSize();
         varIndexed_.fill(false);
 
@@ -254,7 +320,7 @@ private:
                 markOperationsWithDependent(node, depIt);
             }
 
-            /**
+            /*
              * Find shared operations with the previous equation patterns
              */
             if (e > 0) {
@@ -264,7 +330,7 @@ private:
                     findSharedTemporaries(dependents_[depIt], depIt); // a color is used to mark indexed paths
                 }
 
-                /**
+                /*
                  * clean-up
                  */
                 for (size_t depIt : eq->dependents) {
@@ -278,19 +344,15 @@ private:
             loops_.push_back(loop);
             equation2Loop_[eq] = loop;
         }
+    }
 
-        /*******************************************************************
-         * Attempt to combine loops with shared variables
-         ******************************************************************/
-        MaxOps2eq2totalOps2validDepsType maxOps2Eq2totalOps2validDeps;
-        Eq2totalOps2validDepsType eq2totalOps2validDeps;
-        SmartListPointer<TotalOps2validDepsType> totalOps2validDepsMem;
-
-        /**
-         * First organize pairs of equation patterns with shared variables
-         * by the maximum number of shared operations among two dependent
-         * variables.
-         */
+    /**
+     * Organize pairs of equation patterns with shared variables by the maximum
+     * number of shared operations among two dependent variables.
+     */
+    void matchEqPatternsWithSharedVariables(SmartListPointer<TotalOps2validDepsType>& totalOps2validDepsMem,
+                                            MaxOps2eq2totalOps2validDepsType& maxOps2Eq2totalOps2validDeps,
+                                            Eq2totalOps2validDepsType& eq2totalOps2validDeps) {
         for (size_t l1 = 0; l1 < loops_.size(); l1++) {
             Loop<Base>* loop1 = loops_[l1];
             CPPADCG_ASSERT_UNKNOWN(loop1->equations.size() == 1)
@@ -302,18 +364,18 @@ private:
                 EquationPattern<Base>* eq2 = *loop2->equations.begin();
 
                 UniqueEquationPair<Base> eqRel(eq1, eq2);
-                const auto eqSharedit = equationShared_.find(eqRel);
-                if (eqSharedit == equationShared_.end())
+                const auto eqSharedIt = equationShared_.find(eqRel);
+                if (eqSharedIt == equationShared_.end())
                     continue; // nothing is shared between eq1 and eq2
 
-                const Dep1Dep2SharedType& dep1Dep2Shared = eqSharedit->second;
+                const Dep1Dep2SharedType& dep1Dep2Shared = eqSharedIt->second;
 
                 /**
                  * There are shared variables among the two equation patterns
                  */
                 auto* totalOps2validDeps = new TotalOps2validDepsType();
                 totalOps2validDepsMem.push_back(totalOps2validDeps);
-                size_t maxOps = 0; // the maximum number of shared operations between two dependents
+                std::size_t maxOps = 0; // the maximum number of shared operations between two dependents
 
                 bool canCombine = true;
 
@@ -321,15 +383,15 @@ private:
                  * organize relations between dependents
                  **************************************************/
                 for (const auto& itDep1Dep2 : dep1Dep2Shared) {
-                    size_t dep1 = itDep1Dep2.first;
-                    const map<size_t, map<OperationNode<Base>*, Indexed2OpCountType> >& dep2Shared = itDep1Dep2.second;
+                    std::size_t dep1 = itDep1Dep2.first;
+                    const std::map<std::size_t, std::map<OperationNode<Base>*, Indexed2OpCountType> >& dep2Shared = itDep1Dep2.second;
 
                     // multiple deps2 means multiple choices for a relation (only one dep1<->dep2 can be chosen)
                     for (const auto& itDep2 : dep2Shared) {
-                        size_t dep2 = itDep2.first;
-                        const map<OperationNode<Base>*, Indexed2OpCountType>& sharedTmps = itDep2.second;
+                        std::size_t dep2 = itDep2.first;
+                        const std::map<OperationNode<Base>*, Indexed2OpCountType>& sharedTmps = itDep2.second;
 
-                        size_t totalOps = 0; // the total number of operations performed by shared variables with dep2
+                        std::size_t totalOps = 0; // the total number of operations performed by shared variables with dep2
                         for (const auto& itShared : sharedTmps) {
                             if (itShared.second.first == INDEXED_OPERATION_TYPE::BOTH) {
                                 /**
@@ -348,7 +410,7 @@ private:
 
                         DepPairType depRel(dep1, dep2);
                         (*totalOps2validDeps)[totalOps][depRel] = &sharedTmps;
-                        maxOps = std::max<size_t>(maxOps, totalOps);
+                        maxOps = std::max<std::size_t>(maxOps, totalOps);
                     }
 
                     if (!canCombine) break;
@@ -365,10 +427,16 @@ private:
                 }
             }
         }
+    }
 
-        /**
-         * Try to merge loops with shared variables
-         */
+    void mergeLoopsWithSharedVariables(MaxOps2eq2totalOps2validDepsType& maxOps2Eq2totalOps2validDeps,
+                                       Eq2totalOps2validDepsType& eq2totalOps2validDeps) {
+        using namespace std;
+
+        SmartSetPointer<set<size_t> > dependentRelations;
+        map<size_t, set<size_t> > dependentBlackListRelations;
+        std::vector<set<size_t>*> dep2Relations(dependents_.size(), nullptr);
+
         typename MaxOps2eq2totalOps2validDepsType::const_reverse_iterator itMaxOps;
         for (itMaxOps = maxOps2Eq2totalOps2validDeps.rbegin(); itMaxOps != maxOps2Eq2totalOps2validDeps.rend(); ++itMaxOps) {
 #ifdef CPPADCG_PRINT_DEBUG
@@ -444,58 +512,34 @@ private:
 
             }
         }
+    }
 
-        /**
-         * Determine the number of iterations in each loop
-         */
-        for (size_t l = 0; l < loops_.size(); l++) {
-            loops_[l]->generateDependentLoopIndexes(dep2Equation_);
+    void combineUnrelatedEquationsInExistingLoops() {
+        if (loops_.empty()) {
+            return;
         }
 
-        /*******************************************************************
-         * Attempt to combine unrelated loops
-         ******************************************************************/
-        if (!loops_.empty()) {
-            for (size_t l1 = 0; l1 < loops_.size() - 1; l1++) {
-                Loop<Base>* loop1 = loops_[l1];
-                for (size_t l2 = l1 + 1; l2 < loops_.size();) {
-                    Loop<Base>* loop2 = loops_[l2];
+        for (std::size_t l1 = 0; l1 < loops_.size() - 1; l1++) {
+            Loop<Base>* loop1 = loops_[l1];
+            for (std::size_t l2 = l1 + 1; l2 < loops_.size();) {
+                Loop<Base>* loop2 = loops_[l2];
 
-                    bool canMerge = loop1->getIterationCount() == loop2->getIterationCount();
-                    if (canMerge) {
-                        // check if there are equations in the blacklist
-                        canMerge = !find(loop1, loop2, incompatible_);
-                    }
+                bool canMerge = loop1->getIterationCount() == loop2->getIterationCount();
+                if (canMerge) {
+                    // check if there are equations in the blacklist
+                    canMerge = !find(loop1, loop2, incompatible_);
+                }
 
-                    if (canMerge) {
-                        loop1->mergeEqGroups(*loop2);
-                        loops_.erase(loops_.begin() + l2);
-                        delete loop2;
-                    } else {
-                        l2++;
-                    }
+                if (canMerge) {
+                    loop1->mergeEqGroups(*loop2);
+                    loops_.erase(loops_.begin() + l2);
+                    delete loop2;
+                } else {
+                    l2++;
                 }
             }
         }
 
-        size_t l_size = loops_.size();
-
-        /**
-         * assign indexes (k) to temporary variables (non-indexed) used by loops
-         */
-        for (size_t l = 0; l < l_size; l++) {
-            Loop<Base>* loop = loops_[l];
-
-            //Generate a local model for the loop
-            loop->createLoopModel(dependents_, independents_, parameters_, dep2Equation_, origTemp2Index_);
-        }
-
-        /**
-         * clean-up evaluation order
-         */
-        resetHandlerCounters();
-
-        return loops_;
     }
 
     /**
@@ -701,7 +745,7 @@ private:
      *
      * @return The new tape without loop equations
      */
-    virtual LoopFreeModel<Base>* createNewTape() {
+    virtual LoopFreeModel<Base>* createNonLoopTape() {
         CPPADCG_ASSERT_UNKNOWN(handler_ == independents_[0].getCodeHandler())
 
         size_t m = dependents_.size();
@@ -770,7 +814,7 @@ private:
 
         // set atomic functions
         const std::map<size_t, CGAbstractAtomicFun<Base>* >& atomicsOrig = handler_->getAtomicFunctions();
-        std::map<size_t, atomic_base<CGBase>* > atomics;
+        std::map<size_t, atomic_three<CGBase>* > atomics;
         atomics.insert(atomicsOrig.begin(), atomicsOrig.end());
         evaluator.addAtomicFunctions(atomics);
 
@@ -800,7 +844,7 @@ private:
         return new LoopFreeModel<Base>(tapeNoLoops.release(), depTape2Orig);
     }
 
-    std::vector<EquationPattern<Base>*> findRelatedVariables() {
+    void findRelatedVariables() {
         eqCurr_ = nullptr;
         CodeHandlerVector<Base, size_t> varColor(*handler_);
         color_ = 1; // used to mark visited nodes
@@ -808,57 +852,58 @@ private:
         varColor.adjustSize();
         varColor.fill(0);
 
-        size_t rSize = relatedDepCandidates_.size();
-        for (size_t r = 0; r < rSize; r++) {
-            const std::set<size_t>& candidates = relatedDepCandidates_[r];
-            std::set<size_t> used;
-
-            eqCurr_ = nullptr;
-
-            for (auto itRef = candidates.begin(); itRef != candidates.end(); ++itRef) {
-                size_t iDepRef = *itRef;
-
-                // check if it has already been used
-                if (used.find(iDepRef) != used.end()) {
-                    continue;
-                }
-
-                if (eqCurr_ == nullptr || !used.empty()) {
-                    eqCurr_ = new EquationPattern<Base>(dependents_[iDepRef], iDepRef);
-                    equations_.push_back(eqCurr_);
-                }
-
-                auto it = itRef;
-                for (++it; it != candidates.end(); ++it) {
-                    size_t iDep = *it;
-                    // check if it has already been used
-                    if (used.find(iDep) != used.end()) {
-                        continue;
-                    }
-
-                    if (eqCurr_->testAdd(iDep, dependents_[iDep], color_, varColor)) {
-                        used.insert(iDep);
-                    }
-                }
-
-                if (eqCurr_->dependents.size() == 1) {
-                    // nothing found :(
-                    delete eqCurr_;
-                    eqCurr_ = nullptr;
-                    equations_.pop_back();
-                }
-            }
+        for (const auto& relatedDepCandidate : relatedDepCandidates_) {
+            findRelatedVariablesInGroup(relatedDepCandidate, varColor);
         }
 
-        /**
+        /*
          * Determine the independents that don't change from iteration to
          * iteration
          */
         for (size_t eq = 0; eq < equations_.size(); eq++) {
             equations_[eq]->detectNonIndexedIndependents();
         }
+    }
 
-        return equations_;
+    void findRelatedVariablesInGroup(const std::set<size_t>& candidates,
+                                     CodeHandlerVector<Base, size_t>& varColor) {
+        std::set<size_t> used;
+
+        eqCurr_ = nullptr;
+
+        for (auto itRef = candidates.begin(); itRef != candidates.end(); ++itRef) {
+            size_t iDepRef = *itRef;
+
+            // check if it has already been used
+            if (used.find(iDepRef) != used.end()) {
+                continue;
+            }
+
+            if (eqCurr_ == nullptr || !used.empty()) {
+                eqCurr_ = new EquationPattern<Base>(dependents_[iDepRef], iDepRef);
+                equations_.push_back(eqCurr_);
+            }
+
+            auto it = itRef;
+            for (++it; it != candidates.end(); ++it) {
+                size_t iDep = *it;
+                // check if it has already been used
+                if (used.find(iDep) != used.end()) {
+                    continue;
+                }
+
+                if (eqCurr_->testAdd(iDep, dependents_[iDep], color_, varColor)) {
+                    used.insert(iDep);
+                }
+            }
+
+            if (eqCurr_->dependents.size() == 1) {
+                // nothing found :(
+                delete eqCurr_;
+                eqCurr_ = nullptr;
+                equations_.pop_back();
+            }
+        }
     }
 
     /**

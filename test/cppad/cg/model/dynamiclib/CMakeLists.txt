@@ -22,6 +22,7 @@ IF( UNIX )
     add_cppadcg_test(cg_atomic_generic_model.cpp)
     # add_cppadcg_test(dynamic_atomic_nonlinear_outer.cpp) # not supported yet
     add_cppadcg_test(dynamic_atomic.cpp)
+    add_cppadcg_test(dynamic_atomic_custom_sparsity.cpp)
     add_cppadcg_test(dynamic_atomic_2.cpp)
     add_cppadcg_test(dynamic_atomic_3.cpp)
     add_cppadcg_test(dynamic_cond_exp.cpp)

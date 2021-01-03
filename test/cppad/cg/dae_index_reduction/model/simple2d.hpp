@@ -39,8 +39,8 @@ inline CppAD::ADFun<Base> Simple2D(std::vector<DaeVarInfo>& daeVar) {
     daeVar[0] = DaeVarInfo("x1");
     daeVar[1] = DaeVarInfo("x2");
     daeVar[2].makeIntegratedVariable();
-    daeVar[3] = 0;
-    daeVar[4] = 1;
+    daeVar[3] = DaeVarInfo(0);
+    daeVar[4] = DaeVarInfo(1);
 
     // dependent variable vector
     std::vector<ADB> Z(2);
@@ -78,8 +78,8 @@ inline CppAD::ADFun<Base> Simple2DParam(std::vector<DaeVarInfo>& daeVar,
     daeVar[0] = DaeVarInfo("x1");
     daeVar[1] = DaeVarInfo("x2");
     daeVar[2].makeIntegratedVariable();
-    daeVar[3] = 0;
-    daeVar[4] = 1;
+    daeVar[3] = DaeVarInfo(0);
+    daeVar[4] = DaeVarInfo(1);
 
     // dependent variable vector
     std::vector<ADB> Z(2);

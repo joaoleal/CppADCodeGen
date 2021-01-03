@@ -190,7 +190,7 @@ public:
 
     std::vector<ADCGD> modelOuter(const std::vector<ADCGD>& xOuter,
                                   const std::vector<ADCGD>& pOuter,
-                                  atomic_base<CGD>& atomicInnerModel,
+                                  atomic_three<CGD>& atomicInnerModel,
                                   size_t xInnerSize,
                                   size_t pInnerSize,
                                   size_t yInnerSize) override {

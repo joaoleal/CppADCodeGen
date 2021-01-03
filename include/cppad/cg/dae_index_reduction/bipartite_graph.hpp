@@ -221,7 +221,7 @@ public:
         }
 
         // create the edges
-        sparsity_ = jacobianSparsity<vector<bool>, CGBase>(fun);
+        sparsity_ = jacobianSparsityBool<vector<bool>, CGBase>(fun);
 
         for (size_t i = 0; i < m; i++) {
             for (size_t p = 0; p < n; p++) {

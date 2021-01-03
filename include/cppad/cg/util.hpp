@@ -3,7 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
- *    Copyright (C) 2020 Joao Leal
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -18,28 +18,6 @@
 
 namespace CppAD {
 namespace cg {
-
-template<class VectorBool, class Base>
-void zeroOrderDependency(ADFun<Base>& fun,
-                         const VectorBool& vx,
-                         VectorBool& vy) {
-    size_t m = fun.Range();
-    CPPADCG_ASSERT_KNOWN(vx.size() >= fun.Domain(), "Invalid vx size")
-    CPPADCG_ASSERT_KNOWN(vy.size() >= m, "Invalid vy size")
-
-    using VectorSet = std::vector<std::set<size_t> >;
-
-    const VectorSet jacSparsity = jacobianSparsitySet<VectorSet, Base>(fun);
-
-    for (size_t i = 0; i < m; i++) {
-        for (size_t j : jacSparsity[i]) {
-            if (vx[j]) {
-                vy[i] = true;
-                break;
-            }
-        }
-    }
-}
 
 template<class VectorSet>
 inline bool isIdentityPattern(const VectorSet& pattern,
@@ -144,6 +122,37 @@ inline void addMatrixSparsity(const VectorSet& a,
     addMatrixSparsity<VectorSet, VectorSet2>(a, a.size(), result);
 }
 
+
+/**
+ * Computes the resulting sparsity from adding one matrix to another:
+ * R += B * A * B
+ *
+ * @param a The matrix to be added to the result
+ * @param b A diagonal matrix used to filter the elements in A
+ * @param result the resulting sparsity matrix
+ */
+template<class VectorSet, class VectorSet2>
+inline void multMatrixSparsity(const VectorSet& a,
+                               ArrayView<const bool> b,
+                               VectorSet2& result) {
+    size_t m = a.size();
+
+    CPPADCG_ASSERT_UNKNOWN(result.size() == m)
+    CPPADCG_ASSERT_UNKNOWN(b.size() == m)
+
+    for (size_t i = 0; i < m; i++) {
+        if (b[i]) {
+            auto itHint = result[i].begin();
+            for (size_t j: a[i]) {
+                if (b[j]) {
+                    itHint = result[i].insert(itHint, j);
+                    itHint++;
+                }
+            }
+        }
+    }
+}
+
 /**
  * Computes the resulting sparsity from the multiplying of two matrices:
  * R += A * B
@@ -197,9 +206,9 @@ inline void multMatrixMatrixSparsity(const VectorSet& a,
 
     for (size_t jj = 0; jj < q; jj++) { //loop columns of b
         const std::set<size_t>& colB = bt[jj];
-        if (colB.size() > 0) {
+        if (!colB.empty()) {
             for (size_t i = 0; i < m; i++) {
-                const std::set<size_t>& rowA = a[i];
+                const auto& rowA = a[i];
                 for (size_t rowb : colB) {
                     if (rowA.find(rowb) != rowA.end()) {
                         result[i].insert(jj);
@@ -506,7 +515,7 @@ inline Argument<Base> asArgument(const CG<Base>& tx) {
 }
 
 template<class Base>
-inline std::vector<Argument<Base> > asArguments(const std::vector<CG<Base> >& tx) {
+inline std::vector<Argument<Base> > asArguments(ArrayView<const CG<Base>> tx) {
     std::vector<Argument<Base> > arguments(tx.size());
     for (size_t i = 0; i < arguments.size(); i++) {
         arguments[i] = asArgument(tx[i]);
@@ -515,12 +524,18 @@ inline std::vector<Argument<Base> > asArguments(const std::vector<CG<Base> >& tx
 }
 
 template<class Base>
+inline std::vector<Argument<Base> > asArguments(ArrayView<CG<Base>> tx) {
+    return asArguments(ArrayView<const CG<Base>>(tx));
+}
+
+template<class Base>
 inline std::vector<Argument<Base> > asArguments(const CppAD::vector<CG<Base> >& tx) {
-    std::vector<Argument<Base> > arguments(tx.size());
-    for (size_t i = 0; i < arguments.size(); i++) {
-        arguments[i] = asArgument(tx[i]);
-    }
-    return arguments;
+    return asArguments(ArrayView<const CG<Base>>(tx));
+}
+
+template<class Base>
+inline std::vector<Argument<Base> > asArguments(const std::vector<CG<Base> >& tx) {
+    return asArguments(ArrayView<const CG<Base>>(tx));
 }
 
 /***************************************************************************

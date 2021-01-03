@@ -50,8 +50,7 @@ public:
             graph_(fun, varInfo, eqName, *this) {
     }
 
-    inline virtual ~DaeStructuralIndexReduction() {
-    }
+    inline virtual ~DaeStructuralIndexReduction() = default;
 
     inline BipartiteGraph<Base>& getGraph() {
         return graph_;
