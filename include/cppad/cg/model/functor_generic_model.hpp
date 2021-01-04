@@ -107,6 +107,7 @@ public:
             _name(std::move(other._name)),
             _m(other._m),
             _n(other._n),
+            _p(other._p),
             _in(std::move(other._in)),
             _inHess(std::move(other._inHess)),
             _out(std::move(other._out)),
