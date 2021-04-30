@@ -38,7 +38,7 @@ CppADCodeGen is a C++14 header only library, therefore there aren't many depende
 
  - **CppAD** (2020),
  - A **C++14** compiler (such as GCC and Clang),
- - Clang/LLVM (only required for JIT compilation), and
+ - Clang/LLVM (only required for JIT compilation; supported versions <= v9.0), and
  - Eigen 3 (required when DAE differentiation index reduction is used).
 
 Runtime compilation and dynamic linking:
