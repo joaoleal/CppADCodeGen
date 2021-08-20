@@ -15,7 +15,7 @@
 # Author: Joao Leal
 #
 # ----------------------------------------------------------------------------
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 
 PROJECT(cppadcg CXX C)
 
