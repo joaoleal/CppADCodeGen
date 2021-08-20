@@ -31,7 +31,7 @@ MACRO(add_speed_test name)
   ENDIF()
 
   TARGET_LINK_LIBRARIES(${name}
-                        ${CLANG_LIBS}
+                        ${Clang_LIBS}
                         ${LLVM_MODULE_LIBS}
                         ${LLVM_LDFLAGS})
 
