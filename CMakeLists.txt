@@ -15,7 +15,7 @@
 # Author: Joao Leal
 #
 # ----------------------------------------------------------------------------
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 
 PROJECT(cppadcg CXX C)
 
@@ -156,7 +156,7 @@ ENDIF()
 # ----------------------------------------------------------------------------
 SET(CPPADCG_LLVM_LINK_LIB "3.2|3.6|3.8|4.0|5.0|6.0|7.0|8.0|9.0|10.0")
 
-IF((("${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}" MATCHES "^(${CPPADCG_LLVM_LINK_LIB})$") AND CLANG_FOUND)
+IF((("${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}" MATCHES "^(${CPPADCG_LLVM_LINK_LIB})$") AND Clang_FOUND)
         OR
     ("${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}" MATCHES "^(3.3|3.4)$")
   )

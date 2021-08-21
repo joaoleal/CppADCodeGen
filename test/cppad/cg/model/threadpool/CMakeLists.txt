@@ -19,7 +19,7 @@ IF( UNIX )
   ADD_LIBRARY(pthread_pool STATIC
               ${CMAKE_SOURCE_DIR}/include/cppad/cg/model/threadpool/pthread_pool.c)
 
-  add_cppadcg_test(pthreadpool_raw)
+  add_cppadcg_test(pthreadpool_raw.cpp)
 
   TARGET_LINK_LIBRARIES(pthreadpool_raw pthread_pool)
   TARGET_LINK_LIBRARIES(pthreadpool_raw ${CMAKE_THREAD_LIBS_INIT} )
