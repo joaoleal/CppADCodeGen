@@ -82,6 +82,7 @@ jobs:
       - run:
           name: Build Tests
           command: | 
+            curdir="$(pwd)"
             ls -al
             mkdir build
             cd build
@@ -90,8 +91,8 @@ jobs:
                   -DUSE_VALGRIND=OFF \
                   -DENABLE_THREAD_POOL_TESTS=OFF \
                   -DLLVM_VERSION=${LLVM_VERSION} \
-                  -DCPPAD_HOME=${CIRCLE_WORKING_DIRECTORY}/"${CPPAD_INSTALL}" \
-                  -DEIGEN3_INCLUDE_DIR=${CIRCLE_WORKING_DIRECTORY}/"${EIGEN_INSTALL}" \
+                  -DCPPAD_HOME="${curdir}/${CPPAD_INSTALL}" \
+                  -DEIGEN3_INCLUDE_DIR="${curdir}/${EIGEN_INSTALL}" \
                   ..
             cd test
             make -j2 build_tests
