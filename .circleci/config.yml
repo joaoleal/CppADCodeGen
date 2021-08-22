@@ -28,12 +28,15 @@ jobs:
             mkdir -p ${CIRCLE_WORKING_DIRECTORY}/"${CPPADCG_DEPS}"
             mkdir -p ${CIRCLE_WORKING_DIRECTORY}/"${CPPAD_INSTALL}"
             mkdir -p ${CIRCLE_WORKING_DIRECTORY}/"${EIGEN_INSTALL}"
+            curdir="$(pwd)"
+            echo "WORKING DIR: ${curdir}"
             pwd
-            ls -al ${CIRCLE_WORKING_DIRECTORY}/
-            ls -al ${CIRCLE_WORKING_DIRECTORY}/"${EIGEN_INSTALL}/"
+            ls -al ${curdir}/
+            ls -al ${curdir}/"${EIGEN_INSTALL}/"
       - run:
           name: Install CppAD
           command: |
+            cd ${curdir}/"${CPPADCG_DEPS}"
             CPPAD_VERSION_NAME=20200000.2
             cd ${CIRCLE_WORKING_DIRECTORY}/"${CPPADCG_DEPS}"
             wget https://github.com/coin-or/CppAD/archive/${CPPAD_VERSION_NAME}.tar.gz
@@ -42,24 +45,24 @@ jobs:
             mkdir build
             cd build
             pwd
-            realpath ${CIRCLE_WORKING_DIRECTORY}
-            ls -al "$(realpath ${CIRCLE_WORKING_DIRECTORY})"
-            cmake -Dcppad_prefix:PATH=$(realpath ${CIRCLE_WORKING_DIRECTORY})/"${CPPAD_INSTALL}" \
+            realpath ${curdir}
+            ls -al "$(realpath ${curdir})"
+            cmake -Dcppad_prefix:PATH="${curdir}/${CPPAD_INSTALL}" \
                   -Dcppad_cxx_flags="-Wall -std=c++11 -Wshadow" \
                   ..
             make install
-            ls -al ${CIRCLE_WORKING_DIRECTORY}/"${CPPAD_INSTALL}/"
+            ls -al ${curdir}/"${CPPAD_INSTALL}/"
       - run:
           name: Install Eigen
           command: |
-            cd ${CIRCLE_WORKING_DIRECTORY}/"${CPPADCG_DEPS}"
+            cd ${curdir}/"${CPPADCG_DEPS}"
             wget https://gitlab.com/libeigen/eigen/-/archive/3.3.8/eigen-3.3.8.tar.bz2
             tar -jxf eigen-3.3.8.tar.bz2
             cd eigen-3.3.8
             pwd
-            ls -al ${CIRCLE_WORKING_DIRECTORY}/
-            ls -al ${CIRCLE_WORKING_DIRECTORY}/"${EIGEN_INSTALL}/"
-            cp -r Eigen ${CIRCLE_WORKING_DIRECTORY}/"${EIGEN_INSTALL}/"
+            ls -al ${curdir}/
+            ls -al ${curdir}/"${EIGEN_INSTALL}/"
+            cp -r Eigen ${curdir}/"${EIGEN_INSTALL}/"
       - save_cache:
           key: deps-cache-{{ .BuildNum }}
           paths:
