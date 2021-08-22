@@ -38,7 +38,7 @@ jobs:
             mkdir build
             cd build
             cmake -Dcppad_prefix:PATH="${CIRCLE_WORKING_DIRECTORY}/${CPPAD_INSTALL}" \
-                  -Dcppad_cxx_flags="-Wall -std=c++11 -Wshadow"
+                  -Dcppad_cxx_flags="-Wall -std=c++11 -Wshadow" \
                   ..
             make install
             cd ../..
