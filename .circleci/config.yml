@@ -15,6 +15,11 @@ jobs:
             DEBIAN_FRONTEND=noninteractive TZ=Europe/Lisbon apt-get install -y cmake libclang-8-dev llvm-8-dev clang-8 gcc-7 g++-7 wget
             DEBIAN_FRONTEND=noninteractive TZ=Europe/Lisbon apt-get install -y texlive-extra-utils texlive-extra-utils texlive-fonts-extra texlive-latex-recommended
       - run:
+          name: Define Environment Variables
+          command: |
+            if [ "$CXX" == "g++" ];     then export CC="$(which gcc)"   CXX="$(which g++)"; fi
+            if [ "$CXX" == "clang++" ]; then export CC="$(which clang)" CXX="$(which clang++)"; fi
+      - run:
           name: Create Dependencies Directory
           command: |
             mkdir cppadcg_deps
