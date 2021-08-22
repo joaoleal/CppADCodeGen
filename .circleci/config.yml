@@ -12,7 +12,7 @@ jobs:
           name: Install Build Dependencies
           command: | 
             apt-get update
-            DEBIAN_FRONTEND=noninteractive TZ=Europe/Lisbon apt-get install -y cmake libclang-8-dev llvm-8-dev clang-8 gcc-7 g++-7
+            DEBIAN_FRONTEND=noninteractive TZ=Europe/Lisbon apt-get install -y cmake libclang-8-dev llvm-8-dev clang-8 gcc-7 g++-7 wget
             DEBIAN_FRONTEND=noninteractive TZ=Europe/Lisbon apt-get install -y texlive-extra-utils texlive-extra-utils texlive-fonts-extra texlive-latex-recommended
       - run:
           name: Create Dependencies Directory
