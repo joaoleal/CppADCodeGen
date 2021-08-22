@@ -29,8 +29,8 @@ jobs:
             mkdir -p ${CIRCLE_WORKING_DIRECTORY}/"${CPPAD_INSTALL}"
             mkdir -p ${CIRCLE_WORKING_DIRECTORY}/"${EIGEN_INSTALL}"
             pwd
-            ls ${CIRCLE_WORKING_DIRECTORY}/
-            ls ${CIRCLE_WORKING_DIRECTORY}/"${EIGEN_INSTALL}/"
+            ls -al ${CIRCLE_WORKING_DIRECTORY}/
+            ls -al ${CIRCLE_WORKING_DIRECTORY}/"${EIGEN_INSTALL}/"
       - run:
           name: Install CppAD
           command: |
@@ -41,10 +41,11 @@ jobs:
             cd CppAD-${CPPAD_VERSION_NAME}
             mkdir build
             cd build
-            cmake -Dcppad_prefix:PATH=${CIRCLE_WORKING_DIRECTORY}/"${CPPAD_INSTALL}" \
+            cmake -Dcppad_prefix:PATH=$(realpath ${CIRCLE_WORKING_DIRECTORY})/"${CPPAD_INSTALL}" \
                   -Dcppad_cxx_flags="-Wall -std=c++11 -Wshadow" \
                   ..
             make install
+            ls -al ${CIRCLE_WORKING_DIRECTORY}/"${CPPAD_INSTALL}/"
       - run:
           name: Install Eigen
           command: |
@@ -53,8 +54,8 @@ jobs:
             tar -jxf eigen-3.3.8.tar.bz2
             cd eigen-3.3.8
             pwd
-            ls ${CIRCLE_WORKING_DIRECTORY}/
-            ls ${CIRCLE_WORKING_DIRECTORY}/"${EIGEN_INSTALL}/"
+            ls -al ${CIRCLE_WORKING_DIRECTORY}/
+            ls -al ${CIRCLE_WORKING_DIRECTORY}/"${EIGEN_INSTALL}/"
             cp -r Eigen ${CIRCLE_WORKING_DIRECTORY}/"${EIGEN_INSTALL}/"
       - save_cache:
           key: deps-cache-{{ .BuildNum }}
