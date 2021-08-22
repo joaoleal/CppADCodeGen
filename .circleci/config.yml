@@ -2,18 +2,12 @@ version: 2.1
 executors:
   exectr:
     docker:
-      - image: ubuntu:20.04
+      - image: joaoruileal/ubuntu-cmake-cxx:20.04
 
 jobs:
   dependencies:
     executor: exectr
     steps:
-      - run:
-          name: Install Build Dependencies
-          command: | 
-            apt-get update
-            DEBIAN_FRONTEND=noninteractive TZ=Europe/Lisbon apt-get install -y cmake libclang-8-dev llvm-8-dev clang-8 gcc g++ wget
-            DEBIAN_FRONTEND=noninteractive TZ=Europe/Lisbon apt-get install -y texlive-extra-utils texlive-extra-utils texlive-fonts-extra texlive-latex-recommended
       - run:
           name: Define Environment Variables
           command: |
@@ -49,11 +43,17 @@ jobs:
             EIGEN_HOME=`pwd`/install_eigen/include/eigen3
             echo $EIGEN_HOME
             cd ../..
-
+      - save_cache:
+          key: deps-cache-{{ .BuildNum }}
+          paths:
+            - cppadcg_deps
   build:
     executor: exectr
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - deps-cache-{{ .BuildNum }}
       - run:
           name: Build Tests
           command: | 
