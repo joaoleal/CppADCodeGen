@@ -48,6 +48,8 @@ jobs:
             wget https://gitlab.com/libeigen/eigen/-/archive/3.3.8/eigen-3.3.8.tar.bz2
             tar -jxf eigen-3.3.8.tar.bz2
             cd eigen-3.3.8
+            ls ${CIRCLE_WORKING_DIRECTORY}/
+            ls ${CIRCLE_WORKING_DIRECTORY}/"${EIGEN_INSTALL}/"
             cp -r Eigen ${CIRCLE_WORKING_DIRECTORY}/"${EIGEN_INSTALL}/"
             cd ../..
       - save_cache:
