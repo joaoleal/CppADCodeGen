@@ -36,6 +36,8 @@ jobs:
       - run:
           name: Install CppAD
           command: |
+            curdir="$(pwd)"
+            echo "WORKING DIR: ${curdir}"
             cd "${curdir}/${CPPADCG_DEPS}"
             CPPAD_VERSION_NAME=20200000.2
             cd ${CIRCLE_WORKING_DIRECTORY}/"${CPPADCG_DEPS}"
@@ -55,6 +57,8 @@ jobs:
       - run:
           name: Install Eigen
           command: |
+            curdir="$(pwd)"
+            echo "WORKING DIR: ${curdir}"
             cd "${curdir}/${CPPADCG_DEPS}"
             wget https://gitlab.com/libeigen/eigen/-/archive/3.3.8/eigen-3.3.8.tar.bz2
             tar -jxf eigen-3.3.8.tar.bz2
