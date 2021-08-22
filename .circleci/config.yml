@@ -18,9 +18,9 @@ commands:
           command: |
             if [ "$CXX" == "g++" ];     then export CC="$(which gcc)"   CXX="$(which g++)"; fi
             if [ "$CXX" == "clang++" ]; then export CC="$(which clang)" CXX="$(which clang++)"; fi
-            CPPADCG_DEPS="${CIRCLE_WORKING_DIRECTORY}/cppadcg_deps"
-            CPPAD_INSTALL="${CPPADCG_DEPS}/CppAD/install"
-            EIGEN_INSTALL="${CPPADCG_DEPS}/install_eigen/include/eigen3"
+            export CPPADCG_DEPS="${CIRCLE_WORKING_DIRECTORY}/cppadcg_deps"
+            export CPPAD_INSTALL="${CPPADCG_DEPS}/CppAD/install"
+            export EIGEN_INSTALL="${CPPADCG_DEPS}/install_eigen/include/eigen3"
 
 jobs:
   dependencies:
@@ -62,17 +62,24 @@ jobs:
     executor: exectr
     steps:
       - checkout
+      - setupvars
       - restore_cache:
           keys:
             - deps-cache-{{ .BuildNum }}
-      - setupvars
       - run:
           name: Build Tests
           command: | 
             ls -al
             mkdir build
             cd build
-            cmake -DCMAKE_BUILD_TYPE=DEBUG -DGOOGLETEST_GIT=ON -DUSE_VALGRIND=OFF -DENABLE_THREAD_POOL_TESTS=OFF -DLLVM_VERSION=${LLVM_VERSION} -DCPPAD_HOME=$CPPAD_HOME -DEIGEN3_INCLUDE_DIR=$EIGEN_HOME ..
+            cmake -DCMAKE_BUILD_TYPE=DEBUG \
+                  -DGOOGLETEST_GIT=ON \
+                  -DUSE_VALGRIND=OFF \
+                  -DENABLE_THREAD_POOL_TESTS=OFF \
+                  -DLLVM_VERSION=${LLVM_VERSION} \
+                  -DCPPAD_HOME="${CPPAD_INSTALL}" \
+                  -DEIGEN3_INCLUDE_DIR="${EIGEN_INSTALL}" \
+                  ..
             cd test
             make -j2 build_tests
 
