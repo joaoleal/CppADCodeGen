@@ -25,18 +25,18 @@ jobs:
       - run:
           name: Create Dependencies Directories
           command: |
-            mkdir -p ${CIRCLE_WORKING_DIRECTORY}/"${CPPADCG_DEPS}"
-            mkdir -p ${CIRCLE_WORKING_DIRECTORY}/"${CPPAD_INSTALL}"
-            mkdir -p ${CIRCLE_WORKING_DIRECTORY}/"${EIGEN_INSTALL}"
             curdir="$(pwd)"
+            mkdir -p "${curdir}/${CPPADCG_DEPS}"
+            mkdir -p "${curdir}/${CPPAD_INSTALL}"
+            mkdir -p "${curdir}/${EIGEN_INSTALL}"
             echo "WORKING DIR: ${curdir}"
             pwd
             ls -al ${curdir}/
-            ls -al ${curdir}/"${EIGEN_INSTALL}/"
+            ls -al "${curdir}/${EIGEN_INSTALL}/"
       - run:
           name: Install CppAD
           command: |
-            cd ${curdir}/"${CPPADCG_DEPS}"
+            cd "${curdir}/${CPPADCG_DEPS}"
             CPPAD_VERSION_NAME=20200000.2
             cd ${CIRCLE_WORKING_DIRECTORY}/"${CPPADCG_DEPS}"
             wget https://github.com/coin-or/CppAD/archive/${CPPAD_VERSION_NAME}.tar.gz
@@ -55,7 +55,7 @@ jobs:
       - run:
           name: Install Eigen
           command: |
-            cd ${curdir}/"${CPPADCG_DEPS}"
+            cd "${curdir}/${CPPADCG_DEPS}"
             wget https://gitlab.com/libeigen/eigen/-/archive/3.3.8/eigen-3.3.8.tar.bz2
             tar -jxf eigen-3.3.8.tar.bz2
             cd eigen-3.3.8
