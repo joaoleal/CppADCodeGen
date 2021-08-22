@@ -68,7 +68,7 @@ jobs:
             ls -al ${curdir}/"${EIGEN_INSTALL}/"
             cp -r Eigen ${curdir}/"${EIGEN_INSTALL}/"
       - save_cache:
-          key: deps-cache-{{ .BuildNum }}
+          key: deps-cache-{{ arch }}-{{ .Revision }}
           paths:
             - cppadcg_deps
 
@@ -78,7 +78,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - deps-cache-{{ .BuildNum }}
+            - deps-cache-{{ arch }}-{{ .Revision }}
       - run:
           name: Build Tests
           command: | 
