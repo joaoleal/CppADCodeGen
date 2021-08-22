@@ -1,22 +1,38 @@
 version: 2.1
 executors:
   exectr:
+    parameters:
+      llvm_version:
+        type: string
+        default: "8"
+    environment:
+      LLVM_VERSION: << parameters.llvm_version >>
     docker:
       - image: joaoruileal/ubuntu-cmake-cxx:20.04
-
-jobs:
-  dependencies:
-    executor: exectr
+      
+commands:
+  setupvars:
     steps:
       - run:
           name: Define Environment Variables
           command: |
             if [ "$CXX" == "g++" ];     then export CC="$(which gcc)"   CXX="$(which g++)"; fi
             if [ "$CXX" == "clang++" ]; then export CC="$(which clang)" CXX="$(which clang++)"; fi
+            CPPADCG_DEPS="${CIRCLE_WORKING_DIRECTORY}/cppadcg_deps"
+            CPPAD_INSTALL="${CPPADCG_DEPS}/CppAD/install"
+            EIGEN_INSTALL="${CPPADCG_DEPS}/install_eigen/include/eigen3"
+
+jobs:
+  dependencies:
+    executor: exectr
+    steps:
+      - setupvars
       - run:
-          name: Create Dependencies Directory
+          name: Create Dependencies Directories
           command: |
-            mkdir cppadcg_deps
+            mkdir -p "${CPPADCG_DEPS}"
+            mkdir -p "${CPPAD_INSTALL}"
+            mkdir -p "${EIGEN_INSTALL}"
       - run:
           name: Install CppAD
           command: |
@@ -25,11 +41,8 @@ jobs:
             tar -xzf ${CPPAD_VERSION_NAME}.tar.gz
             cd CppAD-${CPPAD_VERSION_NAME}
             mkdir build
-            mkdir install
-            CPPAD_HOME=`pwd`/install/include
-            echo $CPPAD_HOME
             cd build
-            cmake -Dcppad_prefix:PATH=../install -Dcppad_cxx_flags="-Wall -std=c++11 -Wshadow" ..
+            cmake -Dcppad_prefix:PATH="${CPPAD_INSTALL}" -Dcppad_cxx_flags="-Wall -std=c++11 -Wshadow" ..
             make install
             cd ../..
       - run:
@@ -38,15 +51,13 @@ jobs:
             wget https://gitlab.com/libeigen/eigen/-/archive/3.3.8/eigen-3.3.8.tar.bz2
             tar -jxf eigen-3.3.8.tar.bz2
             cd eigen-3.3.8
-            mkdir -p install_eigen/include/eigen3
-            cp -r Eigen ./install_eigen/include/eigen3/
-            EIGEN_HOME=`pwd`/install_eigen/include/eigen3
-            echo $EIGEN_HOME
+            cp -r Eigen "${EIGEN_INSTALL}/"
             cd ../..
       - save_cache:
           key: deps-cache-{{ .BuildNum }}
           paths:
             - cppadcg_deps
+
   build:
     executor: exectr
     steps:
@@ -54,9 +65,11 @@ jobs:
       - restore_cache:
           keys:
             - deps-cache-{{ .BuildNum }}
+      - setupvars
       - run:
           name: Build Tests
           command: | 
+            ls -al
             mkdir build
             cd build
             cmake -DCMAKE_BUILD_TYPE=DEBUG -DGOOGLETEST_GIT=ON -DUSE_VALGRIND=OFF -DENABLE_THREAD_POOL_TESTS=OFF -DLLVM_VERSION=${LLVM_VERSION} -DCPPAD_HOME=$CPPAD_HOME -DEIGEN3_INCLUDE_DIR=$EIGEN_HOME ..
