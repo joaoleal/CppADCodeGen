@@ -84,6 +84,7 @@ jobs:
           command: | 
             curdir="$(pwd)"
             ls -al
+            ls -al "${curdir}/${CPPADCG_DEPS}"
             mkdir build
             cd build
             cmake -DCMAKE_BUILD_TYPE=DEBUG \
