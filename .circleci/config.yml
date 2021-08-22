@@ -1,0 +1,85 @@
+version: 2.1
+executors:
+  exectr:
+    docker:
+      - image: ubuntu:20.04
+
+jobs:
+  dependencies:
+    executor: exectr
+    steps:
+      - run:
+          name: Install Build Dependencies
+          command: | 
+            apt-get update
+            apt-get install -y cmake libclang-8-dev llvm-8-dev clang-8 gcc-7 g++-7 texlive-extra-utils
+            apt-get install -y texlive-extra-utils texlive-fonts-extra texlive-latex-recommended
+      - run:
+          name: Create Dependencies Directory
+          command: |
+            mkdir cppadcg_deps
+      - run:
+          name: Install CppAD
+          command: |
+            CPPAD_VERSION_NAME=20200000.2
+            wget https://github.com/coin-or/CppAD/archive/${CPPAD_VERSION_NAME}.tar.gz
+            tar -xzf ${CPPAD_VERSION_NAME}.tar.gz
+            cd CppAD-${CPPAD_VERSION_NAME}
+            mkdir build
+            mkdir install
+            CPPAD_HOME=`pwd`/install/include
+            echo $CPPAD_HOME
+            cd build
+            cmake -Dcppad_prefix:PATH=../install -Dcppad_cxx_flags="-Wall -std=c++11 -Wshadow" ..
+            make install
+            cd ../..
+      - run:
+          name: Install Eigen
+          command: |
+            wget https://gitlab.com/libeigen/eigen/-/archive/3.3.8/eigen-3.3.8.tar.bz2
+            tar -jxf eigen-3.3.8.tar.bz2
+            cd eigen-3.3.8
+            mkdir -p install_eigen/include/eigen3
+            cp -r Eigen ./install_eigen/include/eigen3/
+            EIGEN_HOME=`pwd`/install_eigen/include/eigen3
+            echo $EIGEN_HOME
+            cd ../..
+
+  build:
+    executor: exectr
+    steps:
+      - checkout
+      - run:
+          name: Build Tests
+          command: | 
+            mkdir build
+            cd build
+            cmake -DCMAKE_BUILD_TYPE=DEBUG -DGOOGLETEST_GIT=ON -DUSE_VALGRIND=OFF -DENABLE_THREAD_POOL_TESTS=OFF -DLLVM_VERSION=${LLVM_VERSION} -DCPPAD_HOME=$CPPAD_HOME -DEIGEN3_INCLUDE_DIR=$EIGEN_HOME ..
+            cd test
+            make -j2 build_tests
+
+  test:
+    executor: exectr
+    steps:
+      - run:
+          name: Execute Tests
+          command: |
+            CTEST_OUTPUT_ON_FAILURE=TRUE make test
+            cd ..
+      - run:
+          name: Test Installation
+          command: |
+            make DESTDIR=cppadcg-install-dir install
+            make DESTDIR=cppadcg-install-dir uninstall
+
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      - dependencies
+      - build:
+          requires:
+            - dependencies
+      - test:
+          requires:
+            - build
