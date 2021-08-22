@@ -25,9 +25,11 @@ jobs:
       - run:
           name: Create Dependencies Directories
           command: |
-            mkdir -p "${CIRCLE_WORKING_DIRECTORY}/${CPPADCG_DEPS}"
-            mkdir -p "${CIRCLE_WORKING_DIRECTORY}/${CPPAD_INSTALL}"
-            mkdir -p "${CIRCLE_WORKING_DIRECTORY}/${EIGEN_INSTALL}"
+            mkdir -p ${CIRCLE_WORKING_DIRECTORY}/"${CPPADCG_DEPS}"
+            mkdir -p ${CIRCLE_WORKING_DIRECTORY}/"${CPPAD_INSTALL}"
+            mkdir -p ${CIRCLE_WORKING_DIRECTORY}/"${EIGEN_INSTALL}"
+            ls ${CIRCLE_WORKING_DIRECTORY}/
+            ls ${CIRCLE_WORKING_DIRECTORY}/"${EIGEN_INSTALL}/"
       - run:
           name: Install CppAD
           command: |
