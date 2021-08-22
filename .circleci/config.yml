@@ -41,6 +41,8 @@ jobs:
             cd CppAD-${CPPAD_VERSION_NAME}
             mkdir build
             cd build
+            realpath ${CIRCLE_WORKING_DIRECTORY}
+            ls -al "$(realpath ${CIRCLE_WORKING_DIRECTORY})"
             cmake -Dcppad_prefix:PATH=$(realpath ${CIRCLE_WORKING_DIRECTORY})/"${CPPAD_INSTALL}" \
                   -Dcppad_cxx_flags="-Wall -std=c++11 -Wshadow" \
                   ..
