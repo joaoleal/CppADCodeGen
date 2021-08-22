@@ -43,7 +43,6 @@ jobs:
             ls -al "${curdir}/${EIGEN_INSTALL}/"
             cd "${curdir}/${CPPADCG_DEPS}"
             CPPAD_VERSION_NAME=20200000.2
-            cd ${CIRCLE_WORKING_DIRECTORY}/"${CPPADCG_DEPS}"
             wget https://github.com/coin-or/CppAD/archive/${CPPAD_VERSION_NAME}.tar.gz
             tar -xzf ${CPPAD_VERSION_NAME}.tar.gz
             cd CppAD-${CPPAD_VERSION_NAME}
