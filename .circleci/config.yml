@@ -38,6 +38,9 @@ jobs:
           command: |
             curdir="$(pwd)"
             echo "WORKING DIR: ${curdir}"
+            ls -al ${curdir}/
+            echo "EIGEN DIR: ${curdir}/${EIGEN_INSTALL}/"
+            ls -al "${curdir}/${EIGEN_INSTALL}/"
             cd "${curdir}/${CPPADCG_DEPS}"
             CPPAD_VERSION_NAME=20200000.2
             cd ${CIRCLE_WORKING_DIRECTORY}/"${CPPADCG_DEPS}"
@@ -47,8 +50,6 @@ jobs:
             mkdir build
             cd build
             pwd
-            realpath ${curdir}
-            ls -al "$(realpath ${curdir})"
             cmake -Dcppad_prefix:PATH="${curdir}/${CPPAD_INSTALL}" \
                   -Dcppad_cxx_flags="-Wall -std=c++11 -Wshadow" \
                   ..
