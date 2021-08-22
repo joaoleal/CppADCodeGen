@@ -37,7 +37,7 @@ jobs:
             cd CppAD-${CPPAD_VERSION_NAME}
             mkdir build
             cd build
-            cmake -Dcppad_prefix:PATH="${CIRCLE_WORKING_DIRECTORY}/${CPPAD_INSTALL}" \
+            cmake -Dcppad_prefix:PATH=${CIRCLE_WORKING_DIRECTORY}/"${CPPAD_INSTALL}" \
                   -Dcppad_cxx_flags="-Wall -std=c++11 -Wshadow" \
                   ..
             make install
@@ -48,7 +48,7 @@ jobs:
             wget https://gitlab.com/libeigen/eigen/-/archive/3.3.8/eigen-3.3.8.tar.bz2
             tar -jxf eigen-3.3.8.tar.bz2
             cd eigen-3.3.8
-            cp -r Eigen "${CIRCLE_WORKING_DIRECTORY}/${EIGEN_INSTALL}/"
+            cp -r Eigen ${CIRCLE_WORKING_DIRECTORY}/"${EIGEN_INSTALL}/"
             cd ../..
       - save_cache:
           key: deps-cache-{{ .BuildNum }}
@@ -73,8 +73,8 @@ jobs:
                   -DUSE_VALGRIND=OFF \
                   -DENABLE_THREAD_POOL_TESTS=OFF \
                   -DLLVM_VERSION=${LLVM_VERSION} \
-                  -DCPPAD_HOME="${CIRCLE_WORKING_DIRECTORY}/${CPPAD_INSTALL}" \
-                  -DEIGEN3_INCLUDE_DIR="${CIRCLE_WORKING_DIRECTORY}/${EIGEN_INSTALL}" \
+                  -DCPPAD_HOME=${CIRCLE_WORKING_DIRECTORY}/"${CPPAD_INSTALL}" \
+                  -DEIGEN3_INCLUDE_DIR=${CIRCLE_WORKING_DIRECTORY}/"${EIGEN_INSTALL}" \
                   ..
             cd test
             make -j2 build_tests
