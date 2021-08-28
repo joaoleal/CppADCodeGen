@@ -98,7 +98,6 @@ jobs:
       - run:
           name: Test Installation
           command: |
-            cd ..
             make DESTDIR=cppadcg-install-dir install
             make DESTDIR=cppadcg-install-dir uninstall
 
