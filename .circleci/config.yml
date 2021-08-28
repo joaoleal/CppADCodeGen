@@ -53,7 +53,7 @@ jobs:
             cd "${curdir}/${CPPADCG_DEPS}"
             wget https://gitlab.com/libeigen/eigen/-/archive/3.3.8/eigen-3.3.8.tar.bz2
             tar -jxf eigen-3.3.8.tar.bz2
-            rm -jxf eigen-3.3.8.tar.bz2
+            rm eigen-3.3.8.tar.bz2
             cd eigen-3.3.8
             cp -r Eigen "${curdir}/${EIGEN_INSTALL}/"
       - save_cache:
