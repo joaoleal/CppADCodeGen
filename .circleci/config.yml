@@ -77,7 +77,7 @@ jobs:
             ls -al ${curdir}/${CPPAD_INSTALL}
             ls -al ${curdir}/${CPPAD_INSTALL}/include
             echo EIGEN_INSTALL=${EIGEN_INSTALL}
-            ls -al${curdir}/${EIGEN_INSTALL}
+            ls -al ${curdir}/${EIGEN_INSTALL}
             ls -al
             mkdir build
             cd build
