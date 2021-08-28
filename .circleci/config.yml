@@ -33,11 +33,13 @@ jobs:
       - run:
           name: Install CppAD
           command: |
+            curdir="$(pwd)"
             cd "${curdir}/${CPPADCG_DEPS}"
             CPPAD_VERSION_NAME=20200000.2
             wget https://github.com/coin-or/CppAD/archive/${CPPAD_VERSION_NAME}.tar.gz
-            tar -xzf ${CPPAD_VERSION_NAME}.tar.gz
-            cd CppAD-${CPPAD_VERSION_NAME}
+            tar -xzf "${CPPAD_VERSION_NAME}.tar.gz"
+            rm "${CPPAD_VERSION_NAME}.tar.gz"
+            cd "CppAD-${CPPAD_VERSION_NAME}"
             mkdir build
             cd build
             cmake -Dcppad_prefix:PATH="${curdir}/${CPPAD_INSTALL}" \
@@ -47,17 +49,19 @@ jobs:
       - run:
           name: Install Eigen
           command: |
+            curdir="$(pwd)"
             cd "${curdir}/${CPPADCG_DEPS}"
             wget https://gitlab.com/libeigen/eigen/-/archive/3.3.8/eigen-3.3.8.tar.bz2
             tar -jxf eigen-3.3.8.tar.bz2
+            rm -jxf eigen-3.3.8.tar.bz2
             cd eigen-3.3.8
-            cp -r Eigen ${curdir}/"${EIGEN_INSTALL}/"
+            cp -r Eigen "${curdir}/${EIGEN_INSTALL}/"
       - save_cache:
           key: deps-cache-{{ arch }}-{{ .Revision }}
           paths:
             - cppadcg_deps
 
-  build:
+  build-test:
     executor: exectr
     steps:
       - checkout
@@ -86,22 +90,14 @@ jobs:
                   ..
             cd test
             make -j2 build_tests
-      - save_cache:
-          key: build-cache-{{ arch }}-{{ .Revision }}
-          paths:
-            - build
-
-  test:
-    executor: exectr
-    steps:
       - run:
           name: Execute Tests
           command: |
             CTEST_OUTPUT_ON_FAILURE=TRUE make test
-            cd ..
       - run:
           name: Test Installation
           command: |
+            cd ..
             make DESTDIR=cppadcg-install-dir install
             make DESTDIR=cppadcg-install-dir uninstall
 
@@ -110,9 +106,6 @@ workflows:
   build-and-test:
     jobs:
       - dependencies
-      - build:
+      - build-test:
           requires:
             - dependencies
-      - test:
-          requires:
-            - build
