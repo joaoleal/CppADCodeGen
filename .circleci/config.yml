@@ -25,22 +25,14 @@ jobs:
       - run:
           name: Create Dependencies Directories
           command: |
+            mkdir -p "${CPPADCG_DEPS}"
+            mkdir -p "${CPPAD_INSTALL}"
+            mkdir -p "${EIGEN_INSTALL}"
             curdir="$(pwd)"
-            mkdir -p "${curdir}/${CPPADCG_DEPS}"
-            mkdir -p "${curdir}/${CPPAD_INSTALL}"
-            mkdir -p "${curdir}/${EIGEN_INSTALL}"
             echo "WORKING DIR: ${curdir}"
-            pwd
-            ls -al ${curdir}/
-            ls -al "${curdir}/${EIGEN_INSTALL}/"
       - run:
           name: Install CppAD
           command: |
-            curdir="$(pwd)"
-            echo "WORKING DIR: ${curdir}"
-            ls -al ${curdir}/
-            echo "EIGEN DIR: ${curdir}/${EIGEN_INSTALL}/"
-            ls -al "${curdir}/${EIGEN_INSTALL}/"
             cd "${curdir}/${CPPADCG_DEPS}"
             CPPAD_VERSION_NAME=20200000.2
             wget https://github.com/coin-or/CppAD/archive/${CPPAD_VERSION_NAME}.tar.gz
@@ -48,24 +40,17 @@ jobs:
             cd CppAD-${CPPAD_VERSION_NAME}
             mkdir build
             cd build
-            pwd
             cmake -Dcppad_prefix:PATH="${curdir}/${CPPAD_INSTALL}" \
                   -Dcppad_cxx_flags="-Wall -std=c++11 -Wshadow" \
                   ..
             make install
-            ls -al ${curdir}/"${CPPAD_INSTALL}/"
       - run:
           name: Install Eigen
           command: |
-            curdir="$(pwd)"
-            echo "WORKING DIR: ${curdir}"
             cd "${curdir}/${CPPADCG_DEPS}"
             wget https://gitlab.com/libeigen/eigen/-/archive/3.3.8/eigen-3.3.8.tar.bz2
             tar -jxf eigen-3.3.8.tar.bz2
             cd eigen-3.3.8
-            pwd
-            ls -al ${curdir}/
-            ls -al ${curdir}/"${EIGEN_INSTALL}/"
             cp -r Eigen ${curdir}/"${EIGEN_INSTALL}/"
       - save_cache:
           key: deps-cache-{{ arch }}-{{ .Revision }}
@@ -83,8 +68,12 @@ jobs:
           name: Build Tests
           command: | 
             curdir="$(pwd)"
+            echo CPPADCG_DEPS=${CPPADCG_DEPS}
+            echo CPPAD_INSTALL=${CPPAD_INSTALL}
+            ls ${curdir}/${CPPAD_INSTALL}
+            echo EIGEN_INSTALL=${EIGEN_INSTALL}
+            ls ${curdir}/${EIGEN_INSTALL}
             ls -al
-            ls -al "${curdir}/${CPPADCG_DEPS}"
             mkdir build
             cd build
             cmake -DCMAKE_BUILD_TYPE=DEBUG \
@@ -97,6 +86,10 @@ jobs:
                   ..
             cd test
             make -j2 build_tests
+      - save_cache:
+          key: build-cache-{{ arch }}-{{ .Revision }}
+          paths:
+            - build
 
   test:
     executor: exectr
