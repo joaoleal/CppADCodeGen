@@ -74,9 +74,10 @@ jobs:
             curdir="$(pwd)"
             echo CPPADCG_DEPS=${CPPADCG_DEPS}
             echo CPPAD_INSTALL=${CPPAD_INSTALL}
-            ls ${curdir}/${CPPAD_INSTALL}
+            ls -al ${curdir}/${CPPAD_INSTALL}
+            ls -al ${curdir}/${CPPAD_INSTALL}/include
             echo EIGEN_INSTALL=${EIGEN_INSTALL}
-            ls ${curdir}/${EIGEN_INSTALL}
+            ls -al${curdir}/${EIGEN_INSTALL}
             ls -al
             mkdir build
             cd build
@@ -85,7 +86,7 @@ jobs:
                   -DUSE_VALGRIND=OFF \
                   -DENABLE_THREAD_POOL_TESTS=OFF \
                   -DLLVM_VERSION=${LLVM_VERSION} \
-                  -DCPPAD_HOME="${curdir}/${CPPAD_INSTALL}" \
+                  -DCPPAD_HOME="${curdir}/${CPPAD_INSTALL}/include" \
                   -DEIGEN3_INCLUDE_DIR="${curdir}/${EIGEN_INSTALL}" \
                   ..
             cd test
