@@ -1,0 +1,103 @@
+version: 2.1
+executors:
+  exectr:
+    parameters:
+      llvm_version:
+        type: string
+        default: "8"
+    environment:
+      LLVM_VERSION: << parameters.llvm_version >>
+      CPPADCG_DEPS: "cppadcg_deps"
+      CPPAD_INSTALL: "cppadcg_deps/CppAD/install"
+      EIGEN_INSTALL: "cppadcg_deps/install_eigen/include/eigen3"
+    docker:
+      - image: joaoruileal/ubuntu-cmake-cxx:20.04
+
+jobs:
+  dependencies:
+    executor: exectr
+    steps:
+      - run:
+          name: Define Environment Variables
+          command: |
+            if [ "$CXX" == "g++" ];     then export CC="$(which gcc)"   CXX="$(which g++)"; fi
+            if [ "$CXX" == "clang++" ]; then export CC="$(which clang)" CXX="$(which clang++)"; fi
+      - run:
+          name: Create Dependencies Directories
+          command: |
+            mkdir -p "${CPPADCG_DEPS}"
+            mkdir -p "${CPPAD_INSTALL}"
+            mkdir -p "${EIGEN_INSTALL}"
+      - run:
+          name: Install CppAD
+          command: |
+            curdir="$(pwd)"
+            cd "${curdir}/${CPPADCG_DEPS}"
+            CPPAD_VERSION_NAME=20200000.2
+            wget https://github.com/coin-or/CppAD/archive/${CPPAD_VERSION_NAME}.tar.gz
+            tar -xzf "${CPPAD_VERSION_NAME}.tar.gz"
+            rm "${CPPAD_VERSION_NAME}.tar.gz"
+            cd "CppAD-${CPPAD_VERSION_NAME}"
+            mkdir build
+            cd build
+            cmake -Dcppad_prefix:PATH="${curdir}/${CPPAD_INSTALL}" \
+                  -Dcppad_cxx_flags="-Wall -std=c++11 -Wshadow" \
+                  ..
+            make install
+      - run:
+          name: Install Eigen
+          command: |
+            curdir="$(pwd)"
+            cd "${curdir}/${CPPADCG_DEPS}"
+            wget https://gitlab.com/libeigen/eigen/-/archive/3.3.8/eigen-3.3.8.tar.bz2
+            tar -jxf eigen-3.3.8.tar.bz2
+            rm eigen-3.3.8.tar.bz2
+            cd eigen-3.3.8
+            cp -r Eigen "${curdir}/${EIGEN_INSTALL}/"
+      - save_cache:
+          key: deps-cache-{{ arch }}-{{ .Revision }}
+          paths:
+            - cppadcg_deps
+
+  build-test:
+    executor: exectr
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - deps-cache-{{ arch }}-{{ .Revision }}
+      - run:
+          name: Build Tests
+          command: | 
+            curdir="$(pwd)"
+            mkdir build
+            cd build
+            cmake -DCMAKE_BUILD_TYPE=DEBUG \
+                  -DGOOGLETEST_GIT=ON \
+                  -DUSE_VALGRIND=OFF \
+                  -DENABLE_THREAD_POOL_TESTS=OFF \
+                  -DLLVM_VERSION=${LLVM_VERSION} \
+                  -DCPPAD_HOME="${curdir}/${CPPAD_INSTALL}/include" \
+                  -DEIGEN3_INCLUDE_DIR="${curdir}/${EIGEN_INSTALL}" \
+                  ..
+            cd test
+            make -j2 build_tests
+      - run:
+          name: Execute Tests
+          command: |
+            CTEST_OUTPUT_ON_FAILURE=TRUE make test
+      - run:
+          name: Test Installation
+          command: |
+            cd build
+            make DESTDIR=cppadcg-install-dir install
+            make DESTDIR=cppadcg-install-dir uninstall
+
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      - dependencies
+      - build-test:
+          requires:
+            - dependencies
