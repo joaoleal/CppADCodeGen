@@ -30,13 +30,13 @@ IF (DEFINED CPPAD_HOME)
             PATHS "${CPPAD_HOME}"
             NO_DEFAULT_PATH)
 
-    FIND_LIBRARY(CPPAD_IPOPT_LIBRARY
-            cppad_ipopt
+    FIND_LIBRARY(CPPAD_LIBRARY
+            cppad_lib
             PATHS "${CPPAD_HOME}/lib"
             NO_DEFAULT_PATH)
 
     SET(CPPAD_INCLUDE_DIRS ${CPPAD_INCLUDE_DIR})
-    SET(CPPAD_LIBRARIES ${CPPAD_IPOPT_LIBRARY})
+    SET(CPPAD_LIBRARIES ${CPPAD_LIBRARY})
     SET(CPPAD_FOUND TRUE)
 
 ELSE ()
@@ -52,19 +52,19 @@ ELSE ()
 
         FIND_PATH(CPPAD_INCLUDE_DIR NAMES cppad/cppad.hpp
                 HINTS "$ENV{CPPAD_HOME}"
-                "/usr/include")
+                PATH_SUFFIXES include)
 
-        FIND_LIBRARY(CPPAD_IPOPT_LIBRARY
-                cppad_ipopt
+        FIND_LIBRARY(CPPAD_LIBRARY
+                cppad_lib
                 HINTS "$ENV{CPPAD_HOME}/lib"
-                "/usr/lib")
+                PATH_SUFFIXES lib)
 
         IF (CPPAD_INCLUDE_DIR)
             SET(CPPAD_INCLUDE_DIRS ${CPPAD_INCLUDE_DIR})
         ENDIF ()
 
-        IF (CPPAD_IPOPT_LIBRARY)
-            SET(CPPAD_LIBRARIES ${CPPAD_IPOPT_LIBRARY})
+        IF (CPPAD_LIBRARY)
+            SET(CPPAD_LIBRARIES ${CPPAD_LIBRARY})
         ENDIF ()
 
         INCLUDE(FindPackageHandleStandardArgs)
