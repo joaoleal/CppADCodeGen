@@ -168,6 +168,8 @@ FUNCTION(add_cppadcg_test source_file)
     IF( UNIX )
         TARGET_LINK_LIBRARIES(${test_target_name} ${DL_LIBRARIES})
     ENDIF()
+    TARGET_LINK_LIBRARIES(${test_target_name} ${CPPAD_LIBRARIES})
+    TARGET_INCLUDE_DIRECTORIES(${test_target_name} PRIVATE ${CPPAD_INCLUDE_DIRS})
 
     ADD_TEST(NAME ${test_target_name}
             COMMAND ${test_target_name})
