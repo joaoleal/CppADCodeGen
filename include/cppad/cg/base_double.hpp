@@ -20,29 +20,7 @@ namespace CppAD {
 /**
  * Specialization of the numeric_limits for doubles
  */
-template <>
-class numeric_limits<cg::CG<double> > {
-public:
-
-    static cg::CG<double> epsilon() {
-        return std::numeric_limits<double>::epsilon();
-    }
-
-    static cg::CG<double> min() {
-        return (std::numeric_limits<double>::min)();
-    }
-
-    static cg::CG<double> max() {
-        return (std::numeric_limits<double>::max)();
-    }
-
-    static cg::CG<double> quiet_NaN() {
-        return std::numeric_limits<double>::quiet_NaN();
-    }
-
-    static const int digits10 
-        = std::numeric_limits<double>::digits10;
-};
+CPPAD_NUMERIC_LIMITS(double, cg::CG<double>)
 
 /**
  * Specialization of the machine epsilon for CG<double>

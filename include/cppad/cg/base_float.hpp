@@ -20,29 +20,7 @@ namespace CppAD {
 /**
  * Specialization of the numeric_limits for floats
  */
-template <>
-class numeric_limits<cg::CG<float> > {
-public:
-
-    static cg::CG<float> epsilon() {
-        return std::numeric_limits<float>::epsilon();
-    }
-
-    static cg::CG<float> min() {
-        return std::numeric_limits<float>::min();
-    }
-
-    static cg::CG<float> max() {
-        return std::numeric_limits<float>::max();
-    }
-
-    static cg::CG<float> quiet_NaN() {
-        return std::numeric_limits<float>::quiet_NaN();
-    }
-
-    static const int digits10 
-        = std::numeric_limits<float>::digits10;
-};
+CPPAD_NUMERIC_LIMITS(float, cg::CG<float>)
 
 /**
  * Specialization of the machine epsilon for CG<float>
