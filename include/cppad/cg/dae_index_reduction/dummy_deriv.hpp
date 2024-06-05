@@ -429,7 +429,6 @@ protected:
         using namespace std;
         using std::vector;
         using std::map;
-        using std::map;
 
         auto& graph = idxIdentify_->getGraph();
         //auto& vnodes = graph.variables();
