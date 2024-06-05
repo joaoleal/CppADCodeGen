@@ -170,6 +170,8 @@ FUNCTION(add_cppadcg_test source_file)
     ENDIF()
     TARGET_LINK_LIBRARIES(${test_target_name} ${CPPAD_LIBRARIES})
     TARGET_INCLUDE_DIRECTORIES(${test_target_name} PRIVATE ${CPPAD_INCLUDE_DIRS})
+    TARGET_COMPILE_DEFINITIONS(${test_target_name}
+                               PRIVATE CPPAD_CG_C_COMPILER=\"${CMAKE_C_COMPILER}\")
 
     ADD_TEST(NAME ${test_target_name}
             COMMAND ${test_target_name})

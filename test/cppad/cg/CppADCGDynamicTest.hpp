@@ -154,7 +154,7 @@ public:
         const auto& cp = p;
         ASSERT_TRUE(cp.getOptions().empty());
 
-        GccCompiler<double> compiler;
+        GccCompiler<double> compiler(CPPAD_CG_C_COMPILER);
         //compiler.setSaveToDiskFirst(true); // useful to detect problem
         prepareTestCompilerFlags(compiler);
         if(libSourceGen.getMultiThreading() == MultiThreadingType::OPENMP) {

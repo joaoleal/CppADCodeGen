@@ -80,7 +80,7 @@ public:
         compHelp.setCreateSparseJacobian(true);
         compHelp.setCreateSparseHessian(true);
 
-        GccCompiler<double> compiler;
+        GccCompiler<double> compiler(CPPAD_CG_C_COMPILER);
         prepareTestCompilerFlags(compiler);
 
         ModelLibraryCSourceGen<double> compDynHelp(compHelp);

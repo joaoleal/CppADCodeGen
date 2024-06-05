@@ -763,7 +763,7 @@ private:
          * Create the dynamic library
          * (generate and compile source code)
          */
-        GccCompiler<double> compiler1;
+        GccCompiler<double> compiler1(CPPAD_CG_C_COMPILER);
         prepareTestCompilerFlags(compiler1);
         compiler1.setSourcesFolder("sources_atomiclibatomiclib_" + _modelName);
         compiler1.setSaveToDiskFirst(true);
@@ -815,7 +815,7 @@ private:
         compDynHelp2.setVerbose(this->verbose_);
 
         DynamicModelLibraryProcessor<double> p2(compDynHelp2, "outerModel");
-        GccCompiler<double> compiler2;
+        GccCompiler<double> compiler2(CPPAD_CG_C_COMPILER);
         prepareTestCompilerFlags(compiler2);
         compiler2.setSourcesFolder("sources_atomiclibatomiclib_" + _modelName);
         compiler2.setSaveToDiskFirst(true);
@@ -912,7 +912,7 @@ private:
 
         DynamicModelLibraryProcessor<double> p(compDynHelp);
 
-        GccCompiler<double> compiler;
+        GccCompiler<double> compiler(CPPAD_CG_C_COMPILER);
         prepareTestCompilerFlags(compiler);
         compiler.setSourcesFolder(folder);
         compiler.setSaveToDiskFirst(true);
@@ -1069,7 +1069,7 @@ protected:
 
         DynamicModelLibraryProcessor<double> p(libSrcGen);
 
-        GccCompiler<double> compiler;
+        GccCompiler<double> compiler(CPPAD_CG_C_COMPILER);
         prepareTestCompilerFlags(compiler);
         compiler.setSourcesFolder(folder);
         compiler.setSaveToDiskFirst(true);

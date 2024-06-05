@@ -56,7 +56,7 @@ void* CppADCGOperationTest::getFunction(void * libHandle, const std::string& fun
 void CppADCGOperationTest::compile(const std::string& source,
                                    const std::string& library) {
 
-    GccCompiler<double> compiler;
+    GccCompiler<double> compiler(CPPAD_CG_C_COMPILER);
     prepareTestCompilerFlags(compiler);
 
     try {

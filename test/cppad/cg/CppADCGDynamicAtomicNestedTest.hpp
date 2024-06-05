@@ -468,7 +468,7 @@ private:
          * (compile source code)
          */
         DynamicModelLibraryProcessor<double> p(compDynHelp, "innerModel");
-        GccCompiler<double> compiler1;
+        GccCompiler<double> compiler1(CPPAD_CG_C_COMPILER);
         prepareTestCompilerFlags(compiler1);
 
         _dynamicLib = p.createDynamicLibrary(compiler1);
@@ -514,7 +514,7 @@ private:
          * Create the dynamic library
          * (compile source code)
          */
-        GccCompiler<double> compiler2;
+        GccCompiler<double> compiler2(CPPAD_CG_C_COMPILER);
         prepareTestCompilerFlags(compiler2);
 
         DynamicModelLibraryProcessor<double> p2(compDynHelp2, "outerModel");
@@ -637,7 +637,7 @@ private:
          * Create the dynamic library
          * (compile source code)
          */
-        GccCompiler<double> compiler;
+        GccCompiler<double> compiler(CPPAD_CG_C_COMPILER);
         prepareTestCompilerFlags(compiler);
 
         DynamicModelLibraryProcessor<double> p(compDynHelp);
