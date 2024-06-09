@@ -27,7 +27,7 @@ ENDIF ()
 IF (DEFINED CPPAD_HOME)
 
     FIND_PATH(CPPAD_INCLUDE_DIR NAMES cppad/cppad.hpp
-            PATHS "${CPPAD_HOME}"
+            PATHS "${CPPAD_HOME}/include"
             NO_DEFAULT_PATH)
 
     FIND_LIBRARY(CPPAD_LIBRARY

@@ -279,7 +279,7 @@ public:
         //SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelpL, "sources_" + lName);
 
         DynamicModelLibraryProcessor<double> p(compDynHelpL, lName);
-        GccCompiler<double> compiler;
+        GccCompiler<double> compiler(CPPAD_CG_C_COMPILER);
         prepareTestCompilerFlags(compiler);
         compiler.setSourcesFolder("sources_" + lName);
         compiler.setSaveToDiskFirst(true);

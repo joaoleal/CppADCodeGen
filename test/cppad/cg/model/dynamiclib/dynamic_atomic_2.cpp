@@ -104,7 +104,7 @@ public:
         SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelp, MODEL_NAME);
 
         DynamicModelLibraryProcessor<double> p(compDynHelp);
-        GccCompiler<double> compiler;
+        GccCompiler<double> compiler(CPPAD_CG_C_COMPILER);
         prepareTestCompilerFlags(compiler);
 
         _dynamicLib = p.createDynamicLibrary(compiler);

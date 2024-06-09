@@ -404,7 +404,7 @@ public:
         if (!customHessSparsity_.empty())
             compHelpL.setCustomSparseHessianElements(customHessSparsity_);
 
-        GccCompiler<double> compiler;
+        GccCompiler<double> compiler(CPPAD_CG_C_COMPILER);
         prepareTestCompilerFlags(compiler);
         compiler.setSourcesFolder("sources_" + libBaseName);
         compiler.setSaveToDiskFirst(true);
