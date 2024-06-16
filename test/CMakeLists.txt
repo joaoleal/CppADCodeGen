@@ -48,9 +48,6 @@ FUNCTION(add_gest_link_libraries test_target_name)
         TARGET_LINK_LIBRARIES(${test_target_name} GTest::gtest_main)
 
   ENDIF()
-
-  # Create dependency of test on googletest
-  #ADD_DEPENDENCIES(${test_target_name} googletest)
 ENDFUNCTION()
 
 ################################################################################

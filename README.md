@@ -96,11 +96,7 @@ Create a new folder for the tests:
 cd make-build-debug
 cmake ../CppADCodeGen
 ```
-Testing requires [google-test](https://github.com/google/googletest) (version 1.14.0).
-Either install it in your system or configure CppADCodeGen to download the sources from GitHub by replacing the previous line with:
-```sh
-cmake ../CppADCodeGen 
-```
+Testing requires [google-test](https://github.com/google/googletest) (version 1.14.0) which will be downloaded from GitHub.
 
 Then compile the tests:
 ```sh
