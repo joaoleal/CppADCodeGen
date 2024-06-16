@@ -85,6 +85,7 @@ jobs:
       - run:
           name: Execute Tests
           command: |
+            cd build
             CTEST_OUTPUT_ON_FAILURE=TRUE make test
       - run:
           name: Test Installation

@@ -22,108 +22,35 @@ SET(CMAKE_BUILD_TYPE DEBUG)
 ################################################################################
 INCLUDE(ExternalProject)
 
-# Set default ExternalProject root directory
-SET_DIRECTORY_PROPERTIES(PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/test/googletest)
+# Download from GitHub
+INCLUDE(FetchContent)
+FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip)
 
-# Add gtest
-OPTION(GOOGLETEST_GIT "Download GoogleTest from the GIT repositoty" OFF)
-IF(GOOGLETEST_GIT)
-  # Download from SVN repository
-    ExternalProject_Add(
-        googletest
-        GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG release-1.8.1
-        TIMEOUT 10
-        # Force separate output paths for debug and release builds to allow easy
-        # identification of correct lib in subsequent TARGET_LINK_LIBRARIES commands
-        CMAKE_ARGS -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=DebugLibs
-                   -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=ReleaseLibs
-                   -Dgtest_force_shared_crt=ON
-        # Disable install step
-        INSTALL_COMMAND ""
-        # Wrap download, configure and build steps in a script to log output
-        LOG_DOWNLOAD ON
-        LOG_CONFIGURE ON
-        LOG_BUILD ON)
-ELSE()
-    # find installed in system
-    FIND_PATH(GOOGLETEST_SOURCE_DIR NAMES "src/gtest_main.cc"
-              HINTS  $ENV{GOOGLETEST_HOME}
-                     "/usr/src/gtest/" )
-    IF(NOT IS_DIRECTORY ${GOOGLETEST_SOURCE_DIR})
-        MESSAGE(FATAL_ERROR "GoogleTest source folder not found")
-    ENDIF()
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+SET(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
 
-    ExternalProject_Add(
-        googletest
-        URL ${GOOGLETEST_SOURCE_DIR}
-        # Force separate output paths for debug and release builds to allow easy
-        # identification of correct lib in subsequent TARGET_LINK_LIBRARIES commands
-        CMAKE_ARGS -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=DebugLibs
-                   -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=ReleaseLibs
-                   -Dgtest_force_shared_crt=ON
-        # Disable install step
-        INSTALL_COMMAND ""
-        # Wrap download, configure and build steps in a script to log output
-        LOG_DOWNLOAD ON
-        LOG_CONFIGURE ON
-        LOG_BUILD ON)
-ENDIF()
-
-# Specify include dir
-ExternalProject_Get_Property(googletest source_dir)
-SET(gtest_source_dir ${source_dir})
-
-# Specify MainTest's link libraries
-ExternalProject_Get_Property(googletest binary_dir)
-IF(GOOGLETEST_GIT)
-    SET(GTEST_LIBS_DIR ${binary_dir}/googlemock/gtest)
-ELSE()
-    SET(GTEST_LIBS_DIR ${binary_dir})
-ENDIF()
-
-INCLUDE_DIRECTORIES("${gtest_source_dir}/googletest/include")
-
-SET(GTEST_LIBRARY_PATH ${GTEST_LIBS_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}gtest.a)
-SET(GTEST_MAIN_PATH    ${GTEST_LIBS_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}gtest_main.a)
-
-ADD_LIBRARY(gtest UNKNOWN IMPORTED)
-SET_TARGET_PROPERTIES(gtest PROPERTIES
-                      "IMPORTED_LOCATION" "${GTEST_LIBRARY_PATH}"
-                      "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
-                      "INTERFACE_INCLUDE_DIRECTORIES" "${GTEST_INCLUDE_DIRS}")
-ADD_DEPENDENCIES(gtest googletest)
-
-ADD_LIBRARY(gtestmain UNKNOWN IMPORTED)
-SET_TARGET_PROPERTIES(gtestmain PROPERTIES
-                      "IMPORTED_LOCATION" "${GTEST_MAIN_PATH}"
-                      "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
-                      "INTERFACE_INCLUDE_DIRECTORIES" "${GTEST_INCLUDE_DIRS}")
-ADD_DEPENDENCIES(gtestmain googletest)
+INCLUDE(GoogleTest)
 
 ################################################################################
 # add gtest dependency
 ################################################################################
-FUNCTION(add_gest_link_libraries test_target_name use_main)
+FUNCTION(add_gest_link_libraries test_target_name)
     IF(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         TARGET_LINK_LIBRARIES(${test_target_name} gtest)
-        IF(${use_main})
-            TARGET_LINK_LIBRARIES(${test_target_name} gtestmain)
-        ENDIF()
+
+        TARGET_LINK_LIBRARIES(${test_target_name} GTest::gtest_main)
+
         TARGET_LINK_LIBRARIES(${test_target_name} pthread)
     ELSE()
-        TARGET_LINK_LIBRARIES(${test_target_name}
-                              debug ${GTEST_LIBS_DIR}/DebugLibs/${CMAKE_FIND_LIBRARY_PREFIXES}gtest${CMAKE_FIND_LIBRARY_SUFFIXES}
-                              optimized ${GTEST_LIBS_DIR}/ReleaseLibs/${CMAKE_FIND_LIBRARY_PREFIXES}gtest${CMAKE_FIND_LIBRARY_SUFFIXES})
-        IF(${use_main})
-            TARGET_LINK_LIBRARIES(${test_target_name}
-                                  debug ${GTEST_LIBS_DIR}/DebugLibs/${CMAKE_FIND_LIBRARY_PREFIXES}gtest_main${CMAKE_FIND_LIBRARY_SUFFIXES}
-                                  optimized ${GTEST_LIBS_DIR}/ReleaseLibs/${CMAKE_FIND_LIBRARY_PREFIXES}gtest_main${CMAKE_FIND_LIBRARY_SUFFIXES})
-        ENDIF()
+        TARGET_LINK_LIBRARIES(${test_target_name} GTest::gtest_main)
+
   ENDIF()
 
   # Create dependency of test on googletest
-  ADD_DEPENDENCIES(${test_target_name} googletest)
+  #ADD_DEPENDENCIES(${test_target_name} googletest)
 ENDFUNCTION()
 
 ################################################################################
@@ -252,7 +179,6 @@ IF(USE_PRECOMPILED_HEADERS)
 ENDIF()
 
 ADD_SUBDIRECTORY(cppad/cg)
-#ADD_SUBDIRECTORY(zoot)
 
 FILE(COPY "${CMAKE_CURRENT_SOURCE_DIR}/valgrind.sh"
      DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")

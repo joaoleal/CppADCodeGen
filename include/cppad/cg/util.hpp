@@ -648,7 +648,7 @@ inline void print(const Base& v) {
 
 template<class Key, class Value>
 inline void print(const std::map<Key, Value>& m) {
-    for (const std::pair<Key, Value>& p : m) {
+    for (const auto& p : m) {
         std::cout << p.first << " : ";
         print(p.second);
         std::cout << std::endl;

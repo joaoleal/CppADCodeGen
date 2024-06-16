@@ -70,7 +70,7 @@ inline void LanguageDot<Base>::printRandomIndexPatternDeclaration(std::ostringst
             const std::map<size_t, size_t>& x2y = ip1->getValues();
 
             std::vector<size_t> y(x2y.rbegin()->first + 1);
-            for (const std::pair<size_t, size_t>& p : x2y)
+            for (const auto& p : x2y)
                 y[p.first] = p.second;
 
             printStaticIndexArray(os, ip->getName(), y);

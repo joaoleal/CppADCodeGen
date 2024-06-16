@@ -15,7 +15,7 @@
 # Author: Joao Leal
 #
 # ----------------------------------------------------------------------------
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.5.0...3.27.4)
 
 PROJECT(cppadcg CXX C)
 
@@ -120,11 +120,9 @@ SET(install_python_location              "${CMAKE_INSTALL_PREFIX}/share/cppadcg/
 # ----------------------------------------------------------------------------
 #                    Define some optional compiler flags
 # ----------------------------------------------------------------------------
-IF(CMAKE_VERSION VERSION_GREATER "3.1.0")
-    # aim for this version which has explicit support for c++11
-    SET(CMAKE_CXX_STANDARD 14)
-    SET(CMAKE_CXX_STANDARD_REQUIRED TRUE)
-ENDIF()
+
+SET(CMAKE_CXX_STANDARD 14)
+SET(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 IF(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     SET(warning_flags "-Wall") # enable as many warnings as possible

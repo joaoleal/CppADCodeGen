@@ -327,7 +327,7 @@ public:
                 _ss << _spaces << _baseTypeName << " " << tmpArg[0].name << "[" << size << "];\n";
             }
         } else if (_temporary.size() > 0) {
-            for (const std::pair<size_t, Node*>& p : _temporary) {
+            for (const auto& p : _temporary) {
                 Node* var = p.second;
                 if (var->getName() == nullptr) {
                     var->setName(_nameGen->generateTemporary(*var, getVariableID(*var)));

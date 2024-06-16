@@ -36,10 +36,10 @@ See epl-v10.txt and gpl3.txt for a copy of the licenses.
 
 CppADCodeGen is a C++14 header only library, therefore there aren't many dependencies:
 
- - **CppAD** (2020),
+ - [**CppAD**](https://github.com/coin-or/CppAD) (2024),
  - A **C++14** compiler (such as GCC and Clang),
  - Clang/LLVM (only required for JIT compilation; supported versions <= v9.0), and
- - Eigen 3 (required when DAE differentiation index reduction is used).
+ - [Eigen 3](https://gitlab.com/libeigen/eigen) (required when DAE differentiation index reduction is used).
 
 Runtime compilation and dynamic linking:
  - Linux (it might be very easy to support other OSes but it is not implemented yet)
@@ -49,24 +49,24 @@ Runtime compilation and dynamic linking:
 ### General installation ###
 
 Get the sources from GitHub:
-```
+```sh
     git clone https://github.com/joaoleal/CppADCodeGen.git CppADCodeGen
 ```
 Create a new folder to build the project:
-```
+```sh
     mkdir cppadcg-build
 ```
 Build the project (no compilation of C/C++ occurs, just generation of header files):
-```
+```sh
     cd cppadcg-build
     cmake ../CppADCodeGen
 ```
 Either install the project in your system:
-```
+```sh
     make install
 ```
 or to some other folder:
-```
+```sh
     make DESTDIR=someotherfolder install
 ```
 
@@ -74,7 +74,7 @@ or to some other folder:
 
 A debian installation package can be created at the root of the project.
 Typically you can create the installer by just typing:
-```
+```sh
     dpkg-buildpackage
 ```
 It will create a debian package outside the project's folder.
@@ -88,34 +88,34 @@ The folder example includes some simple use cases.
 ## Testing ##
 
 Get the sources from GitHub:
-```
+```sh
     git clone https://github.com/joaoleal/CppADCodeGen.git CppADCodeGen
 ```
 Create a new folder for the tests:
-```
+```sh
     cd make-build-debug
     cmake ../CppADCodeGen
 ```
 Testing requires [google-test](https://github.com/google/googletest) (version 1.8.1).
 Either install it in your system or configure CppADCodeGen to download the sources from GitHub by replacing the previous line with:
-```
+```sh
     cmake -DGOOGLETEST_GIT=ON ../CppADCodeGen 
 ```
 
 Then compile the tests:
-```
+```sh
     make build_tests
 ```
 
 Run the complete set of tests:
-```
+```sh
     make test
 ```
 If [valgrind](https://valgrind.org/) is available in your system, CppADCodeGen will also perform memory checks which can
 lead to a very lengthy test execution.
 It is possible to disable memory validations by turning off the CMake option `USE_VALGRIND`.
 For instance, by calling the following command before running the tests:
- ```
+ ```sh
      cmake -DUSE_VALGRIND=OFF ../CppADCodeGen 
  ```
 ---

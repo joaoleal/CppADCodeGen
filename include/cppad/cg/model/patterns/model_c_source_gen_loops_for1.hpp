@@ -62,7 +62,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
     std::vector<size_t> locations(nnz);
 
     size_t p = 0;
-    for (const pair<size_t, std::vector<size_t> >& itJ : elements) {//loop variables
+    for (const auto& itJ : elements) {//loop variables
         size_t j = itJ.first;
         const std::vector<size_t>& r = itJ.second;
 
@@ -130,7 +130,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
                                                                       x, hasAtomics);
 
         map<size_t, std::vector<CGBase> > jacNl; // by column
-        for (const pair<size_t, map<size_t, CGBase> >& itDydxT : dydxT) {
+        for (const auto& itDydxT : dydxT) {
             size_t j = itDydxT.first;
             const map<size_t, CGBase>& dydxjT = itDydxT.second;
 
@@ -138,7 +138,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
             std::vector<CGBase>& col = jacNl[j];
             col.resize(elements.at(j).size());
 
-            for (const pair<size_t, CGBase>& itiv : dydxjT) {
+            for (const auto& itiv : dydxjT) {
                 size_t inl = itiv.first;
 
                 if (inl < nonIndexdedEqSize) {
@@ -224,7 +224,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
 
             map<size_t, set<size_t> > localIterCount2Jcols;
 
-            for (const pair<size_t, set<size_t> >& itJcol2It : group.jCol2Iterations) {
+            for (const auto& itJcol2It : group.jCol2Iterations) {
                 size_t jcol = itJcol2It.first;
                 size_t itCount = itJcol2It.second.size();
                 localIterCount2Jcols[itCount].insert(jcol);
@@ -241,7 +241,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
              */
             map<size_t, map<size_t, size_t> > jcol2localIt2ModelIt;
 
-            for (const pair<size_t, set<size_t> >& itJcol2It : group.jCol2Iterations) {
+            for (const auto& itJcol2It : group.jCol2Iterations) {
                 size_t jcol = itJcol2It.first;
 
                 map<size_t, size_t>& localIt2ModelIt = jcol2localIt2ModelIt[jcol];
@@ -274,7 +274,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
             if (createsLoop) {
                 map<size_t, size_t> jcol2litCount;
 
-                for (const pair<size_t, set<size_t> >& itJcol2Its : group.jCol2Iterations) {
+                for (const auto& itJcol2Its : group.jCol2Iterations) {
                     size_t jcol = itJcol2Its.first;
                     jcol2litCount[jcol] = itJcol2Its.second.size();
                 }
@@ -589,7 +589,7 @@ std::map<JacobianTermContrib<Base>, std::set<size_t> > groupForOneByContrib(cons
         const JacobianWithLoopsRowInfo& row = loopEqInfo[i];
 
         // indexed
-        for (const pair<size_t, std::vector<size_t> >& it : row.indexedPositions) {
+        for (const auto& it : row.indexedPositions) {
             size_t tapeJ = it.first;
             const std::vector<size_t>& positions = it.second;
             map<size_t, set<size_t> >& jcol2Iter = indexed2jcol2Iter[tapeJ];
@@ -606,7 +606,7 @@ std::map<JacobianTermContrib<Base>, std::set<size_t> > groupForOneByContrib(cons
         }
 
         // non-indexed
-        for (const pair<size_t, std::vector<size_t> >& it : row.nonIndexedPositions) {
+        for (const auto& it : row.nonIndexedPositions) {
             size_t j = it.first;
             const std::vector<size_t>& positions = it.second;
             set<size_t>& jcol2Iter = nonIndexed2Iter[j];
@@ -680,7 +680,7 @@ inline void subgroupForOneByContrib(const std::vector<JacobianWithLoopsRowInfo>&
     /**
      * 
      */
-    for (const pair<Forward1Jcol2Iter, JacobianTermContrib<Base> >& itK2C : contribs) {
+    for (const auto& itK2C : contribs) {
         const Forward1Jcol2Iter& jcol2Iters = itK2C.first;
         const JacobianTermContrib<Base>& hc = itK2C.second;
 
@@ -825,7 +825,7 @@ std::pair<CG<Base>, IndexPattern*> createForwardOneElement(CodeHandler<Base>& ha
      */
     map<size_t, size_t> locationsIter2Pos;
 
-    for (const std::pair<size_t, size_t>& itIt : iter2jcols) {
+    for (const auto& itIt : iter2jcols) {
         size_t iter = itIt.first;
         size_t jcol = itIt.second;
         CPPADCG_ASSERT_UNKNOWN(positions[iter] != (std::numeric_limits<size_t>::max)());
