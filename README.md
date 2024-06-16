@@ -50,24 +50,24 @@ Runtime compilation and dynamic linking:
 
 Get the sources from GitHub:
 ```sh
-    git clone https://github.com/joaoleal/CppADCodeGen.git CppADCodeGen
+git clone https://github.com/joaoleal/CppADCodeGen.git CppADCodeGen
 ```
 Create a new folder to build the project:
 ```sh
-    mkdir cppadcg-build
+mkdir cppadcg-build
 ```
 Build the project (no compilation of C/C++ occurs, just generation of header files):
 ```sh
-    cd cppadcg-build
-    cmake ../CppADCodeGen
+cd cppadcg-build
+cmake ../CppADCodeGen
 ```
 Either install the project in your system:
 ```sh
-    make install
+make install
 ```
 or to some other folder:
 ```sh
-    make DESTDIR=someotherfolder install
+make DESTDIR=someotherfolder install
 ```
 
 ### Debian/Ubuntu ###
@@ -75,7 +75,7 @@ or to some other folder:
 A debian installation package can be created at the root of the project.
 Typically you can create the installer by just typing:
 ```sh
-    dpkg-buildpackage
+dpkg-buildpackage
 ```
 It will create a debian package outside the project's folder.
 
@@ -89,34 +89,34 @@ The folder example includes some simple use cases.
 
 Get the sources from GitHub:
 ```sh
-    git clone https://github.com/joaoleal/CppADCodeGen.git CppADCodeGen
+git clone https://github.com/joaoleal/CppADCodeGen.git CppADCodeGen
 ```
 Create a new folder for the tests:
 ```sh
-    cd make-build-debug
-    cmake ../CppADCodeGen
+cd make-build-debug
+cmake ../CppADCodeGen
 ```
-Testing requires [google-test](https://github.com/google/googletest) (version 1.8.1).
+Testing requires [google-test](https://github.com/google/googletest) (version 1.14.0).
 Either install it in your system or configure CppADCodeGen to download the sources from GitHub by replacing the previous line with:
 ```sh
-    cmake -DGOOGLETEST_GIT=ON ../CppADCodeGen 
+cmake ../CppADCodeGen 
 ```
 
 Then compile the tests:
 ```sh
-    make build_tests
+make build_tests
 ```
 
 Run the complete set of tests:
 ```sh
-    make test
+make test
 ```
 If [valgrind](https://valgrind.org/) is available in your system, CppADCodeGen will also perform memory checks which can
 lead to a very lengthy test execution.
 It is possible to disable memory validations by turning off the CMake option `USE_VALGRIND`.
 For instance, by calling the following command before running the tests:
  ```sh
-     cmake -DUSE_VALGRIND=OFF ../CppADCodeGen 
+cmake -DUSE_VALGRIND=OFF ../CppADCodeGen 
  ```
 ---
 

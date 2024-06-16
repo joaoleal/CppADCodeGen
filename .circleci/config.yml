@@ -73,7 +73,6 @@ jobs:
             mkdir build
             cd build
             cmake -DCMAKE_BUILD_TYPE=DEBUG \
-                  -DGOOGLETEST_GIT=ON \
                   -DUSE_VALGRIND=OFF \
                   -DENABLE_THREAD_POOL_TESTS=OFF \
                   -DLLVM_VERSION=${LLVM_VERSION} \
