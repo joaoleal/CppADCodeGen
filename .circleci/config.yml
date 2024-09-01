@@ -33,11 +33,8 @@ jobs:
           command: |
             curdir="$(pwd)"
             cd "${curdir}/${CPPADCG_DEPS}"
-            CPPAD_VERSION_NAME=20200000.2
-            wget https://github.com/coin-or/CppAD/archive/${CPPAD_VERSION_NAME}.tar.gz
-            tar -xzf "${CPPAD_VERSION_NAME}.tar.gz"
-            rm "${CPPAD_VERSION_NAME}.tar.gz"
-            cd "CppAD-${CPPAD_VERSION_NAME}"
+            git clone --depth 1 --branch 20240000.7 https://github.com/coin-or/CppAD.git CppAD
+            cd "CppAD"
             mkdir build
             cd build
             cmake -Dcppad_prefix:PATH="${curdir}/${CPPAD_INSTALL}" \
