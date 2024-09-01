@@ -33,8 +33,8 @@ jobs:
           command: |
             curdir="$(pwd)"
             cd "${curdir}/${CPPADCG_DEPS}"
-            git clone --depth 1 --branch 20240000.7 https://github.com/coin-or/CppAD.git CppAD
-            cd "CppAD"
+            git clone --depth 1 --branch 20240000.7 https://github.com/coin-or/CppAD.git CppADGit
+            cd "CppADGit"
             mkdir build
             cd build
             cmake -Dcppad_prefix:PATH="${curdir}/${CPPAD_INSTALL}" \
