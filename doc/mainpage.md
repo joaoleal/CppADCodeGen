@@ -1,30 +1,32 @@
 # CppADCodeGen
 
-CppADCodeGen performs **hybrid Automatic Differentiation** (AD), that is, uses 
-operator-overloading and produces source-code. Such source-code can be 
-statically compiled at runtime using an existing compiler and linked dynamically 
-or, alternatively, go through a JIT compilation using Clang/LLVM.
+CppADCodeGen is a C++ library that extends [CppAD](http://www.coin-or.org/CppAD) 
+to allow the generation of C/C++ source code for computing the derivatives of
+mathematical models using Algorithmic Differentiation (AD).
+Since CppAD uses operator-overloading and CppADCodeGen produces source-code,
+the result is **hybrid Automatic Differentiation**.
 
 The evaluation of differential information can be orders of magnitude faster
-to compute using a compiled model than using a regular operator overloading
+to compute using a compiled model than using a regular operator-overloading
 strategy.
 
-In addition to C source generation, CppADCodeGen can also produce
- [Latex](http://www.latex-project.org/),
- html+[MathML](http://www.w3.org/Math/), and
- [dot](https://en.wikipedia.org/wiki/DOT_%28graph_description_language%29)
- source-code files for your algorithm.
-Latex sources can be used to create PDF files for documentation purposes,
-html+MathML can be used to display your algorithm in a web browser, and
-dot files can be used to create images with a graph of your model
-(see [graphviz](http://graphviz.org/)).
+## Key Features ##
 
-CppADCodeGen can also be used to perform differentiation index reduction of
-Differential Algebraic Equations (DAE) through Pantelides, Soares-Secchi, and Dummy
-Derivatives methods.
-
-CppADCodeGen is built on top of the [CppAD](http://www.coin-or.org/CppAD)
-library, which is a header only C++ AD library using operator overloading.
+ - Code Generation:
+   - C/C++: It can be used to compute derivatives of functions/models (see [wiki](https://github.com/joaoleal/CppADCodeGen/wiki/DirectSourceGeneration#c-language)) and generate libraries (see [wiki](https://github.com/joaoleal/CppADCodeGen/wiki/LibGeneration)).
+   - [Latex](http://www.latex-project.org/): Latex sources can be used to create PDF files for documentation purposes (see [wiki](https://github.com/joaoleal/CppADCodeGen/wiki/DirectSourceGeneration#latex)).
+   - html+[MathML](http://www.w3.org/Math/): tml+MathML can be used to display your algorithm in a web browser (see [wiki](https://github.com/joaoleal/CppADCodeGen/wiki/DirectSourceGeneration#htmlmathmljavascript)).
+   - [dot](https://en.wikipedia.org/wiki/DOT_%28graph_description_language%29) source-code: dot files can be used to create images with a graph of your model
+     (see [graphviz](http://graphviz.org/)).
+ - Support for Multiple Types: Allows the creation of CppAD models using double or float floating-point types.
+ - Efficient Sparsity Handling: Supports generation of code optimized for sparse Jacobians and Hessians.
+ - Differentiation index reduction of Differential Algebraic Equations (DAE) through:
+   - Pantelides,
+   - Soares-Secchi, and
+   - Dummy Derivatives methods.
+ - **Statically compile** generated source-code at runtime can be using an existing compiler and linked
+   dynamically or, alternatively, 
+ - Generated source-code can be **JIT** compilation using Clang/LLVM.
 
 ## License ##
 
@@ -36,46 +38,50 @@ See epl-v10.txt and gpl3.txt for a copy of the licenses.
 
 CppADCodeGen is a C++14 header only library, therefore there aren't many dependencies:
 
- - **CppAD** (2020),
- - A **C++14** compiler (such as GCC and Clang),
- - Clang/LLVM (only required for JIT compilation), and
- - Eigen 3 (required when DAE differentiation index reduction is used).
+ - Required:
+   - [**CppAD**](https://github.com/coin-or/CppAD) (2024),
+   - A **C++14** compiler (such as GCC and Clang),
+ - Optional:
+   - Clang/LLVM (only required for JIT compilation; supported versions <= v10.0), and
+   - [Eigen 3](https://gitlab.com/libeigen/eigen) (required when DAE differentiation index reduction is used).
 
 Runtime compilation and dynamic linking:
- - Linux (it might be very easy to support other OSes but it is not implemented yet)
+ - Linux 
+
+It might be very easy to support other OSes, but it is not implemented yet.
 
 ## Installing ##
 
 ### General installation ###
 
 Get the sources from GitHub:
-```
-    git clone https://github.com/joaoleal/CppADCodeGen.git CppADCodeGen
+```sh
+git clone https://github.com/joaoleal/CppADCodeGen.git CppADCodeGen
 ```
 Create a new folder to build the project:
-```
-    mkdir cppadcg-build
+```sh
+mkdir cppadcg-build
 ```
 Build the project (no compilation of C/C++ occurs, just generation of header files):
-```
-    cd cppadcg-build
-    cmake ../CppADCodeGen
+```sh
+cd cppadcg-build
+cmake ../CppADCodeGen
 ```
 Either install the project in your system:
-```
-    make install
+```sh
+make install
 ```
 or to some other folder:
-```
-    make DESTDIR=someotherfolder install
+```sh
+make DESTDIR=someotherfolder install
 ```
 
 ### Debian/Ubuntu ###
 
 A debian installation package can be created at the root of the project.
-Typically you can create the installer by just typing:
-```
-    dpkg-buildpackage
+Typically, you can create the installer by just typing:
+```sh
+dpkg-buildpackage
 ```
 It will create a debian package outside the project's folder.
 
@@ -88,36 +94,32 @@ The folder example includes some simple use cases.
 ## Testing ##
 
 Get the sources from GitHub:
-```
-    git clone https://github.com/joaoleal/CppADCodeGen.git CppADCodeGen
+```sh
+git clone https://github.com/joaoleal/CppADCodeGen.git CppADCodeGen
 ```
 Create a new folder for the tests:
+```sh
+cd make-build-debug
+cmake ../CppADCodeGen
 ```
-    cd make-build-debug
-    cmake ../CppADCodeGen
-```
-Testing requires [google-test](https://github.com/google/googletest) (version 1.8.1).
-Either install it in your system or configure CppADCodeGen to download the sources from GitHub by replacing the previous line with:
-```
-    cmake -DGOOGLETEST_GIT=ON ../CppADCodeGen 
-```
+Testing requires [google-test](https://github.com/google/googletest) (version 1.14.0) which will be downloaded from GitHub.
 
 Then compile the tests:
-```
-    make build_tests
+```sh
+make build_tests
 ```
 
 Run the complete set of tests:
-```
-    make test
+```sh
+make test
 ```
 If [valgrind](https://valgrind.org/) is available in your system, CppADCodeGen will also perform memory checks which can
 lead to a very lengthy test execution.
 It is possible to disable memory validations by turning off the CMake option `USE_VALGRIND`.
 For instance, by calling the following command before running the tests:
- ```
-     cmake -DUSE_VALGRIND=OFF ../CppADCodeGen 
- ```
+```sh
+cmake -DUSE_VALGRIND=OFF ../CppADCodeGen 
+```
 ---
 
 ## Repository Content

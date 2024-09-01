@@ -117,9 +117,9 @@ If [valgrind](https://valgrind.org/) is available in your system, CppADCodeGen w
 lead to a very lengthy test execution.
 It is possible to disable memory validations by turning off the CMake option `USE_VALGRIND`.
 For instance, by calling the following command before running the tests:
- ```sh
+```sh
 cmake -DUSE_VALGRIND=OFF ../CppADCodeGen 
- ```
+```
 ---
 
 ## Repository Content

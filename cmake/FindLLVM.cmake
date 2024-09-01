@@ -25,7 +25,7 @@
 #  LLVM_MODULE_LIBS      - list of llvm libs for working with modules.
 
 IF(LLVM_FIND_VERSION AND LLVM_FIND_VERSION_MAJOR LESS 4 AND NOT LLVM_FIND_VERSION_MINOR)
-    MESSAGE(FATAL_ERROR "When requesting a specific version of LLVM higher or equal to 7.0 you should only proide the major version, on LLVM versions lower than 4.0, you must provide at least the major and minor version numbers, e.g., 3.8")
+    MESSAGE(FATAL_ERROR "When requesting a specific version of LLVM higher or equal to 7.0 you should only provide the major version, on LLVM versions lower than 4.0, you must provide at least the major and minor version numbers, e.g., 3.8")
 ENDIF()
 
 # Lets make sure cache doesn't ruin the day
