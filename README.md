@@ -1,30 +1,32 @@
 # CppADCodeGen [![CircleCI](https://circleci.com/gh/joaoleal/CppADCodeGen/tree/master.svg?style=svg)](https://circleci.com/gh/joaoleal/CppADCodeGen/tree/master) [![DOI](https://zenodo.org/badge/20828/joaoleal/CppADCodeGen.svg)](https://zenodo.org/badge/latestdoi/20828/joaoleal/CppADCodeGen) [![Documentation](https://codedocs.xyz/joaoleal/CppADCodeGen.svg)](https://codedocs.xyz/joaoleal/CppADCodeGen/) [![License](https://img.shields.io/badge/License-EPL%201.0-blue.svg)](https://opensource.org/licenses/EPL-1.0) [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
 
-CppADCodeGen performs **hybrid Automatic Differentiation** (AD), that is, uses 
-operator-overloading and produces source-code. Such source-code can be 
-statically compiled at runtime using an existing compiler and linked dynamically 
-or, alternatively, go through a JIT compilation using Clang/LLVM.
+CppADCodeGen is a C++ library that extends [CppAD](http://www.coin-or.org/CppAD) 
+to allow the generation of C/C++ source code for computing the derivatives of
+mathematical models using Algorithmic Differentiation (AD).
+Since CppAD uses operator-overloading and CppADCodeGen produces source-code,
+the result is **hybrid Automatic Differentiation**.
 
 The evaluation of differential information can be orders of magnitude faster
-to compute using a compiled model than using a regular operator overloading
+to compute using a compiled model than using a regular operator-overloading
 strategy.
 
-In addition to C source generation, CppADCodeGen can also produce
- [Latex](http://www.latex-project.org/),
- html+[MathML](http://www.w3.org/Math/), and
- [dot](https://en.wikipedia.org/wiki/DOT_%28graph_description_language%29)
- source-code files for your algorithm.
-Latex sources can be used to create PDF files for documentation purposes,
-html+MathML can be used to display your algorithm in a web browser, and
-dot files can be used to create images with a graph of your model
-(see [graphviz](http://graphviz.org/)).
+## Key Features ##
 
-CppADCodeGen can also be used to perform differentiation index reduction of
-Differential Algebraic Equations (DAE) through Pantelides, Soares-Secchi, and Dummy
-Derivatives methods.
-
-CppADCodeGen is built on top of the [CppAD](http://www.coin-or.org/CppAD)
-library, which is a header only C++ AD library using operator overloading.
+ - Code Generation:
+   - C/C++: It can be used to compute derivatives of functions/models (see [wiki](https://github.com/joaoleal/CppADCodeGen/wiki/DirectSourceGeneration#c-language)) and generate libraries (see [wiki](https://github.com/joaoleal/CppADCodeGen/wiki/LibGeneration)).
+   - [Latex](http://www.latex-project.org/): Latex sources can be used to create PDF files for documentation purposes (see [wiki](https://github.com/joaoleal/CppADCodeGen/wiki/DirectSourceGeneration#latex)).
+   - html+[MathML](http://www.w3.org/Math/): tml+MathML can be used to display your algorithm in a web browser (see [wiki](https://github.com/joaoleal/CppADCodeGen/wiki/DirectSourceGeneration#htmlmathmljavascript)).
+   - [dot](https://en.wikipedia.org/wiki/DOT_%28graph_description_language%29) source-code: dot files can be used to create images with a graph of your model
+     (see [graphviz](http://graphviz.org/)).
+ - Support for Multiple Types: Allows the creation of CppAD models using double or float floating-point types.
+ - Efficient Sparsity Handling: Supports generation of code optimized for sparse Jacobians and Hessians.
+ - Differentiation index reduction of Differential Algebraic Equations (DAE) through:
+   - Pantelides,
+   - Soares-Secchi, and
+   - Dummy Derivatives methods.
+ - **Statically compile** generated source-code at runtime can be using an existing compiler and linked
+   dynamically or, alternatively, 
+ - Generated source-code can be **JIT** compilation using Clang/LLVM.
 
 ## License ##
 
@@ -36,13 +38,17 @@ See epl-v10.txt and gpl3.txt for a copy of the licenses.
 
 CppADCodeGen is a C++14 header only library, therefore there aren't many dependencies:
 
- - [**CppAD**](https://github.com/coin-or/CppAD) (2024),
- - A **C++14** compiler (such as GCC and Clang),
- - Clang/LLVM (only required for JIT compilation; supported versions <= v9.0), and
- - [Eigen 3](https://gitlab.com/libeigen/eigen) (required when DAE differentiation index reduction is used).
+ - Required:
+   - [**CppAD**](https://github.com/coin-or/CppAD) (2024),
+   - A **C++14** compiler (such as GCC and Clang),
+ - Optional:
+   - Clang/LLVM (only required for JIT compilation; supported versions <= v10.0), and
+   - [Eigen 3](https://gitlab.com/libeigen/eigen) (required when DAE differentiation index reduction is used).
 
 Runtime compilation and dynamic linking:
- - Linux (it might be very easy to support other OSes but it is not implemented yet)
+ - Linux 
+
+It might be very easy to support other OSes, but it is not implemented yet.
 
 ## Installing ##
 
@@ -73,7 +79,7 @@ make DESTDIR=someotherfolder install
 ### Debian/Ubuntu ###
 
 A debian installation package can be created at the root of the project.
-Typically you can create the installer by just typing:
+Typically, you can create the installer by just typing:
 ```sh
 dpkg-buildpackage
 ```
