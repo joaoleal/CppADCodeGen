@@ -22,6 +22,7 @@ add_cppadcg_test(inputstream.cpp)
 add_cppadcg_test(temporary.cpp)
 add_cppadcg_test(mult_sparsity_pattern.cpp)
 add_cppadcg_test(multi_object_1.cpp multi_object.cpp)
+add_cppadcg_test(gcc_build_issue.cpp)
 
 ADD_SUBDIRECTORY(extra)
 ADD_SUBDIRECTORY(operations)
