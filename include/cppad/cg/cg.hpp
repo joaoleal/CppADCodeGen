@@ -267,11 +267,14 @@ protected:
  */
 template<class Base>
 struct CGOStreamFunc {
-    static thread_local std::function<std::ostream& (std::ostream&, const CG<Base>&)> FUNC;
+    // Because of a GCC bug (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66944)
+    // FUNC_OBJ can't be a CGOStreamFunc static member.
+    // Instead, we store it as CGOStreamFunc::FUNC method static variable.
+    static std::function<std::ostream& (std::ostream&, const CG<Base>&)>& FUNC () {
+        static thread_local std::function<std::ostream& (std::ostream&, const CG<Base>&)> FUNC_OBJ = nullptr;
+        return FUNC_OBJ;
+    }
 };
-
-template<class Base>
-thread_local std::function<std::ostream& (std::ostream&, const CG<Base>&)> CGOStreamFunc<Base>::FUNC = nullptr;
 
 /**
  * Output stream operator for CG objects.
@@ -282,8 +285,8 @@ inline std::ostream& operator<<(
         std::ostream& os, //< stream to write to
         const CG<Base>& v//< vector that is output
         ) {
-    if(CGOStreamFunc<Base>::FUNC != nullptr) {
-        return CGOStreamFunc<Base>::FUNC(os, v);
+    if(CGOStreamFunc<Base>::FUNC() != nullptr) {
+        return CGOStreamFunc<Base>::FUNC()(os, v);
     }
 
     if (v.isParameter()) {

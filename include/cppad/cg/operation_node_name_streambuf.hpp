@@ -44,16 +44,16 @@ public:
         if (BUF != nullptr) {
             throw CGException("Only one OperationNodeNameStreambuf can exist at a time in each thread");
         }
-        if (CGOStreamFunc<Base>::FUNC != nullptr) {
+        if (CGOStreamFunc<Base>::FUNC() != nullptr) {
             throw CGException("CGOStreamFunc<Base>::FUNC already defined in this thread");
         }
         BUF = this;
-        CGOStreamFunc<Base>::FUNC = registerNode;
+        CGOStreamFunc<Base>::FUNC() = registerNode;
     }
 
     virtual ~OperationNodeNameStreambuf() {
         BUF = nullptr;
-        CGOStreamFunc<Base>::FUNC = nullptr;
+        CGOStreamFunc<Base>::FUNC() = nullptr;
     }
 
     std::streamsize xsputn(const char_type* s,
